@@ -1,29 +1,71 @@
-# Connect Supabase (optional but recommended)
+# Supabase setup (agent accounts + cloud data)
 
-Without Supabase the app still works fully in **Local mode** (data saved in your browser).
-
-## 1. Create a free Supabase project
-1. Go to https://supabase.com → New project
-2. Wait until the project is ready
+## 1. Create a project
+1. Go to [supabase.com](https://supabase.com) → **New project**
+2. Wait until the database is ready
 
 ## 2. Run the schema
-1. In Supabase open **SQL Editor**
-2. Paste the contents of `supabase-schema.sql` and click **Run**
+1. Open **SQL Editor** → New query
+2. Paste everything from `supabase-schema.sql`
+3. Click **Run**
 
-## 3. Add your keys
-1. Go to **Project Settings → API**
-2. Copy **Project URL** and **anon public** key
-3. Create a file `.env` in the project root:
+## 3. Auth settings (recommended for agents)
+1. **Authentication → Providers → Email** → enabled
+2. Optional: disable **Confirm email** while testing  
+   (Authentication → Providers → Email → **Confirm email** off)
+3. Under **Authentication → URL Configuration**, add your site URL:  
+   `https://lizer-webcoder.github.io/nexus-support/`
+
+## 4. Create the first agent user
+**Option A — in the app**  
+After keys are set, open the agent app → **Create account** with a work email.
+
+**Option B — in Supabase**  
+Authentication → Users → **Add user** → email + password.
+
+## 5. Env keys in the frontend
+Copy **Project URL** and **anon public** key from **Project Settings → API**.
+
+### Local development
+Create `.env` in the project root:
 
 ```
-VITE_SUPABASE_URL=https://xxxx.supabase.co
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
 ```
 
-## 4. Restart
+Then:
+
 ```bash
 npm install
 npm run dev
 ```
 
-The header will show **Supabase connected** when it works.
+### GitHub Pages (production)
+Vite bakes env vars at **build time**. For GitHub Actions:
+
+1. Repo → **Settings → Secrets and variables → Actions**
+2. Add secrets:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+3. Update `.github/workflows/deploy.yml` build step to pass them (see below)
+
+```yaml
+- name: Build
+  env:
+    VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+    VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+  run: npx vite build
+```
+
+## 6. How access works
+| Surface | Auth |
+|---------|------|
+| **Customer portal** (`#/portal`) | Public — submit & track tickets |
+| **Agent Command Center** | Requires Supabase login when keys are configured |
+| **Local mode** (no keys) | No login; data stays in the browser |
+
+## 7. Verify
+1. Open agent URL → Sign in / Create account
+2. Open `#/portal` → submit a ticket without logging in
+3. Back in agent view → ticket appears in the list
