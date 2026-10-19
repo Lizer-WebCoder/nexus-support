@@ -7,26 +7,93 @@ import Distribution from './components/Distribution';
 import ChannelMix from './components/ChannelMix';
 import MyQueue from './components/MyQueue';
 import TeamStatus from './components/TeamStatus';
+import TicketsPage from './components/TicketsPage';
+import { TicketProvider, useTickets } from './context/TicketContext';
 
-export default function App() {
+function Dashboard() {
+  return (
+    <>
+      <MetricBar />
+      <TicketPulse />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <Distribution />
+        <ChannelMix />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <MyQueue />
+        <TeamStatus />
+      </div>
+    </>
+  );
+}
+
+function AppShell() {
   const [activeNav, setActiveNav] = useState('dashboard');
+  const [search, setSearch] = useState('');
+  const { tickets, usingSupabase } = useTickets();
+
+  const searchResults =
+    search.trim().length > 1
+      ? tickets.filter(
+          (t) =>
+            t.title.toLowerCase().includes(search.toLowerCase()) ||
+            t.id.toLowerCase().includes(search.toLowerCase()) ||
+            t.customer_name.toLowerCase().includes(search.toLowerCase())
+        )
+      : [];
 
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar active={activeNav} onNavigate={setActiveNav} />
 
       <main className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
         <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
-          <h1 className="text-lg font-semibold text-slate-900">Command Center</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold text-slate-900">
+              {activeNav === 'dashboard'
+                ? 'Command Center'
+                : activeNav === 'tickets'
+                ? 'Tickets'
+                : activeNav.charAt(0).toUpperCase() + activeNav.slice(1)}
+            </h1>
+            {!usingSupabase && (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                Local mode
+              </span>
+            )}
+            {usingSupabase && (
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                Supabase connected
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-3">
             <div className="relative hidden sm:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search tickets, customers..."
                 className="pl-9 pr-4 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
               />
+              {searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-y-auto z-20">
+                  {searchResults.slice(0, 8).map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        setActiveNav('tickets');
+                        setSearch('');
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0"
+                    >
+                      <span className="font-mono text-xs text-slate-400 mr-2">{t.id}</span>
+                      {t.title}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <button className="relative p-2 rounded-lg hover:bg-slate-100 text-slate-500">
               <Bell size={18} />
@@ -38,32 +105,21 @@ export default function App() {
           </div>
         </header>
 
-        {/* Content */}
-        <div className="p-5 space-y-5 overflow-y-auto">
-          {activeNav === 'dashboard' ? (
-            <>
-              <MetricBar />
-              <TicketPulse />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <Distribution />
-                <ChannelMix />
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <MyQueue />
-                <TeamStatus />
-              </div>
-            </>
-          ) : (
+        <div className="p-5 space-y-5 overflow-y-auto flex-1">
+          {activeNav === 'dashboard' && <Dashboard />}
+          {activeNav === 'tickets' && <TicketsPage />}
+          {activeNav !== 'dashboard' && activeNav !== 'tickets' && (
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
               <h2 className="text-xl font-semibold text-slate-800 capitalize mb-2">
                 {activeNav.replace('-', ' ')}
               </h2>
               <p className="text-slate-500 max-w-md mx-auto">
-                This section is ready for expansion. The Overview dashboard is fully interactive with live metrics, charts, and ticket queues.
+                This section is ready for expansion. Use <strong>Overview</strong> and{' '}
+                <strong>Tickets</strong> for the full working experience.
               </p>
               <button
                 onClick={() => setActiveNav('dashboard')}
-                className="mt-6 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"
+                className="mt-6 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700"
               >
                 Back to Overview
               </button>
@@ -72,5 +128,13 @@ export default function App() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <TicketProvider>
+      <AppShell />
+    </TicketProvider>
   );
 }
