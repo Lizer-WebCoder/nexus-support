@@ -1,11 +1,31 @@
 import { useTickets } from '../context/TicketContext';
 import { Database, HardDrive, ExternalLink } from 'lucide-react';
 
-export default function SettingsPage() {
+interface Props {
+  onOpenPortal?: () => void;
+}
+
+export default function SettingsPage({ onOpenPortal }: Props) {
   const { usingSupabase, tickets, agents, refresh } = useTickets();
 
   return (
     <div className="max-w-2xl space-y-6">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-sm font-semibold text-slate-800 mb-4">Customer portal</h2>
+        <p className="text-sm text-slate-500 mb-3">
+          Customers use a separate public portal to submit and track tickets. Agents use this Command Center.
+        </p>
+        <button
+          onClick={onOpenPortal}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg"
+        >
+          Open customer portal <ExternalLink size={14} />
+        </button>
+        <p className="text-xs text-slate-400 mt-2">
+          Direct link: add <code className="bg-slate-100 px-1 rounded">#/portal</code> to the app URL
+        </p>
+      </div>
+
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <h2 className="text-sm font-semibold text-slate-800 mb-4">Data source</h2>
         <div className="flex items-start gap-4">
@@ -19,7 +39,7 @@ export default function SettingsPage() {
             <p className="text-sm text-slate-500 mt-1">
               {usingSupabase
                 ? 'Tickets are stored in your Supabase project and shared across devices.'
-                : 'Tickets are saved in this browser only. Connect Supabase for persistence and multi-device access.'}
+                : 'Tickets are saved in this browser only. Portal and agent share the same local data on this device.'}
             </p>
             {!usingSupabase && (
               <a href="https://github.com/Lizer-WebCoder/nexus-support/blob/main/SUPABASE_SETUP.md" target="_blank" rel="noreferrer"
@@ -57,7 +77,7 @@ export default function SettingsPage() {
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <h2 className="text-sm font-semibold text-slate-800 mb-2">About</h2>
         <p className="text-sm text-slate-500">
-          Nexus Support v1.1 — modern ticketing command center. Built with React, TypeScript, Tailwind CSS & Recharts.
+          Nexus Support v1.2 — agent command center + customer portal. React, TypeScript, Tailwind, Recharts.
         </p>
       </div>
     </div>

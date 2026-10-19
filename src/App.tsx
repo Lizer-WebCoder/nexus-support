@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, Bell, Settings2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Bell, Settings2, ExternalLink } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import MetricBar from './components/MetricBar';
 import TicketPulse from './components/TicketPulse';
@@ -14,6 +14,7 @@ import SettingsPage from './components/SettingsPage';
 import AnalyticsPage from './components/AnalyticsPage';
 import KnowledgePage from './components/KnowledgePage';
 import LiveChatPage from './components/LiveChatPage';
+import CustomerPortal from './components/CustomerPortal';
 import { TicketProvider, useTickets } from './context/TicketContext';
 
 function Dashboard() {
@@ -46,11 +47,37 @@ const TITLES: Record<string, string> = {
 
 const WORKING = new Set(['dashboard', 'tickets', 'customers', 'knowledge', 'chat', 'analytics', 'team', 'settings']);
 
+function getModeFromHash(): 'agent' | 'portal' {
+  const h = window.location.hash.replace(/^#\/?/, '');
+  return h.startsWith('portal') ? 'portal' : 'agent';
+}
+
 function AppShell() {
+  const [mode, setMode] = useState<'agent' | 'portal'>(getModeFromHash);
   const [activeNav, setActiveNav] = useState('dashboard');
   const [search, setSearch] = useState('');
   const { tickets, usingSupabase } = useTickets();
   const openCount = tickets.filter((t) => t.status !== 'resolved').length;
+
+  useEffect(() => {
+    const onHash = () => setMode(getModeFromHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const goPortal = () => {
+    window.location.hash = '#/portal';
+    setMode('portal');
+  };
+
+  const goAgent = () => {
+    window.location.hash = '#/';
+    setMode('agent');
+  };
+
+  if (mode === 'portal') {
+    return <CustomerPortal onBackToAgent={goAgent} />;
+  }
 
   const searchResults =
     search.trim().length > 1
@@ -80,6 +107,12 @@ function AppShell() {
             )}
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={goPortal}
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-sky-600 hover:text-sky-700 px-2.5 py-1.5 rounded-lg hover:bg-sky-50"
+            >
+              Customer portal <ExternalLink size={12} />
+            </button>
             <div className="relative hidden sm:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -122,12 +155,12 @@ function AppShell() {
           {activeNav === 'chat' && <LiveChatPage />}
           {activeNav === 'analytics' && <AnalyticsPage />}
           {activeNav === 'team' && <TeamPage />}
-          {activeNav === 'settings' && <SettingsPage />}
+          {activeNav === 'settings' && <SettingsPage onOpenPortal={goPortal} />}
           {!WORKING.has(activeNav) && (
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
               <h2 className="text-xl font-semibold text-slate-800 capitalize mb-2">{activeNav.replace('-', ' ')}</h2>
               <p className="text-slate-500 max-w-md mx-auto">
-                Placeholder for future module. Core support workflows are available under Overview, Tickets, Customers, Knowledge Base, Live Chat, Analytics, Team, and Settings.
+                Placeholder module. Core workflows are under Overview, Tickets, Customers, Knowledge Base, Live Chat, Analytics, Team, and Settings.
               </p>
               <button onClick={() => setActiveNav('dashboard')} className="mt-6 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700">
                 Back to Overview
