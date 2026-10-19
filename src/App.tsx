@@ -63,7 +63,7 @@ function Dashboard() {
 const TITLES: Record<string, string> = {
   dashboard: 'Command Center',
   tickets: 'Tickets',
-  customers: 'Customers',
+  customers: 'Branches',
   knowledge: 'Knowledge Base',
   chat: 'Live Chat',
   analytics: 'Analytics',
@@ -143,7 +143,8 @@ function AppShell() {
           (t) =>
             t.title.toLowerCase().includes(search.toLowerCase()) ||
             t.id.toLowerCase().includes(search.toLowerCase()) ||
-            t.customer_name.toLowerCase().includes(search.toLowerCase())
+            t.customer_name.toLowerCase().includes(search.toLowerCase()) ||
+            (t.branch || '').toLowerCase().includes(search.toLowerCase())
         )
       : [];
 
@@ -192,7 +193,7 @@ function AppShell() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search tickets, customers..."
+                placeholder="Search tickets, branches..."
                 className="pl-9 pr-4 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
               />
               {searchResults.length > 0 && (
