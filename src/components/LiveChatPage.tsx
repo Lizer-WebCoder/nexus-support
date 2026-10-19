@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import { Send, Plus, Trash2, UserRound, RotateCcw } from 'lucide-react';
+import { Send, Plus, Trash2, UserRound, RotateCcw, Paperclip } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
+import { MAX_CHAT_FILE_BYTES } from '../types';
+import { encodeChatAttachment, parseChatAttachment, isImageMime } from '../lib/chatAttachments';
 
 export default function LiveChatPage() {
   const {
@@ -17,7 +19,9 @@ export default function LiveChatPage() {
   const [newName, setNewName] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [fileError, setFileError] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!selectedId && conversations[0]) setSelectedId(conversations[0].id);
@@ -46,6 +50,33 @@ export default function LiveChatPage() {
       }
       await sendChatMessage(selected.id, draft.trim(), as);
       setDraft('');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sendFile = async (file: File) => {
+    if (!selected) return;
+    setFileError('');
+    if (file.size > MAX_CHAT_FILE_BYTES) {
+      setFileError(`File too large (max ~${Math.round(MAX_CHAT_FILE_BYTES / 1000)}KB).`);
+      return;
+    }
+    setBusy(true);
+    try {
+      if (selected.status === 'ended') await setChatStatus(selected.id, 'active');
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error('read failed'));
+        reader.readAsDataURL(file);
+      });
+      const body = encodeChatAttachment(
+        { url: dataUrl, name: file.name, mime: file.type || 'application/octet-stream' },
+        draft.trim() || undefined
+      );
+      setDraft('');
+      await sendChatMessage(selected.id, body, 'agent');
     } finally {
       setBusy(false);
     }
@@ -84,10 +115,8 @@ export default function LiveChatPage() {
   return (
     <div className="space-y-3">
       <div className="bg-sky-50 border border-sky-100 rounded-xl px-4 py-3 text-sm text-sky-800">
-        <strong>How chat works:</strong> Customers open the{' '}
-        <span className="font-semibold">Customer portal → Live chat</span>, pick their{' '}
-        <strong>branch</strong> and optional <strong>ticket number</strong>, then chat.
-        You see branch + ticket in the header so you can open the right ticket immediately.
+        <strong>How chat works:</strong> Customers enter <strong>ticket number</strong> first (branch auto-fills),
+        then chat. Both sides can send <strong>images/files</strong> with the paperclip button.
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex h-[calc(100vh-12rem)] min-h-[420px]">
@@ -146,7 +175,9 @@ export default function LiveChatPage() {
                       {c.ticket_id ? ` · ${c.ticket_id}` : ''}
                     </div>
                   )}
-                  <div className="text-xs text-slate-500 truncate mt-0.5">{c.preview || 'No messages'}</div>
+                  <div className="text-xs text-slate-500 truncate mt-0.5">
+                    {c.preview?.startsWith('__ATT__') ? '📎 Attachment' : (c.preview || 'No messages')}
+                  </div>
                   <div className={clsx(
                     'text-[10px] mt-1 capitalize',
                     c.status === 'ended' ? 'text-slate-400' : c.status === 'waiting' ? 'text-amber-600' : 'text-emerald-600'
@@ -202,22 +233,39 @@ export default function LiveChatPage() {
                 {(selected.messages || []).length === 0 && (
                   <p className="text-sm text-slate-400 text-center py-8">No messages yet. Send a greeting or wait for the customer.</p>
                 )}
-                {(selected.messages || []).map((m) => (
-                  <div key={m.id} className={clsx('flex', m.sender === 'agent' ? 'justify-end' : 'justify-start')}>
-                    <div className={clsx(
-                      'max-w-[75%] rounded-2xl px-4 py-2 text-sm',
-                      m.sender === 'agent' ? 'bg-sky-600 text-white rounded-br-md' : 'bg-slate-100 text-slate-800 rounded-bl-md'
-                    )}>
-                      {m.sender === 'customer' && (
-                        <div className="text-[10px] font-semibold opacity-70 mb-0.5">Customer</div>
-                      )}
-                      {m.text}
-                      <div className={clsx('text-[10px] mt-1', m.sender === 'agent' ? 'text-sky-200' : 'text-slate-400')}>
-                        {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {(selected.messages || []).map((m) => {
+                  const { att, text } = parseChatAttachment(m.text);
+                  return (
+                    <div key={m.id} className={clsx('flex', m.sender === 'agent' ? 'justify-end' : 'justify-start')}>
+                      <div className={clsx(
+                        'max-w-[75%] rounded-2xl px-4 py-2 text-sm',
+                        m.sender === 'agent' ? 'bg-sky-600 text-white rounded-br-md' : 'bg-slate-100 text-slate-800 rounded-bl-md'
+                      )}>
+                        {m.sender === 'customer' && (
+                          <div className="text-[10px] font-semibold opacity-70 mb-0.5">Customer</div>
+                        )}
+                        {att && isImageMime(att.mime) && (
+                          <a href={att.url} target="_blank" rel="noreferrer" className="block mb-2">
+                            <img src={att.url} alt={att.name || 'image'} className="max-w-full rounded-lg max-h-52 object-contain" />
+                          </a>
+                        )}
+                        {att && !isImageMime(att.mime) && (
+                          <a
+                            href={att.url}
+                            download={att.name || 'file'}
+                            className={clsx('block text-xs underline mb-1', m.sender === 'agent' ? 'text-sky-100' : 'text-sky-700')}
+                          >
+                            📎 {att.name || 'Download file'}
+                          </a>
+                        )}
+                        {text}
+                        <div className={clsx('text-[10px] mt-1', m.sender === 'agent' ? 'text-sky-200' : 'text-slate-400')}>
+                          {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div ref={bottomRef} />
               </div>
 
@@ -227,7 +275,28 @@ export default function LiveChatPage() {
                     This chat is ended. Click <strong>Reopen</strong> or send a message to continue.
                   </p>
                 )}
+                {fileError && <p className="text-xs text-rose-600">{fileError}</p>}
                 <div className="flex gap-2">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*,.pdf,.txt,.log,.zip,.doc,.docx"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) sendFile(f);
+                      e.target.value = '';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={busy}
+                    className="px-3 py-2.5 border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50 disabled:opacity-40"
+                    title="Send image or file"
+                  >
+                    <Paperclip size={18} />
+                  </button>
                   <input
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}

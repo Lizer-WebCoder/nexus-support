@@ -5,15 +5,12 @@ import { usePlatform } from '../context/PlatformContext';
 import { useTickets } from '../context/TicketContext';
 import { INITIAL_BRANCHES } from '../data';
 import { MAX_CHAT_FILE_BYTES } from '../types';
+import { encodeChatAttachment, parseChatAttachment, isImageMime } from '../lib/chatAttachments';
 
 const STORAGE_KEY = 'nexus-portal-chat-id';
 
 interface Props {
   onBack: () => void;
-}
-
-function isImageMime(mime?: string) {
-  return !!mime && mime.startsWith('image/');
 }
 
 export default function PortalLiveChat({ onBack }: Props) {
@@ -47,7 +44,6 @@ export default function PortalLiveChat({ onBack }: Props) {
     return Array.from(set).sort();
   }, [branch]);
 
-  // Auto-fill branch (and optionally email) when ticket number is entered
   useEffect(() => {
     const id = ticketId.trim();
     if (!id) {
@@ -65,12 +61,8 @@ export default function PortalLiveChat({ onBack }: Props) {
     } else {
       setTicketHint(`Found ${t.id}: ${t.title} (no branch on ticket — pick one below)`);
     }
-    if (t.customer_email && !email.trim()) {
-      setEmail(t.customer_email);
-    }
-    if (t.customer_name && !name.trim()) {
-      setName(t.customer_name);
-    }
+    if (t.customer_email && !email.trim()) setEmail(t.customer_email);
+    if (t.customer_name && !name.trim()) setName(t.customer_name);
   }, [ticketId, findTicket]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -102,11 +94,7 @@ export default function PortalLiveChat({ onBack }: Props) {
       });
       sessionStorage.setItem(STORAGE_KEY, c.id);
       setChatId(c.id);
-
-      const parts = [
-        `Hi, I'm ${name.trim()}.`,
-        `Branch: ${branch.trim()}.`,
-      ];
+      const parts = [`Hi, I'm ${name.trim()}.`, `Branch: ${branch.trim()}.`];
       if (tid) parts.push(`Ticket to resolve: ${tid}.`);
       parts.push('I need help.');
       await sendChatMessage(c.id, parts.join(' '), 'customer');
@@ -135,13 +123,12 @@ export default function PortalLiveChat({ onBack }: Props) {
       reader.onerror = () => reject(new Error('Could not read file'));
       reader.readAsDataURL(file);
     });
-    const label = isImageMime(file.type) ? 'Sent an image' : `Sent file: ${file.name}`;
-    await sendChatMessage(chatId, draft.trim() || label, 'customer', {
-      attachment_url: dataUrl,
-      attachment_name: file.name,
-      attachment_mime: file.type || 'application/octet-stream',
-    });
+    const body = encodeChatAttachment(
+      { url: dataUrl, name: file.name, mime: file.type || 'application/octet-stream' },
+      draft.trim() || undefined
+    );
     setDraft('');
+    await sendChatMessage(chatId, body, 'customer');
   };
 
   const endAndLeave = () => {
@@ -230,37 +217,37 @@ export default function PortalLiveChat({ onBack }: Props) {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {(conversation.messages || []).map((m) => (
-            <div key={m.id} className={clsx('flex', m.sender === 'customer' ? 'justify-end' : 'justify-start')}>
-              <div className={clsx(
-                'max-w-[80%] rounded-2xl px-4 py-2 text-sm',
-                m.sender === 'customer' ? 'bg-sky-600 text-white rounded-br-md' : 'bg-slate-100 text-slate-800 rounded-bl-md'
-              )}>
-                {m.sender === 'agent' && <div className="text-[10px] font-semibold text-slate-500 mb-0.5">Agent</div>}
-                {m.attachment_url && isImageMime(m.attachment_mime) && (
-                  <a href={m.attachment_url} target="_blank" rel="noreferrer" className="block mb-2">
-                    <img src={m.attachment_url} alt={m.attachment_name || 'attachment'} className="max-w-full rounded-lg max-h-48 object-contain" />
-                  </a>
-                )}
-                {m.attachment_url && !isImageMime(m.attachment_mime) && (
-                  <a
-                    href={m.attachment_url}
-                    download={m.attachment_name || 'file'}
-                    className={clsx(
-                      'block text-xs underline mb-1',
-                      m.sender === 'customer' ? 'text-sky-100' : 'text-sky-700'
-                    )}
-                  >
-                    📎 {m.attachment_name || 'Download file'}
-                  </a>
-                )}
-                {m.text}
-                <div className={clsx('text-[10px] mt-1', m.sender === 'customer' ? 'text-sky-200' : 'text-slate-400')}>
-                  {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {(conversation.messages || []).map((m) => {
+            const { att, text } = parseChatAttachment(m.text);
+            return (
+              <div key={m.id} className={clsx('flex', m.sender === 'customer' ? 'justify-end' : 'justify-start')}>
+                <div className={clsx(
+                  'max-w-[80%] rounded-2xl px-4 py-2 text-sm',
+                  m.sender === 'customer' ? 'bg-sky-600 text-white rounded-br-md' : 'bg-slate-100 text-slate-800 rounded-bl-md'
+                )}>
+                  {m.sender === 'agent' && <div className="text-[10px] font-semibold text-slate-500 mb-0.5">Agent</div>}
+                  {att && isImageMime(att.mime) && (
+                    <a href={att.url} target="_blank" rel="noreferrer" className="block mb-2">
+                      <img src={att.url} alt={att.name || 'image'} className="max-w-full rounded-lg max-h-48 object-contain" />
+                    </a>
+                  )}
+                  {att && !isImageMime(att.mime) && (
+                    <a
+                      href={att.url}
+                      download={att.name || 'file'}
+                      className={clsx('block text-xs underline mb-1', m.sender === 'customer' ? 'text-sky-100' : 'text-sky-700')}
+                    >
+                      📎 {att.name || 'Download file'}
+                    </a>
+                  )}
+                  {text}
+                  <div className={clsx('text-[10px] mt-1', m.sender === 'customer' ? 'text-sky-200' : 'text-slate-400')}>
+                    {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={bottomRef} />
         </div>
         {conversation.status !== 'ended' ? (
