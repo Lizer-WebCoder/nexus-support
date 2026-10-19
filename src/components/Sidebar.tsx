@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Ticket, Users, BookOpen, MessageSquare,
   BarChart3, UserCog, Zap, ClipboardList, ShieldCheck,
-  Megaphone, FileText, Rocket, Settings, ChevronRight, LogOut,
+  Megaphone, FileText, Rocket, Settings, ChevronRight, LogOut, User,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -9,18 +9,22 @@ interface SidebarProps {
   active: string;
   onNavigate: (id: string) => void;
   ticketCount?: number;
+  chatCount?: number;
   userName?: string;
   userEmail?: string;
   onSignOut?: () => void;
+  onProfile?: () => void;
 }
 
 export default function Sidebar({
   active,
   onNavigate,
   ticketCount = 0,
-  userName = 'Sarah Chen',
-  userEmail = 'sarah@nexus.support',
+  chatCount = 0,
+  userName = 'Agent',
+  userEmail = '',
   onSignOut,
+  onProfile,
 }: SidebarProps) {
   const initials = userName
     .split(' ')
@@ -34,7 +38,7 @@ export default function Sidebar({
     { id: 'tickets', label: 'Tickets', icon: Ticket, badge: ticketCount || undefined },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen },
-    { id: 'chat', label: 'Live Chat', icon: MessageSquare, badge: 4, badgeColor: 'bg-emerald-500' },
+    { id: 'chat', label: 'Live Chat', icon: MessageSquare, badge: chatCount || undefined, badgeColor: 'bg-emerald-500' },
   ];
 
   const managementItems = [
@@ -66,7 +70,7 @@ export default function Sidebar({
       >
         <Icon size={18} className="shrink-0" />
         <span className="flex-1 text-left">{item.label}</span>
-        {item.badge !== undefined && (
+        {item.badge !== undefined && item.badge > 0 && (
           <span className={clsx(
             'text-xs font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center',
             item.badgeColor || 'bg-slate-200 text-slate-700',
@@ -75,7 +79,7 @@ export default function Sidebar({
             {item.badge}
           </span>
         )}
-        {!item.badge && !isActive && <ChevronRight className="w-3.5 h-3.5 text-slate-300" />}
+        {!(item.badge && item.badge > 0) && !isActive && <ChevronRight className="w-3.5 h-3.5 text-slate-300" />}
       </button>
     );
   };
@@ -124,15 +128,23 @@ export default function Sidebar({
           <span>Settings</span>
         </button>
 
-        <div className="flex items-center gap-2.5 px-3 py-2 mt-1">
+        <button
+          type="button"
+          onClick={() => (onProfile ? onProfile() : onNavigate('profile'))}
+          className={clsx(
+            'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors',
+            active === 'profile' ? 'bg-sky-50' : 'hover:bg-slate-50'
+          )}
+        >
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-white text-xs font-semibold">
             {initials}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-left">
             <div className="text-sm font-medium text-slate-900 truncate">{userName}</div>
             <div className="text-[11px] text-slate-500 truncate">{userEmail}</div>
           </div>
-        </div>
+          <User size={14} className="text-slate-400 shrink-0" />
+        </button>
 
         {onSignOut && (
           <button

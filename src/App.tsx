@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Bell, Settings2, ExternalLink } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import MetricBar from './components/MetricBar';
@@ -16,12 +16,36 @@ import KnowledgePage from './components/KnowledgePage';
 import LiveChatPage from './components/LiveChatPage';
 import CustomerPortal from './components/CustomerPortal';
 import LoginPage from './components/LoginPage';
+import ProfilePage from './components/ProfilePage';
+import AutomationsPage from './components/AutomationsPage';
+import SurveysPage from './components/SurveysPage';
+import QualityPage from './components/QualityPage';
+import AnnouncementsPage from './components/AnnouncementsPage';
+import FormsPage from './components/FormsPage';
+import ReleasesPage from './components/ReleasesPage';
 import { TicketProvider, useTickets } from './context/TicketContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { PlatformProvider, usePlatform } from './context/PlatformContext';
 
 function Dashboard() {
+  const { announcements } = usePlatform();
+  const active = announcements.filter((a) => a.active);
   return (
     <>
+      {active.slice(0, 2).map((a) => (
+        <div
+          key={a.id}
+          className={`rounded-xl border px-4 py-3 text-sm ${
+            a.severity === 'critical'
+              ? 'bg-rose-50 border-rose-200 text-rose-800'
+              : a.severity === 'warning'
+                ? 'bg-amber-50 border-amber-200 text-amber-800'
+                : 'bg-sky-50 border-sky-200 text-sky-800'
+          }`}
+        >
+          <strong>{a.title}</strong> — {a.body}
+        </div>
+      ))}
       <MetricBar />
       <TicketPulse />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -45,9 +69,16 @@ const TITLES: Record<string, string> = {
   analytics: 'Analytics',
   team: 'Team',
   settings: 'Settings',
+  profile: 'My Profile',
+  automations: 'Automations',
+  surveys: 'Surveys',
+  quality: 'Quality',
+  announcements: 'Announcements',
+  forms: 'Forms',
+  releases: 'Releases',
 };
 
-const WORKING = new Set(['dashboard', 'tickets', 'customers', 'knowledge', 'chat', 'analytics', 'team', 'settings']);
+const WORKING = new Set(Object.keys(TITLES));
 
 function getModeFromHash(): 'agent' | 'portal' {
   const h = window.location.hash.replace(/^#\/?/, '');
@@ -58,14 +89,26 @@ function AppShell() {
   const [mode, setMode] = useState<'agent' | 'portal'>(getModeFromHash);
   const [activeNav, setActiveNav] = useState('dashboard');
   const [search, setSearch] = useState('');
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
   const { tickets, usingSupabase } = useTickets();
   const { user, loading: authLoading, requiresAuth, signOut } = useAuth();
+  const { notifications, unreadCount, markNotificationRead, markAllNotificationsRead, conversations } = usePlatform();
   const openCount = tickets.filter((t) => t.status !== 'resolved').length;
+  const chatBadge = conversations.filter((c) => c.status !== 'ended').length;
 
   useEffect(() => {
     const onHash = () => setMode(getModeFromHash());
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
   const goPortal = () => {
@@ -90,7 +133,6 @@ function AppShell() {
     );
   }
 
-  // When Supabase is configured, agents must sign in
   if (requiresAuth && !user) {
     return <LoginPage onOpenPortal={goPortal} />;
   }
@@ -116,16 +158,18 @@ function AppShell() {
         active={activeNav}
         onNavigate={setActiveNav}
         ticketCount={openCount}
+        chatCount={chatBadge}
         userName={displayName}
         userEmail={user?.email}
         onSignOut={requiresAuth ? signOut : undefined}
+        onProfile={() => setActiveNav('profile')}
       />
 
       <main className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold text-slate-900">
-              {TITLES[activeNav] || activeNav.charAt(0).toUpperCase() + activeNav.slice(1)}
+              {TITLES[activeNav] || activeNav}
             </h1>
             {!usingSupabase && (
               <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Local mode</span>
@@ -136,6 +180,7 @@ function AppShell() {
           </div>
           <div className="flex items-center gap-3">
             <button
+              type="button"
               onClick={goPortal}
               className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-sky-600 hover:text-sky-700 px-2.5 py-1.5 rounded-lg hover:bg-sky-50"
             >
@@ -155,6 +200,7 @@ function AppShell() {
                   {searchResults.slice(0, 8).map((t) => (
                     <button
                       key={t.id}
+                      type="button"
                       onClick={() => { setActiveNav('tickets'); setSearch(''); }}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0"
                     >
@@ -165,11 +211,54 @@ function AppShell() {
                 </div>
               )}
             </div>
-            <button className="relative p-2 rounded-lg hover:bg-slate-100 text-slate-500">
-              <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full" />
-            </button>
-            <button onClick={() => setActiveNav('settings')} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
+
+            <div className="relative" ref={notifRef}>
+              <button
+                type="button"
+                onClick={() => setNotifOpen((o) => !o)}
+                className="relative p-2 rounded-lg hover:bg-slate-100 text-slate-500"
+              >
+                <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[14px] h-3.5 px-0.5 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              {notifOpen && (
+                <div className="absolute right-0 top-full mt-1 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-30 overflow-hidden">
+                  <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-slate-800">Notifications</span>
+                    <button type="button" onClick={() => markAllNotificationsRead()} className="text-xs text-sky-600 hover:underline">
+                      Mark all read
+                    </button>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    {notifications.length === 0 && (
+                      <p className="text-xs text-slate-400 p-4 text-center">No notifications</p>
+                    )}
+                    {notifications.slice(0, 20).map((n) => (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={() => {
+                          markNotificationRead(n.id);
+                          if (n.link === 'tickets') setActiveNav('tickets');
+                          setNotifOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2.5 border-b border-slate-50 hover:bg-slate-50 ${!n.read ? 'bg-sky-50/50' : ''}`}
+                      >
+                        <div className="text-sm font-medium text-slate-800">{n.title}</div>
+                        <div className="text-xs text-slate-500 mt-0.5">{n.body}</div>
+                        <div className="text-[10px] text-slate-400 mt-1">{new Date(n.created_at).toLocaleString()}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button type="button" onClick={() => setActiveNav('settings')} className="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
               <Settings2 size={18} />
             </button>
           </div>
@@ -186,11 +275,18 @@ function AppShell() {
           {activeNav === 'settings' && (
             <SettingsPage onOpenPortal={goPortal} onSignOut={requiresAuth ? signOut : undefined} />
           )}
+          {activeNav === 'profile' && <ProfilePage />}
+          {activeNav === 'automations' && <AutomationsPage />}
+          {activeNav === 'surveys' && <SurveysPage />}
+          {activeNav === 'quality' && <QualityPage />}
+          {activeNav === 'announcements' && <AnnouncementsPage />}
+          {activeNav === 'forms' && <FormsPage />}
+          {activeNav === 'releases' && <ReleasesPage />}
           {!WORKING.has(activeNav) && (
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
-              <h2 className="text-xl font-semibold text-slate-800 capitalize mb-2">{activeNav.replace('-', ' ')}</h2>
-              <p className="text-slate-500 max-w-md mx-auto">Placeholder module.</p>
-              <button onClick={() => setActiveNav('dashboard')} className="mt-6 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700">
+              <h2 className="text-xl font-semibold text-slate-800 capitalize mb-2">{activeNav}</h2>
+              <p className="text-slate-500">Module not found.</p>
+              <button type="button" onClick={() => setActiveNav('dashboard')} className="mt-6 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg">
                 Back to Overview
               </button>
             </div>
@@ -205,7 +301,9 @@ export default function App() {
   return (
     <AuthProvider>
       <TicketProvider>
-        <AppShell />
+        <PlatformProvider>
+          <AppShell />
+        </PlatformProvider>
       </TicketProvider>
     </AuthProvider>
   );
