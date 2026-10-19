@@ -6,7 +6,8 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import type { Ticket, Agent, Customer, Priority, Channel, TicketNote, AgentStatus } from '../types';
+import type { Ticket, Agent, Customer, Priority, Channel, TicketNote, TicketMessage, AgentStatus } from '../types';
+import { computeSlaDue } from '../types';
 import { INITIAL_TICKETS, INITIAL_AGENTS, INITIAL_CUSTOMERS, nextTicketId } from '../data';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from './AuthContext';
@@ -31,10 +32,11 @@ interface TicketContextValue {
   createTicket: (data: CreateTicketInput) => Promise<Ticket>;
   updateTicket: (
     id: string,
-    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes'>>
+    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes' | 'messages' | 'first_response_at'>>
   ) => Promise<void>;
   deleteTicket: (id: string) => Promise<void>;
   addNote: (ticketId: string, text: string, author?: string) => Promise<void>;
+  addMessage: (ticketId: string, text: string, kind?: 'public' | 'internal') => Promise<void>;
   updateAgentStatus: (status: AgentStatus) => Promise<void>;
   findTicket: (id: string, email?: string) => Ticket | undefined;
   refresh: () => Promise<void>;
@@ -88,6 +90,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       list.map((t) => ({
         ...t,
         notes: Array.isArray(t.notes) ? t.notes : [],
+        messages: Array.isArray(t.messages) ? t.messages : [],
         assignee: t.assignee_id
           ? agentList.find((a) => a.id === t.assignee_id) || null
           : null,
@@ -121,7 +124,6 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     }
   }, [attachAssignees]);
 
-  // Ensure signed-in user has an agents row
   useEffect(() => {
     if (!supabase || !user) {
       setCurrentAgent(null);
@@ -155,7 +157,6 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Try match by email first
       if (user.email) {
         const { data: byEmail } = await supabase
           .from('agents')
@@ -167,9 +168,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
           await supabase.from('agents').update({ user_id: user.id }).eq('id', byEmail.id);
           const linked = { ...byEmail, user_id: user.id } as Agent;
           setCurrentAgent(linked);
-          setAgents((prev) =>
-            prev.map((a) => (a.id === linked.id ? linked : a))
-          );
+          setAgents((prev) => prev.map((a) => (a.id === linked.id ? linked : a)));
           return;
         }
       }
@@ -204,33 +203,14 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
-  // Realtime: refresh when tickets/agents change
   useEffect(() => {
     if (!supabase) return;
 
     const channel = supabase
       .channel('nexus-live')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'tickets' },
-        () => {
-          refresh();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'agents' },
-        () => {
-          refresh();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'customers' },
-        () => {
-          refresh();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'agents' }, () => refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => refresh())
       .subscribe();
 
     return () => {
@@ -247,6 +227,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
   const createTicket = async (data: CreateTicketInput): Promise<Ticket> => {
     const id = nextTicketId(tickets);
     const now = new Date().toISOString();
+    const sla_due_at = computeSlaDue(data.priority, now);
     const ticket: Ticket = {
       id,
       title: data.title,
@@ -260,6 +241,8 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       created_at: now,
       updated_at: now,
       notes: [],
+      messages: [],
+      sla_due_at,
     };
 
     if (supabase) {
@@ -274,6 +257,8 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         customer_name: ticket.customer_name,
         customer_email: ticket.customer_email || null,
         notes: [],
+        messages: [],
+        sla_due_at,
         created_at: ticket.created_at,
         updated_at: ticket.updated_at,
       });
@@ -287,7 +272,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
 
   const updateTicket = async (
     id: string,
-    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes'>>
+    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes' | 'messages' | 'first_response_at'>>
   ) => {
     const updated_at = new Date().toISOString();
     if (supabase) {
@@ -315,18 +300,17 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addNote = async (ticketId: string, text: string, author?: string) => {
-    const authorName =
-      author ||
-      currentAgent?.name ||
-      (user?.user_metadata?.full_name as string | undefined) ||
-      user?.email?.split('@')[0] ||
-      'Agent';
+  const authorName = () =>
+    currentAgent?.name ||
+    (user?.user_metadata?.full_name as string | undefined) ||
+    user?.email?.split('@')[0] ||
+    'Agent';
 
+  const addNote = async (ticketId: string, text: string, author?: string) => {
     const note: TicketNote = {
       id: `n-${Date.now()}`,
       text: text.trim(),
-      author: authorName,
+      author: author || authorName(),
       created_at: new Date().toISOString(),
     };
     const ticket = tickets.find((t) => t.id === ticketId);
@@ -335,23 +319,34 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     await updateTicket(ticketId, { notes });
   };
 
+  const addMessage = async (ticketId: string, text: string, kind: 'public' | 'internal' = 'public') => {
+    const msg: TicketMessage = {
+      id: `m-${Date.now()}`,
+      text: text.trim(),
+      author: authorName(),
+      kind,
+      created_at: new Date().toISOString(),
+    };
+    const ticket = tickets.find((t) => t.id === ticketId);
+    if (!ticket) return;
+    const messages = [...(ticket.messages || []), msg];
+    const updates: Parameters<typeof updateTicket>[1] = { messages };
+    if (!ticket.first_response_at && kind === 'public') {
+      updates.first_response_at = msg.created_at;
+    }
+    await updateTicket(ticketId, updates);
+  };
+
   const updateAgentStatus = async (status: AgentStatus) => {
     if (!currentAgent) return;
     if (supabase) {
-      const { error } = await supabase
-        .from('agents')
-        .update({ status })
-        .eq('id', currentAgent.id);
+      const { error } = await supabase.from('agents').update({ status }).eq('id', currentAgent.id);
       if (error) throw error;
       setCurrentAgent({ ...currentAgent, status });
-      setAgents((prev) =>
-        prev.map((a) => (a.id === currentAgent.id ? { ...a, status } : a))
-      );
+      setAgents((prev) => prev.map((a) => (a.id === currentAgent.id ? { ...a, status } : a)));
     } else {
       setCurrentAgent({ ...currentAgent, status });
-      setAgents((prev) =>
-        prev.map((a) => (a.id === currentAgent.id ? { ...a, status } : a))
-      );
+      setAgents((prev) => prev.map((a) => (a.id === currentAgent.id ? { ...a, status } : a)));
     }
   };
 
@@ -377,6 +372,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         updateTicket,
         deleteTicket,
         addNote,
+        addMessage,
         updateAgentStatus,
         findTicket,
         refresh,
