@@ -11,6 +11,9 @@ import TicketsPage from './components/TicketsPage';
 import CustomersPage from './components/CustomersPage';
 import TeamPage from './components/TeamPage';
 import SettingsPage from './components/SettingsPage';
+import AnalyticsPage from './components/AnalyticsPage';
+import KnowledgePage from './components/KnowledgePage';
+import LiveChatPage from './components/LiveChatPage';
 import { TicketProvider, useTickets } from './context/TicketContext';
 
 function Dashboard() {
@@ -30,6 +33,19 @@ function Dashboard() {
   );
 }
 
+const TITLES: Record<string, string> = {
+  dashboard: 'Command Center',
+  tickets: 'Tickets',
+  customers: 'Customers',
+  knowledge: 'Knowledge Base',
+  chat: 'Live Chat',
+  analytics: 'Analytics',
+  team: 'Team',
+  settings: 'Settings',
+};
+
+const WORKING = new Set(['dashboard', 'tickets', 'customers', 'knowledge', 'chat', 'analytics', 'team', 'settings']);
+
 function AppShell() {
   const [activeNav, setActiveNav] = useState('dashboard');
   const [search, setSearch] = useState('');
@@ -46,14 +62,6 @@ function AppShell() {
         )
       : [];
 
-  const titles: Record<string, string> = {
-    dashboard: 'Command Center',
-    tickets: 'Tickets',
-    customers: 'Customers',
-    team: 'Team',
-    settings: 'Settings',
-  };
-
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar active={activeNav} onNavigate={setActiveNav} ticketCount={openCount} />
@@ -62,7 +70,7 @@ function AppShell() {
         <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-semibold text-slate-900">
-              {titles[activeNav] || activeNav.charAt(0).toUpperCase() + activeNav.slice(1)}
+              {TITLES[activeNav] || activeNav.charAt(0).toUpperCase() + activeNav.slice(1)}
             </h1>
             {!usingSupabase && (
               <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Local mode</span>
@@ -74,14 +82,23 @@ function AppShell() {
           <div className="flex items-center gap-3">
             <div className="relative hidden sm:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}\n                placeholder="Search tickets, customers..."
-                className="pl-9 pr-4 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search tickets, customers..."
+                className="pl-9 pr-4 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-400"
+              />
               {searchResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-y-auto z-20">
                   {searchResults.slice(0, 8).map((t) => (
-                    <button key={t.id} onClick={() => { setActiveNav('tickets'); setSearch(''); }}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0">
-                      <span className="font-mono text-xs text-slate-400 mr-2">{t.id}</span>{t.title}
+                    <button
+                      key={t.id}
+                      onClick={() => { setActiveNav('tickets'); setSearch(''); }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0"
+                    >
+                      <span className="font-mono text-xs text-slate-400 mr-2">{t.id}</span>
+                      {t.title}
                     </button>
                   ))}
                 </div>
@@ -101,13 +118,20 @@ function AppShell() {
           {activeNav === 'dashboard' && <Dashboard />}
           {activeNav === 'tickets' && <TicketsPage />}
           {activeNav === 'customers' && <CustomersPage />}
+          {activeNav === 'knowledge' && <KnowledgePage />}
+          {activeNav === 'chat' && <LiveChatPage />}
+          {activeNav === 'analytics' && <AnalyticsPage />}
           {activeNav === 'team' && <TeamPage />}
           {activeNav === 'settings' && <SettingsPage />}
-          {!['dashboard', 'tickets', 'customers', 'team', 'settings'].includes(activeNav) && (
+          {!WORKING.has(activeNav) && (
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
               <h2 className="text-xl font-semibold text-slate-800 capitalize mb-2">{activeNav.replace('-', ' ')}</h2>
-              <p className="text-slate-500 max-w-md mx-auto">Coming soon. Use Overview, Tickets, Customers, Team, and Settings for the full experience.</p>
-              <button onClick={() => setActiveNav('dashboard')} className="mt-6 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700">Back to Overview</button>
+              <p className="text-slate-500 max-w-md mx-auto">
+                Placeholder for future module. Core support workflows are available under Overview, Tickets, Customers, Knowledge Base, Live Chat, Analytics, Team, and Settings.
+              </p>
+              <button onClick={() => setActiveNav('dashboard')} className="mt-6 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700">
+                Back to Overview
+              </button>
             </div>
           )}
         </div>
