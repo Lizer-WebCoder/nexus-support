@@ -26,6 +26,15 @@ Authentication → Users → **Add user** → email + password.
 ## 5. Env keys in the frontend
 Copy **Project URL** and **anon public** key from **Project Settings → API**.
 
+### Critical: use the full Project URL
+
+| Correct | Wrong |
+|---------|--------|
+| `https://abcdefghijklmnop.supabase.co` | `abcdefghijklmnop` (project ref only) |
+| Full URL from Settings → API | Anything without `https://` and `.supabase.co` |
+
+A bare project ref causes `net::ERR_NAME_NOT_RESOLVED` and **Failed to fetch** on signup/login.
+
 ### Local development
 Create `.env` in the project root:
 
@@ -46,9 +55,10 @@ Vite bakes env vars at **build time**. For GitHub Actions:
 
 1. Repo → **Settings → Secrets and variables → Actions**
 2. Add secrets:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-3. Update `.github/workflows/deploy.yml` build step to pass them (see below)
+   - `VITE_SUPABASE_URL` → full `https://….supabase.co` URL
+   - `VITE_SUPABASE_ANON_KEY` → anon public key
+3. The workflow already passes them into the build step.
+4. After changing secrets, **Actions → Deploy to GitHub Pages → Run workflow** (or push a commit).
 
 ```yaml
 - name: Build
@@ -63,9 +73,15 @@ Vite bakes env vars at **build time**. For GitHub Actions:
 |---------|------|
 | **Customer portal** (`#/portal`) | Public — submit & track tickets |
 | **Agent Command Center** | Requires Supabase login when keys are configured |
-| **Local mode** (no keys) | No login; data stays in the browser |
+| **Local mode** (no keys / invalid keys) | No login; data stays in the browser |
 
 ## 7. Verify
 1. Open agent URL → Sign in / Create account
 2. Open `#/portal` → submit a ticket without logging in
 3. Back in agent view → ticket appears in the list
+
+## 8. Troubleshooting "Failed to fetch"
+1. Open DevTools → Network → failed request → check the **hostname**.
+2. If the host is not `*.supabase.co`, the secret is wrong (often only the project ref was pasted).
+3. Confirm the Supabase project is not **paused** (dashboard → restore if needed).
+4. Fix secrets, redeploy, hard-refresh the site.

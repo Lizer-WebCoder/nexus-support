@@ -6,13 +6,14 @@ import {
   type ReactNode,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, getSupabaseConfigError } from '../lib/supabase';
 
 interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
   requiresAuth: boolean;
+  configError: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName?: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -20,9 +21,39 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function friendlyAuthError(err: unknown): Error {
+  if (!(err instanceof Error)) return new Error('Authentication failed');
+  const msg = err.message || '';
+  const lower = msg.toLowerCase();
+
+  if (
+    lower.includes('failed to fetch') ||
+    lower.includes('networkerror') ||
+    lower.includes('load failed') ||
+    lower.includes('err_name_not_resolved')
+  ) {
+    return new Error(
+      'Cannot reach Supabase (Failed to fetch). Check that VITE_SUPABASE_URL is the full ' +
+        'https://YOUR_PROJECT.supabase.co URL and that the project is not paused. ' +
+        'Update GitHub Actions secrets and redeploy if this is the live site.'
+    );
+  }
+  if (lower.includes('invalid login credentials')) {
+    return new Error('Invalid email or password.');
+  }
+  if (lower.includes('user already registered')) {
+    return new Error('An account with this email already exists. Sign in instead.');
+  }
+  if (lower.includes('email not confirmed')) {
+    return new Error('Confirm your email in the inbox before signing in (or disable Confirm email in Supabase Auth settings).');
+  }
+  return err;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
+  const configError = getSupabaseConfigError();
 
   useEffect(() => {
     if (!supabase) {
@@ -32,6 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
+      setLoading(false);
+    }).catch(() => {
       setLoading(false);
     });
 
@@ -43,13 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    if (!supabase) throw new Error('Supabase is not configured');
+    if (!supabase) throw new Error(configError || 'Supabase is not configured');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (error) throw friendlyAuthError(error);
   };
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    if (!supabase) throw new Error('Supabase is not configured');
+    if (!supabase) throw new Error(configError || 'Supabase is not configured');
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -57,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { full_name: fullName || email.split('@')[0] },
       },
     });
-    if (error) throw error;
+    if (error) throw friendlyAuthError(error);
   };
 
   const signOut = async () => {
@@ -72,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: session?.user ?? null,
         loading,
         requiresAuth: isSupabaseConfigured,
+        configError,
         signIn,
         signUp,
         signOut,
