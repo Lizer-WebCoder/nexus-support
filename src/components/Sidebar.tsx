@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Ticket, Users, BookOpen, MessageSquare,
   BarChart3, UserCog, Zap, ClipboardList, ShieldCheck,
-  Megaphone, FileText, Rocket, Settings, ChevronRight,
+  Megaphone, FileText, Rocket, Settings, ChevronRight, LogOut,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -9,9 +9,26 @@ interface SidebarProps {
   active: string;
   onNavigate: (id: string) => void;
   ticketCount?: number;
+  userName?: string;
+  userEmail?: string;
+  onSignOut?: () => void;
 }
 
-export default function Sidebar({ active, onNavigate, ticketCount = 0 }: SidebarProps) {
+export default function Sidebar({
+  active,
+  onNavigate,
+  ticketCount = 0,
+  userName = 'Sarah Chen',
+  userEmail = 'sarah@nexus.support',
+  onSignOut,
+}: SidebarProps) {
+  const initials = userName
+    .split(' ')
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'AG';
+
   const navItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'tickets', label: 'Tickets', icon: Ticket, badge: ticketCount || undefined },
@@ -40,6 +57,7 @@ export default function Sidebar({ active, onNavigate, ticketCount = 0 }: Sidebar
     return (
       <button
         key={item.id}
+        type="button"
         onClick={() => onNavigate(item.id)}
         className={clsx(
           'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
@@ -95,6 +113,7 @@ export default function Sidebar({ active, onNavigate, ticketCount = 0 }: Sidebar
 
       <div className="border-t border-slate-200 p-3 space-y-1">
         <button
+          type="button"
           onClick={() => onNavigate('settings')}
           className={clsx(
             'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
@@ -104,13 +123,27 @@ export default function Sidebar({ active, onNavigate, ticketCount = 0 }: Sidebar
           <Settings size={18} />
           <span>Settings</span>
         </button>
+
         <div className="flex items-center gap-2.5 px-3 py-2 mt-1">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-white text-xs font-semibold">SC</div>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-white text-xs font-semibold">
+            {initials}
+          </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-slate-900 truncate">Sarah Chen</div>
-            <div className="text-[11px] text-slate-500 truncate">sarah@nexus.support</div>
+            <div className="text-sm font-medium text-slate-900 truncate">{userName}</div>
+            <div className="text-[11px] text-slate-500 truncate">{userEmail}</div>
           </div>
         </div>
+
+        {onSignOut && (
+          <button
+            type="button"
+            onClick={() => onSignOut()}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+          >
+            <LogOut size={16} />
+            Sign out
+          </button>
+        )}
       </div>
     </aside>
   );
