@@ -19,6 +19,13 @@ export interface Customer {
   company?: string;
 }
 
+export interface TicketNote {
+  id: string;
+  text: string;
+  author: string;
+  created_at: string;
+}
+
 export interface Ticket {
   id: string;
   title: string;
@@ -31,6 +38,7 @@ export interface Ticket {
   customer_name: string;
   created_at: string;
   updated_at?: string;
+  notes?: TicketNote[];
   assignee?: Agent | null;
 }
 

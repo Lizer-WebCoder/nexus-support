@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import type { Ticket, Agent, Customer, Priority, Status, Channel } from '../types';
+import type { Ticket, Agent, Customer, Priority, Channel, TicketNote } from '../types';
 import { INITIAL_TICKETS, INITIAL_AGENTS, INITIAL_CUSTOMERS, nextTicketId } from '../data';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
@@ -26,8 +26,10 @@ interface TicketContextValue {
   }) => Promise<void>;
   updateTicket: (
     id: string,
-    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description'>>
+    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes'>>
   ) => Promise<void>;
+  deleteTicket: (id: string) => Promise<void>;
+  addNote: (ticketId: string, text: string, author?: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -123,6 +125,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       customer_name: data.customer_name,
       created_at: now,
       updated_at: now,
+      notes: [],
     };
 
     if (supabase) {
@@ -147,7 +150,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
 
   const updateTicket = async (
     id: string,
-    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description'>>
+    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes'>>
   ) => {
     const updated_at = new Date().toISOString();
     if (supabase) {
@@ -167,6 +170,29 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteTicket = async (id: string) => {
+    if (supabase) {
+      const { error } = await supabase.from('tickets').delete().eq('id', id);
+      if (error) throw error;
+      await refresh();
+    } else {
+      setTickets((prev) => prev.filter((t) => t.id !== id));
+    }
+  };
+
+  const addNote = async (ticketId: string, text: string, author = 'Sarah Chen') => {
+    const note: TicketNote = {
+      id: `n-${Date.now()}`,
+      text: text.trim(),
+      author,
+      created_at: new Date().toISOString(),
+    };
+    const ticket = tickets.find((t) => t.id === ticketId);
+    if (!ticket) return;
+    const notes = [...(ticket.notes || []), note];
+    await updateTicket(ticketId, { notes });
+  };
+
   return (
     <TicketContext.Provider
       value={{
@@ -177,6 +203,8 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         usingSupabase: isSupabaseConfigured,
         createTicket,
         updateTicket,
+        deleteTicket,
+        addNote,
         refresh,
       }}
     >
