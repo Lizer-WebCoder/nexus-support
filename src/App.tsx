@@ -15,7 +15,9 @@ import AnalyticsPage from './components/AnalyticsPage';
 import KnowledgePage from './components/KnowledgePage';
 import LiveChatPage from './components/LiveChatPage';
 import CustomerPortal from './components/CustomerPortal';
+import LoginPage from './components/LoginPage';
 import { TicketProvider, useTickets } from './context/TicketContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 function Dashboard() {
   return (
@@ -57,6 +59,7 @@ function AppShell() {
   const [activeNav, setActiveNav] = useState('dashboard');
   const [search, setSearch] = useState('');
   const { tickets, usingSupabase } = useTickets();
+  const { user, loading: authLoading, requiresAuth, signOut } = useAuth();
   const openCount = tickets.filter((t) => t.status !== 'resolved').length;
 
   useEffect(() => {
@@ -79,6 +82,19 @@ function AppShell() {
     return <CustomerPortal onBackToAgent={goAgent} />;
   }
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500 text-sm">
+        Loading…
+      </div>
+    );
+  }
+
+  // When Supabase is configured, agents must sign in
+  if (requiresAuth && !user) {
+    return <LoginPage onOpenPortal={goPortal} />;
+  }
+
   const searchResults =
     search.trim().length > 1
       ? tickets.filter(
@@ -89,9 +105,21 @@ function AppShell() {
         )
       : [];
 
+  const displayName =
+    (user?.user_metadata?.full_name as string | undefined) ||
+    user?.email?.split('@')[0] ||
+    'Agent';
+
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar active={activeNav} onNavigate={setActiveNav} ticketCount={openCount} />
+      <Sidebar
+        active={activeNav}
+        onNavigate={setActiveNav}
+        ticketCount={openCount}
+        userName={displayName}
+        userEmail={user?.email}
+        onSignOut={requiresAuth ? signOut : undefined}
+      />
 
       <main className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
@@ -155,13 +183,13 @@ function AppShell() {
           {activeNav === 'chat' && <LiveChatPage />}
           {activeNav === 'analytics' && <AnalyticsPage />}
           {activeNav === 'team' && <TeamPage />}
-          {activeNav === 'settings' && <SettingsPage onOpenPortal={goPortal} />}
+          {activeNav === 'settings' && (
+            <SettingsPage onOpenPortal={goPortal} onSignOut={requiresAuth ? signOut : undefined} />
+          )}
           {!WORKING.has(activeNav) && (
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
               <h2 className="text-xl font-semibold text-slate-800 capitalize mb-2">{activeNav.replace('-', ' ')}</h2>
-              <p className="text-slate-500 max-w-md mx-auto">
-                Placeholder module. Core workflows are under Overview, Tickets, Customers, Knowledge Base, Live Chat, Analytics, Team, and Settings.
-              </p>
+              <p className="text-slate-500 max-w-md mx-auto">Placeholder module.</p>
               <button onClick={() => setActiveNav('dashboard')} className="mt-6 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700">
                 Back to Overview
               </button>
@@ -175,8 +203,10 @@ function AppShell() {
 
 export default function App() {
   return (
-    <TicketProvider>
-      <AppShell />
-    </TicketProvider>
+    <AuthProvider>
+      <TicketProvider>
+        <AppShell />
+      </TicketProvider>
+    </AuthProvider>
   );
 }
