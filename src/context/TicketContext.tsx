@@ -19,6 +19,7 @@ interface CreateTicketInput {
   channel: Channel;
   customer_name: string;
   customer_email?: string;
+  branch?: string;
   assignee_id?: string;
 }
 
@@ -32,7 +33,7 @@ interface TicketContextValue {
   createTicket: (data: CreateTicketInput) => Promise<Ticket>;
   updateTicket: (
     id: string,
-    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes' | 'messages' | 'first_response_at'>>
+    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes' | 'messages' | 'first_response_at' | 'branch'>>
   ) => Promise<void>;
   deleteTicket: (id: string) => Promise<void>;
   addNote: (ticketId: string, text: string, author?: string) => Promise<void>;
@@ -228,6 +229,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     const id = nextTicketId(tickets);
     const now = new Date().toISOString();
     const sla_due_at = computeSlaDue(data.priority, now);
+    const branch = data.branch?.trim() || undefined;
     const ticket: Ticket = {
       id,
       title: data.title,
@@ -238,6 +240,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       assignee_id: data.assignee_id || null,
       customer_name: data.customer_name,
       customer_email: data.customer_email || '',
+      branch,
       created_at: now,
       updated_at: now,
       notes: [],
@@ -246,7 +249,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     };
 
     if (supabase) {
-      const { error } = await supabase.from('tickets').insert({
+      const row: Record<string, unknown> = {
         id: ticket.id,
         title: ticket.title,
         description: ticket.description,
@@ -261,8 +264,19 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         sla_due_at,
         created_at: ticket.created_at,
         updated_at: ticket.updated_at,
-      });
-      if (error) throw error;
+      };
+      if (branch) row.branch = branch;
+      const { error } = await supabase.from('tickets').insert(row);
+      if (error) {
+        // Fallback if branch column not yet migrated
+        if (String(error.message || '').toLowerCase().includes('branch')) {
+          delete row.branch;
+          const retry = await supabase.from('tickets').insert(row);
+          if (retry.error) throw retry.error;
+        } else {
+          throw error;
+        }
+      }
       await refresh();
     } else {
       setTickets((prev) => attachAssignees([ticket, ...prev], agents));
@@ -272,7 +286,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
 
   const updateTicket = async (
     id: string,
-    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes' | 'messages' | 'first_response_at'>>
+    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes' | 'messages' | 'first_response_at' | 'branch'>>
   ) => {
     const updated_at = new Date().toISOString();
     if (supabase) {

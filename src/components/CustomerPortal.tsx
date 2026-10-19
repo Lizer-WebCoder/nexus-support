@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, CheckCircle2, Ticket, BookOpen, ArrowLeft, MessageSquare } from 'lucide-react';
 import { useTickets } from '../context/TicketContext';
 import type { Priority, Ticket as TicketType } from '../types';
+import { INITIAL_BRANCHES } from '../data';
 import PortalLiveChat from './PortalLiveChat';
 
 interface Props {
@@ -17,13 +18,15 @@ const HELP_ARTICLES = [
   { title: 'API rate limits', body: 'Free plans allow 60 requests/minute. Pro plans allow 600. Contact support if you need a higher limit.' },
 ];
 
+const BRANCH_OPTIONS = INITIAL_BRANCHES.map((b) => b.name);
+
 export default function CustomerPortal({ onBackToAgent }: Props) {
-  const { createTicket, findTicket } = useTickets();
+  const { createTicket, findTicket, tickets } = useTickets();
   const [view, setView] = useState<PortalView>('home');
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [company, setCompany] = useState('');
+  const [branch, setBranch] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
@@ -36,10 +39,26 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
   const [tracked, setTracked] = useState<TicketType | null>(null);
   const [trackError, setTrackError] = useState('');
 
+  // Include any branches that already appear on tickets
+  const branchOptions = useMemo(() => {
+    const set = new Set(BRANCH_OPTIONS);
+    tickets.forEach((t) => {
+      if (t.branch) set.add(t.branch);
+    });
+    try {
+      const raw = localStorage.getItem('nexus-branches-v1');
+      if (raw) {
+        const list = JSON.parse(raw) as { name: string }[];
+        list.forEach((b) => set.add(b.name));
+      }
+    } catch {}
+    return Array.from(set).sort();
+  }, [tickets]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !title.trim()) {
-      setError('Name, email, and subject are required');
+    if (!name.trim() || !email.trim() || !title.trim() || !branch.trim()) {
+      setError('Name, email, branch, and subject are required');
       return;
     }
     setSaving(true);
@@ -50,14 +69,15 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
         description: description.trim(),
         priority,
         channel: 'portal',
-        customer_name: company.trim() || name.trim(),
+        customer_name: name.trim(),
         customer_email: email.trim(),
+        branch: branch.trim(),
       });
       setCreated(ticket);
       setView('success');
       setName('');
       setEmail('');
-      setCompany('');
+      setBranch('');
       setTitle('');
       setDescription('');
       setPriority('medium');
@@ -180,9 +200,18 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Company</label>
-                <input value={company} onChange={(e) => setCompany(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30" />
+                <label className="block text-sm font-medium text-slate-700 mb-1">Branch *</label>
+                <select
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                >
+                  <option value="">Select your branch…</option>
+                  {branchOptions.map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Subject *</label>
@@ -224,6 +253,9 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <div className="text-xs text-slate-400 uppercase tracking-wider">Ticket ID</div>
               <div className="text-2xl font-mono font-bold text-sky-700 mt-1">{created.id}</div>
               <div className="text-sm text-slate-600 mt-3">{created.title}</div>
+              {created.branch && (
+                <div className="text-xs text-slate-500 mt-2">Branch: {created.branch}</div>
+              )}
             </div>
             <div className="flex gap-3 justify-center">
               <button type="button" onClick={() => { setTrackId(created.id); setView('track'); }}
@@ -269,6 +301,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                   </span>
                 </div>
                 <div className="text-lg font-semibold text-slate-900">{tracked.title}</div>
+                {tracked.branch && <div className="text-sm text-slate-500">Branch: {tracked.branch}</div>}
               </div>
             )}
           </div>
