@@ -59,7 +59,6 @@ export interface TicketAttachment {
   name: string;
   size: number;
   mime: string;
-  /** data URL or remote URL */
   url: string;
   created_at: string;
   uploaded_by?: string;
@@ -104,6 +103,10 @@ export interface ChatMessage {
   sender: 'agent' | 'customer';
   text: string;
   created_at: string;
+  /** Optional image or file (data URL or remote URL) */
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_mime?: string;
 }
 
 export interface ChatConversation {
@@ -218,5 +221,5 @@ export function ticketBranch(t: Ticket): string {
   return 'Unassigned';
 }
 
-/** Max attachment size (~1.5MB encoded) for local/json storage */
 export const MAX_ATTACHMENT_BYTES = 1_200_000;
+export const MAX_CHAT_FILE_BYTES = 900_000;

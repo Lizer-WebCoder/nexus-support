@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import clsx from 'clsx';
-import { Send, ArrowLeft } from 'lucide-react';
+import { Send, ArrowLeft, Paperclip } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
+import { useTickets } from '../context/TicketContext';
 import { INITIAL_BRANCHES } from '../data';
+import { MAX_CHAT_FILE_BYTES } from '../types';
 
 const STORAGE_KEY = 'nexus-portal-chat-id';
 
@@ -10,17 +12,25 @@ interface Props {
   onBack: () => void;
 }
 
+function isImageMime(mime?: string) {
+  return !!mime && mime.startsWith('image/');
+}
+
 export default function PortalLiveChat({ onBack }: Props) {
   const { conversations, createChat, sendChatMessage, refreshPlatform } = usePlatform();
+  const { findTicket } = useTickets();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [branch, setBranch] = useState('');
   const [ticketId, setTicketId] = useState('');
+  const [ticketHint, setTicketHint] = useState('');
   const [chatId, setChatId] = useState<string | null>(() => sessionStorage.getItem(STORAGE_KEY));
   const [draft, setDraft] = useState('');
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
+  const [fileError, setFileError] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const conversation = conversations.find((c) => c.id === chatId) || null;
 
@@ -33,8 +43,35 @@ export default function PortalLiveChat({ onBack }: Props) {
         list.forEach((b) => set.add(b.name));
       }
     } catch {}
+    if (branch) set.add(branch);
     return Array.from(set).sort();
-  }, []);
+  }, [branch]);
+
+  // Auto-fill branch (and optionally email) when ticket number is entered
+  useEffect(() => {
+    const id = ticketId.trim();
+    if (!id) {
+      setTicketHint('');
+      return;
+    }
+    const t = findTicket(id);
+    if (!t) {
+      setTicketHint('Ticket not found yet — you can still chat.');
+      return;
+    }
+    if (t.branch) {
+      setBranch(t.branch);
+      setTicketHint(`Found ${t.id}: ${t.title} → branch set to ${t.branch}`);
+    } else {
+      setTicketHint(`Found ${t.id}: ${t.title} (no branch on ticket — pick one below)`);
+    }
+    if (t.customer_email && !email.trim()) {
+      setEmail(t.customer_email);
+    }
+    if (t.customer_name && !name.trim()) {
+      setName(t.customer_name);
+    }
+  }, [ticketId, findTicket]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const t = setInterval(() => refreshPlatform(), 3000);
@@ -66,7 +103,6 @@ export default function PortalLiveChat({ onBack }: Props) {
       sessionStorage.setItem(STORAGE_KEY, c.id);
       setChatId(c.id);
 
-      // Opening message with context so agents don't need to ask
       const parts = [
         `Hi, I'm ${name.trim()}.`,
         `Branch: ${branch.trim()}.`,
@@ -84,6 +120,28 @@ export default function PortalLiveChat({ onBack }: Props) {
     const text = draft.trim();
     setDraft('');
     await sendChatMessage(chatId, text, 'customer');
+  };
+
+  const sendFile = async (file: File) => {
+    if (!chatId) return;
+    setFileError('');
+    if (file.size > MAX_CHAT_FILE_BYTES) {
+      setFileError(`File too large (max ~${Math.round(MAX_CHAT_FILE_BYTES / 1000)}KB).`);
+      return;
+    }
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.readAsDataURL(file);
+    });
+    const label = isImageMime(file.type) ? 'Sent an image' : `Sent file: ${file.name}`;
+    await sendChatMessage(chatId, draft.trim() || label, 'customer', {
+      attachment_url: dataUrl,
+      attachment_name: file.name,
+      attachment_mime: file.type || 'application/octet-stream',
+    });
+    setDraft('');
   };
 
   const endAndLeave = () => {
@@ -113,6 +171,23 @@ export default function PortalLiveChat({ onBack }: Props) {
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30" />
           </div>
           <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Ticket number (if any)</label>
+            <input
+              value={ticketId}
+              onChange={(e) => setTicketId(e.target.value)}
+              placeholder="e.g. NX-2841"
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Enter your ticket ID first — branch fills in automatically when found.
+            </p>
+            {ticketHint && (
+              <p className={`text-[11px] mt-1 ${ticketHint.startsWith('Found') ? 'text-emerald-600' : 'text-amber-600'}`}>
+                {ticketHint}
+              </p>
+            )}
+          </div>
+          <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Branch *</label>
             <select
               value={branch}
@@ -125,16 +200,6 @@ export default function PortalLiveChat({ onBack }: Props) {
                 <option key={b} value={b}>{b}</option>
               ))}
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Ticket number (if any)</label>
-            <input
-              value={ticketId}
-              onChange={(e) => setTicketId(e.target.value)}
-              placeholder="e.g. NX-2841"
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-            />
-            <p className="text-[11px] text-slate-400 mt-1">If you already submitted a request, enter the ticket ID so we can help faster.</p>
           </div>
           <button type="submit" disabled={starting}
             className="w-full py-2.5 bg-sky-600 text-white text-sm font-semibold rounded-lg hover:bg-sky-700 disabled:opacity-50">
@@ -172,6 +237,23 @@ export default function PortalLiveChat({ onBack }: Props) {
                 m.sender === 'customer' ? 'bg-sky-600 text-white rounded-br-md' : 'bg-slate-100 text-slate-800 rounded-bl-md'
               )}>
                 {m.sender === 'agent' && <div className="text-[10px] font-semibold text-slate-500 mb-0.5">Agent</div>}
+                {m.attachment_url && isImageMime(m.attachment_mime) && (
+                  <a href={m.attachment_url} target="_blank" rel="noreferrer" className="block mb-2">
+                    <img src={m.attachment_url} alt={m.attachment_name || 'attachment'} className="max-w-full rounded-lg max-h-48 object-contain" />
+                  </a>
+                )}
+                {m.attachment_url && !isImageMime(m.attachment_mime) && (
+                  <a
+                    href={m.attachment_url}
+                    download={m.attachment_name || 'file'}
+                    className={clsx(
+                      'block text-xs underline mb-1',
+                      m.sender === 'customer' ? 'text-sky-100' : 'text-sky-700'
+                    )}
+                  >
+                    📎 {m.attachment_name || 'Download file'}
+                  </a>
+                )}
                 {m.text}
                 <div className={clsx('text-[10px] mt-1', m.sender === 'customer' ? 'text-sky-200' : 'text-slate-400')}>
                   {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -182,18 +264,40 @@ export default function PortalLiveChat({ onBack }: Props) {
           <div ref={bottomRef} />
         </div>
         {conversation.status !== 'ended' ? (
-          <div className="p-3 border-t border-slate-100 flex gap-2">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && send()}
-              placeholder="Type your message…"
-              className="flex-1 px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-            />
-            <button type="button" onClick={send} disabled={!draft.trim()}
-              className="px-4 py-2.5 bg-sky-600 text-white rounded-xl hover:bg-sky-700 disabled:opacity-40">
-              <Send size={18} />
-            </button>
+          <div className="p-3 border-t border-slate-100 space-y-2">
+            {fileError && <p className="text-xs text-rose-600">{fileError}</p>}
+            <div className="flex gap-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*,.pdf,.txt,.log,.zip,.doc,.docx"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) sendFile(f);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="px-3 py-2.5 border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-50"
+                title="Send image or file"
+              >
+                <Paperclip size={18} />
+              </button>
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && send()}
+                placeholder="Type your message…"
+                className="flex-1 px-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+              />
+              <button type="button" onClick={send} disabled={!draft.trim()}
+                className="px-4 py-2.5 bg-sky-600 text-white rounded-xl hover:bg-sky-700 disabled:opacity-40">
+                <Send size={18} />
+              </button>
+            </div>
           </div>
         ) : (
           <div className="p-4 text-center text-sm text-slate-500">This chat was ended by the agent.</div>
