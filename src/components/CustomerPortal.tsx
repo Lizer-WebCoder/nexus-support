@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
-import { Search, CheckCircle2, Ticket, BookOpen, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Search, CheckCircle2, Ticket, BookOpen, ArrowLeft, MessageSquare, LogIn, LogOut, User } from 'lucide-react';
 import { useTickets } from '../context/TicketContext';
+import { useAuth } from '../context/AuthContext';
 import type { Priority, Ticket as TicketType } from '../types';
 import { INITIAL_BRANCHES } from '../data';
 import PortalLiveChat from './PortalLiveChat';
@@ -9,19 +10,20 @@ interface Props {
   onBackToAgent?: () => void;
 }
 
-type PortalView = 'home' | 'submit' | 'track' | 'success' | 'help' | 'chat';
+type PortalView = 'home' | 'submit' | 'track' | 'success' | 'help' | 'chat' | 'account' | 'mytickets';
 
 const HELP_ARTICLES = [
-  { title: 'Reset your password', body: 'Go to Sign in → Forgot password. Check spam if the email does not arrive within 5 minutes.' },
+  { title: 'Reset your password', body: 'Go to Account → Sign in. Use the same email you registered with.' },
   { title: 'Check service status', body: 'Visit status.nexus.support for live incident updates before opening a ticket.' },
-  { title: 'Billing & invoices', body: 'Invoices are emailed on the 1st of each month. For discrepancies, include your invoice number when submitting a request.' },
-  { title: 'API rate limits', body: 'Free plans allow 60 requests/minute. Pro plans allow 600. Contact support if you need a higher limit.' },
+  { title: 'Billing & invoices', body: 'Invoices are emailed on the 1st of each month. Include your invoice number when submitting a request.' },
+  { title: 'API rate limits', body: 'Free plans allow 60 requests/minute. Pro plans allow 600.' },
 ];
 
 const BRANCH_OPTIONS = INITIAL_BRANCHES.map((b) => b.name);
 
 export default function CustomerPortal({ onBackToAgent }: Props) {
-  const { createTicket, findTicket, tickets } = useTickets();
+  const { createTicket, findTicket, tickets, ticketsForEmail } = useTickets();
+  const { user, accountRole, signIn, signUp, signOut, requiresAuth, configError } = useAuth();
   const [view, setView] = useState<PortalView>('home');
 
   const [name, setName] = useState('');
@@ -39,7 +41,18 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
   const [tracked, setTracked] = useState<TicketType | null>(null);
   const [trackError, setTrackError] = useState('');
 
-  // Include any branches that already appear on tickets
+  // Account form
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authName, setAuthName] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authInfo, setAuthInfo] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
+  const isCustomerSession = !!user && accountRole === 'customer';
+  const myTickets = isCustomerSession && user?.email ? ticketsForEmail(user.email) : [];
+
   const branchOptions = useMemo(() => {
     const set = new Set(BRANCH_OPTIONS);
     tickets.forEach((t) => {
@@ -101,6 +114,26 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
     setTracked(t);
   };
 
+  const doAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthInfo('');
+    setAuthLoading(true);
+    try {
+      if (authMode === 'signin') {
+        await signIn(authEmail.trim(), authPassword);
+      } else {
+        await signUp(authEmail.trim(), authPassword, authName.trim() || undefined, 'customer');
+        setAuthInfo('Account created. Sign in with your email and password.');
+        setAuthMode('signin');
+      }
+    } catch (err: unknown) {
+      setAuthError(err instanceof Error ? err.message : 'Auth failed');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   const statusColor: Record<string, string> = {
     new: 'bg-sky-100 text-sky-700',
     open: 'bg-amber-100 text-amber-700',
@@ -113,7 +146,9 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
     { id: 'submit' as const, Icon: Ticket, title: 'Submit a request', desc: 'Report a problem or ask a question' },
     { id: 'chat' as const, Icon: MessageSquare, title: 'Live chat', desc: 'Talk to an agent in real time' },
     { id: 'track' as const, Icon: Search, title: 'Track a ticket', desc: 'Check status with your ticket ID' },
+    { id: 'mytickets' as const, Icon: User, title: 'My tickets', desc: isCustomerSession ? 'Tickets linked to your email' : 'Sign in to see your tickets' },
     { id: 'help' as const, Icon: BookOpen, title: 'Help articles', desc: 'Find answers without waiting' },
+    { id: 'account' as const, Icon: LogIn, title: isCustomerSession ? 'Account' : 'Sign in', desc: isCustomerSession ? 'Manage your customer account' : 'Optional account for ticket history' },
   ];
 
   return (
@@ -133,13 +168,16 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <div className="text-[11px] text-slate-500">Customer Portal</div>
             </div>
           </button>
-          <nav className="flex items-center gap-1 text-sm">
-            <button type="button" onClick={() => setView('submit')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Submit</button>
-            <button type="button" onClick={() => setView('chat')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Chat</button>
-            <button type="button" onClick={() => setView('track')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Track</button>
-            <button type="button" onClick={() => setView('help')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Help</button>
+          <nav className="flex items-center gap-1 text-sm flex-wrap justify-end">
+            <button type="button" onClick={() => setView('submit')} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Submit</button>
+            <button type="button" onClick={() => setView('chat')} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Chat</button>
+            <button type="button" onClick={() => setView('track')} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Track</button>
+            <button type="button" onClick={() => setView('mytickets')} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">My tickets</button>
+            <button type="button" onClick={() => setView('account')} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">
+              {isCustomerSession ? 'Account' : 'Sign in'}
+            </button>
             {onBackToAgent && (
-              <button type="button" onClick={onBackToAgent} className="ml-2 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-600">
+              <button type="button" onClick={onBackToAgent} className="ml-1 px-2 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-600">
                 Agent login
               </button>
             )}
@@ -152,7 +190,11 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
           <div className="text-center space-y-8">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 tracking-tight">How can we help?</h1>
-              <p className="text-slate-500 mt-2">Submit a request, chat with an agent, or check ticket status.</p>
+              <p className="text-slate-500 mt-2">
+                {isCustomerSession
+                  ? `Signed in as ${user?.email}`
+                  : 'Submit a request, chat with an agent, or check ticket status.'}
+              </p>
             </div>
             <div className="grid sm:grid-cols-2 gap-4 text-left">
               {homeCards.map((card) => {
@@ -178,6 +220,129 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
 
         {view === 'chat' && <PortalLiveChat onBack={() => setView('home')} />}
 
+        {view === 'account' && (
+          <div className="max-w-md mx-auto">
+            <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">
+              <ArrowLeft size={16} /> Back
+            </button>
+            <h1 className="text-2xl font-bold text-slate-900 mb-1">Customer account</h1>
+            <p className="text-slate-500 text-sm mb-6">Optional. Sign in to see all tickets under your email.</p>
+
+            {!requiresAuth && (
+              <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                Accounts require Supabase. In local mode, use Track with ticket ID instead.
+              </div>
+            )}
+
+            {configError && (
+              <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">{configError}</div>
+            )}
+
+            {isCustomerSession ? (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <div className="text-sm text-slate-600">Signed in as</div>
+                <div className="font-semibold text-slate-900">{user?.email}</div>
+                <div className="text-xs text-slate-500">
+                  Name: {(user?.user_metadata?.full_name as string) || '—'}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setView('mytickets')}
+                  className="w-full py-2.5 bg-sky-600 text-white text-sm font-semibold rounded-lg"
+                >
+                  View my tickets
+                </button>
+                <button
+                  type="button"
+                  onClick={() => signOut()}
+                  className="w-full py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg inline-flex items-center justify-center gap-2"
+                >
+                  <LogOut size={14} /> Sign out
+                </button>
+              </div>
+            ) : user && accountRole === 'agent' ? (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
+                <p className="text-sm text-slate-600">
+                  You are signed in as an <strong>agent</strong> ({user.email}). Use Agent login for the command center, or sign out to create a customer account.
+                </p>
+                <button type="button" onClick={() => signOut()} className="w-full py-2 text-sm font-medium text-slate-600 border rounded-lg">
+                  Sign out
+                </button>
+              </div>
+            ) : requiresAuth ? (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div className="flex rounded-lg bg-slate-100 p-1 mb-4">
+                  <button type="button" onClick={() => setAuthMode('signin')} className={`flex-1 py-2 text-sm font-medium rounded-md ${authMode === 'signin' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Sign in</button>
+                  <button type="button" onClick={() => setAuthMode('signup')} className={`flex-1 py-2 text-sm font-medium rounded-md ${authMode === 'signup' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Register</button>
+                </div>
+                <form onSubmit={doAuth} className="space-y-3">
+                  {authError && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{authError}</div>}
+                  {authInfo && <div className="text-sm text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg">{authInfo}</div>}
+                  {authMode === 'signup' && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Full name</label>
+                      <input value={authName} onChange={(e) => setAuthName(e.target.value)} className="w-full px-3 py-2 text-sm border rounded-lg" />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input type="email" required value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} className="w-full px-3 py-2 text-sm border rounded-lg" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                    <input type="password" required minLength={6} value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} className="w-full px-3 py-2 text-sm border rounded-lg" />
+                  </div>
+                  <button type="submit" disabled={authLoading} className="w-full py-2.5 bg-sky-600 text-white text-sm font-semibold rounded-lg disabled:opacity-50">
+                    {authLoading ? 'Please wait…' : authMode === 'signin' ? 'Sign in' : 'Create customer account'}
+                  </button>
+                </form>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {view === 'mytickets' && (
+          <div className="max-w-lg mx-auto">
+            <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">
+              <ArrowLeft size={16} /> Back
+            </button>
+            <h1 className="text-2xl font-bold text-slate-900 mb-1">My tickets</h1>
+            {!isCustomerSession ? (
+              <div className="mt-6 bg-white rounded-2xl border border-slate-200 p-6 text-center space-y-3">
+                <p className="text-sm text-slate-600">Sign in with a customer account to list tickets under your email.</p>
+                <button type="button" onClick={() => setView('account')} className="px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg">
+                  Sign in
+                </button>
+              </div>
+            ) : (
+              <div className="mt-6 space-y-3">
+                {myTickets.length === 0 && (
+                  <p className="text-sm text-slate-500 text-center py-8">No tickets found for {user?.email}. Submit a request using this email.</p>
+                )}
+                {myTickets.map((t) => (
+                  <div key={t.id} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-xs text-slate-400">{t.id}</span>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${statusColor[t.status] || ''}`}>
+                        {t.status.replace('-', ' ')}
+                      </span>
+                    </div>
+                    <div className="text-sm font-semibold text-slate-900 mt-1">{t.title}</div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      {t.branch || 'No branch'} · {new Date(t.created_at).toLocaleDateString()}
+                    </div>
+                    {(t.messages || []).filter((m) => m.kind === 'public').slice(-1).map((m) => (
+                      <div key={m.id} className="mt-2 text-xs text-slate-600 bg-slate-50 rounded-lg px-2 py-1.5">
+                        Latest: {m.text}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {view === 'submit' && (
           <div className="max-w-lg mx-auto">
             <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">
@@ -201,12 +366,8 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Branch *</label>
-                <select
-                  value={branch}
-                  onChange={(e) => setBranch(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-                >
+                <select value={branch} onChange={(e) => setBranch(e.target.value)} required
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/30">
                   <option value="">Select your branch…</option>
                   {branchOptions.map((b) => (
                     <option key={b} value={b}>{b}</option>
