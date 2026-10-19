@@ -14,6 +14,7 @@ export default function CreateTicketModal({ onClose }: Props) {
   const [priority, setPriority] = useState<Priority>('medium');
   const [channel, setChannel] = useState<Channel>('email');
   const [customer, setCustomer] = useState('');
+  const [email, setEmail] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -33,6 +34,7 @@ export default function CreateTicketModal({ onClose }: Props) {
         priority,
         channel,
         customer_name: customer.trim(),
+        customer_email: email.trim() || undefined,
         assignee_id: assigneeId || undefined,
       });
       onClose();
@@ -105,14 +107,26 @@ export default function CreateTicketModal({ onClose }: Props) {
               </select>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Customer *</label>
-            <input
-              value={customer}
-              onChange={(e) => setCustomer(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-              placeholder="Company or contact name"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Customer *</label>
+              <input
+                value={customer}
+                onChange={(e) => setCustomer(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                placeholder="Company or contact"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                placeholder="customer@email.com"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Assignee</label>
@@ -130,18 +144,10 @@ export default function CreateTicketModal({ onClose }: Props) {
             </select>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg"
-            >
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg disabled:opacity-50"
-            >
+            <button type="submit" disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg disabled:opacity-50">
               {saving ? 'Creating...' : 'Create Ticket'}
             </button>
           </div>

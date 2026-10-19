@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Download } from 'lucide-react';
 import clsx from 'clsx';
 import { useTickets } from '../context/TicketContext';
 import type { Priority, Status } from '../types';
@@ -48,6 +48,29 @@ export default function TicketsPage() {
 
   const selected = selectedId ? tickets.find((t) => t.id === selectedId) : null;
 
+  const exportCsv = () => {
+    const headers = ['ID', 'Title', 'Customer', 'Email', 'Priority', 'Status', 'Channel', 'Assignee', 'Created'];
+    const rows = filtered.map((t) => [
+      t.id,
+      `"${t.title.replace(/"/g, '""')}"`,
+      `"${t.customer_name.replace(/"/g, '""')}"`,
+      t.customer_email || '',
+      t.priority,
+      t.status,
+      t.channel,
+      t.assignee?.name || '',
+      t.created_at,
+    ]);
+    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `nexus-tickets-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3 justify-between">
@@ -85,13 +108,22 @@ export default function TicketsPage() {
             <option value="low">Low</option>
           </select>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700"
-        >
-          <Plus size={16} />
-          New Ticket
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={exportCsv}
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
+          >
+            <Download size={16} />
+            Export CSV
+          </button>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700"
+          >
+            <Plus size={16} />
+            New Ticket
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
