@@ -36,6 +36,7 @@ export interface Ticket {
   assignee_id?: string | null;
   customer_id?: string | null;
   customer_name: string;
+  customer_email?: string;
   created_at: string;
   updated_at?: string;
   notes?: TicketNote[];

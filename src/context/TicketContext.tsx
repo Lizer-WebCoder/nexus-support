@@ -10,26 +10,30 @@ import type { Ticket, Agent, Customer, Priority, Channel, TicketNote } from '../
 import { INITIAL_TICKETS, INITIAL_AGENTS, INITIAL_CUSTOMERS, nextTicketId } from '../data';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
+interface CreateTicketInput {
+  title: string;
+  description?: string;
+  priority: Priority;
+  channel: Channel;
+  customer_name: string;
+  customer_email?: string;
+  assignee_id?: string;
+}
+
 interface TicketContextValue {
   tickets: Ticket[];
   agents: Agent[];
   customers: Customer[];
   loading: boolean;
   usingSupabase: boolean;
-  createTicket: (data: {
-    title: string;
-    description?: string;
-    priority: Priority;
-    channel: Channel;
-    customer_name: string;
-    assignee_id?: string;
-  }) => Promise<void>;
+  createTicket: (data: CreateTicketInput) => Promise<Ticket>;
   updateTicket: (
     id: string,
     updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes'>>
   ) => Promise<void>;
   deleteTicket: (id: string) => Promise<void>;
   addNote: (ticketId: string, text: string, author?: string) => Promise<void>;
+  findTicket: (id: string, email?: string) => Ticket | undefined;
   refresh: () => Promise<void>;
 }
 
@@ -104,14 +108,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     }
   }, [tickets]);
 
-  const createTicket = async (data: {
-    title: string;
-    description?: string;
-    priority: Priority;
-    channel: Channel;
-    customer_name: string;
-    assignee_id?: string;
-  }) => {
+  const createTicket = async (data: CreateTicketInput): Promise<Ticket> => {
     const id = nextTicketId(tickets);
     const now = new Date().toISOString();
     const ticket: Ticket = {
@@ -123,6 +120,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       channel: data.channel,
       assignee_id: data.assignee_id || null,
       customer_name: data.customer_name,
+      customer_email: data.customer_email || '',
       created_at: now,
       updated_at: now,
       notes: [],
@@ -146,6 +144,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     } else {
       setTickets((prev) => attachAssignees([ticket, ...prev], agents));
     }
+    return ticket;
   };
 
   const updateTicket = async (
@@ -193,6 +192,15 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     await updateTicket(ticketId, { notes });
   };
 
+  const findTicket = (id: string, email?: string) => {
+    const t = tickets.find((x) => x.id.toLowerCase() === id.trim().toLowerCase());
+    if (!t) return undefined;
+    if (email && t.customer_email) {
+      if (t.customer_email.toLowerCase() !== email.trim().toLowerCase()) return undefined;
+    }
+    return t;
+  };
+
   return (
     <TicketContext.Provider
       value={{
@@ -205,6 +213,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         updateTicket,
         deleteTicket,
         addNote,
+        findTicket,
         refresh,
       }}
     >
