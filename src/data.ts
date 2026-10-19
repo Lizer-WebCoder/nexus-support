@@ -1,23 +1,4 @@
-export interface Ticket {
-  id: string;
-  title: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
-  status: 'new' | 'open' | 'pending' | 'resolved' | 'on-hold';
-  channel: 'email' | 'chat' | 'phone' | 'portal' | 'social';
-  assignee?: string;
-  createdAt: string;
-  customer: string;
-}
-
-export interface Agent {
-  id: string;
-  name: string;
-  initials: string;
-  role: string;
-  tickets: number;
-  status: 'online' | 'busy' | 'away' | 'offline';
-  color: string;
-}
+import type { Ticket, Agent, Customer } from './types';
 
 export const pulseData = [
   { time: '00:00', tickets: 12 },
@@ -34,107 +15,39 @@ export const pulseData = [
   { time: '22:00', tickets: 19 },
 ];
 
-export const channelData = [
-  { name: 'Email', value: 42, color: '#0ea5e9' },
-  { name: 'Live Chat', value: 31, color: '#38bdf8' },
-  { name: 'Phone', value: 14, color: '#7dd3fc' },
-  { name: 'Portal', value: 8, color: '#bae6fd' },
-  { name: 'Social', value: 5, color: '#e0f2fe' },
+export const INITIAL_AGENTS: Agent[] = [
+  { id: '1', name: 'Sarah Chen', initials: 'SC', role: 'Lead', status: 'online', color: 'bg-emerald-500' },
+  { id: '2', name: 'Marcus Reed', initials: 'MR', role: 'Senior', status: 'busy', color: 'bg-amber-500' },
+  { id: '3', name: 'Aisha Lane', initials: 'AL', role: 'Agent', status: 'online', color: 'bg-sky-500' },
+  { id: '4', name: 'Tomás García', initials: 'TG', role: 'Agent', status: 'online', color: 'bg-violet-500' },
+  { id: '5', name: 'Rachel Kim', initials: 'RK', role: 'Senior', status: 'away', color: 'bg-rose-500' },
+  { id: '6', name: 'David Okonkwo', initials: 'DO', role: 'Agent', status: 'online', color: 'bg-indigo-500' },
 ];
 
-export const tickets: Ticket[] = [
-  {
-    id: 'NX-2841',
-    title: 'Billing mismatch on enterprise subscription',
-    priority: 'high',
-    status: 'open',
-    channel: 'email',
-    assignee: 'SC',
-    createdAt: '2026-10-18T14:22:00Z',
-    customer: 'Acme Corp',
-  },
-  {
-    id: 'NX-2839',
-    title: 'SSO login failing for Okta users',
-    priority: 'critical',
-    status: 'open',
-    channel: 'chat',
-    assignee: 'MR',
-    createdAt: '2026-10-18T13:05:00Z',
-    customer: 'TechNova Inc',
-  },
-  {
-    id: 'NX-2837',
-    title: 'API rate limit exceeded unexpectedly',
-    priority: 'high',
-    status: 'pending',
-    channel: 'portal',
-    assignee: 'AL',
-    createdAt: '2026-10-18T11:40:00Z',
-    customer: 'DataFlow Systems',
-  },
-  {
-    id: 'NX-2835',
-    title: 'Feature request: bulk ticket export',
-    priority: 'low',
-    status: 'new',
-    channel: 'email',
-    createdAt: '2026-10-18T10:15:00Z',
-    customer: 'BrightPath LLC',
-  },
-  {
-    id: 'NX-2832',
-    title: 'Mobile app crashes on iOS 18',
-    priority: 'critical',
-    status: 'open',
-    channel: 'chat',
-    assignee: 'TG',
-    createdAt: '2026-10-18T09:30:00Z',
-    customer: 'MobileFirst Co',
-  },
-  {
-    id: 'NX-2828',
-    title: 'Incorrect tax calculation on invoice',
-    priority: 'medium',
-    status: 'on-hold',
-    channel: 'email',
-    assignee: 'RK',
-    createdAt: '2026-10-17T16:50:00Z',
-    customer: 'GlobalTrade Ltd',
-  },
+export const INITIAL_CUSTOMERS: Customer[] = [
+  { id: 'c1', name: 'Acme Corp', email: 'billing@acme.com', company: 'Acme Corp' },
+  { id: 'c2', name: 'TechNova Inc', email: 'support@technova.io', company: 'TechNova Inc' },
+  { id: 'c3', name: 'DataFlow Systems', email: 'ops@dataflow.io', company: 'DataFlow Systems' },
+  { id: 'c4', name: 'BrightPath LLC', email: 'hello@brightpath.com', company: 'BrightPath LLC' },
+  { id: 'c5', name: 'MobileFirst Co', email: 'dev@mobilefirst.app', company: 'MobileFirst Co' },
+  { id: 'c6', name: 'GlobalTrade Ltd', email: 'finance@globaltrade.com', company: 'GlobalTrade Ltd' },
 ];
 
-export const agents: Agent[] = [
-  { id: '1', name: 'Sarah Chen', initials: 'SC', role: 'Lead', tickets: 14, status: 'online', color: 'bg-emerald-500' },
-  { id: '2', name: 'Marcus Reed', initials: 'MR', role: 'Senior', tickets: 11, status: 'busy', color: 'bg-amber-500' },
-  { id: '3', name: 'Aisha Lane', initials: 'AL', role: 'Agent', tickets: 9, status: 'online', color: 'bg-sky-500' },
-  { id: '4', name: 'Tomás García', initials: 'TG', role: 'Agent', tickets: 7, status: 'online', color: 'bg-violet-500' },
-  { id: '5', name: 'Rachel Kim', initials: 'RK', role: 'Senior', tickets: 6, status: 'away', color: 'bg-rose-500' },
-  { id: '6', name: 'David Okonkwo', initials: 'DO', role: 'Agent', tickets: 5, status: 'online', color: 'bg-indigo-500' },
+export const INITIAL_TICKETS: Ticket[] = [
+  { id: 'NX-2841', title: 'Billing mismatch on enterprise subscription', description: 'Customer was charged twice for the annual plan.', priority: 'high', status: 'open', channel: 'email', assignee_id: '1', customer_name: 'Acme Corp', created_at: new Date(Date.now() - 86400000).toISOString() },
+  { id: 'NX-2839', title: 'SSO login failing for Okta users', description: 'Users redirected to error page after Okta auth.', priority: 'critical', status: 'open', channel: 'chat', assignee_id: '2', customer_name: 'TechNova Inc', created_at: new Date(Date.now() - 18000000).toISOString() },
+  { id: 'NX-2837', title: 'API rate limit exceeded unexpectedly', description: 'Production API hitting 429s under normal load.', priority: 'high', status: 'pending', channel: 'portal', assignee_id: '3', customer_name: 'DataFlow Systems', created_at: new Date(Date.now() - 28800000).toISOString() },
+  { id: 'NX-2835', title: 'Feature request: bulk ticket export', description: 'Need CSV/JSON export for closed tickets.', priority: 'low', status: 'new', channel: 'email', customer_name: 'BrightPath LLC', created_at: new Date(Date.now() - 36000000).toISOString() },
+  { id: 'NX-2832', title: 'Mobile app crashes on iOS 18', description: 'Crash on launch after updating to iOS 18.1.', priority: 'critical', status: 'open', channel: 'chat', assignee_id: '4', customer_name: 'MobileFirst Co', created_at: new Date(Date.now() - 43200000).toISOString() },
+  { id: 'NX-2828', title: 'Incorrect tax calculation on invoice', description: 'VAT applied incorrectly for EU customers.', priority: 'medium', status: 'on-hold', channel: 'email', assignee_id: '5', customer_name: 'GlobalTrade Ltd', created_at: new Date(Date.now() - 172800000).toISOString() },
+  { id: 'NX-2825', title: 'Password reset emails not arriving', description: 'Multiple users report missing reset links.', priority: 'high', status: 'open', channel: 'email', assignee_id: '1', customer_name: 'Acme Corp', created_at: new Date(Date.now() - 10800000).toISOString() },
+  { id: 'NX-2821', title: 'Dashboard charts loading slowly', description: 'Ticket pulse chart takes >8s on first load.', priority: 'medium', status: 'new', channel: 'portal', customer_name: 'TechNova Inc', created_at: new Date(Date.now() - 21600000).toISOString() },
+  { id: 'NX-2818', title: 'Cannot attach files larger than 5MB', description: 'Upload fails silently for larger screenshots.', priority: 'medium', status: 'pending', channel: 'chat', assignee_id: '3', customer_name: 'DataFlow Systems', created_at: new Date(Date.now() - 86400000).toISOString() },
+  { id: 'NX-2814', title: 'Dark mode preference not saved', description: 'Setting resets on every login.', priority: 'low', status: 'resolved', channel: 'portal', assignee_id: '6', customer_name: 'BrightPath LLC', created_at: new Date(Date.now() - 14400000).toISOString() },
 ];
 
-export const statusSummary = {
-  new: 6,
-  open: 11,
-  pending: 5,
-  resolvedToday: 27,
-  breached: 1,
-};
-
-export const prioritySummary = {
-  critical: 5,
-  high: 22,
-  medium: 58,
-  low: 37,
-  onHold: 9,
-  unassigned: 18,
-};
-
-export const metrics = {
-  uptime: 99.7,
-  activeConversations: 29,
-  queueWait: '1m 42s',
-  agentsOnline: 9,
-  slaHealth: 96.4,
-  dayShiftAgents: 12,
-};
+export function nextTicketId(existing: Ticket[]): string {
+  const nums = existing.map((t) => parseInt(t.id.replace('NX-', ''), 10)).filter((n) => !isNaN(n));
+  const max = nums.length ? Math.max(...nums) : 2800;
+  return `NX-${max + 1}`;
+}
