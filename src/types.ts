@@ -10,6 +10,8 @@ export interface Agent {
   role: string;
   status: AgentStatus;
   color: string;
+  email?: string;
+  user_id?: string | null;
 }
 
 export interface Customer {

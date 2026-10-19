@@ -1,6 +1,7 @@
 import { useTickets } from '../context/TicketContext';
 import { useAuth } from '../context/AuthContext';
 import { Database, HardDrive, ExternalLink, LogOut } from 'lucide-react';
+import type { AgentStatus } from '../types';
 
 interface Props {
   onOpenPortal?: () => void;
@@ -8,7 +9,7 @@ interface Props {
 }
 
 export default function SettingsPage({ onOpenPortal, onSignOut }: Props) {
-  const { usingSupabase, tickets, agents, refresh } = useTickets();
+  const { usingSupabase, tickets, agents, refresh, currentAgent, updateAgentStatus } = useTickets();
   const { user, requiresAuth } = useAuth();
 
   return (
@@ -20,6 +21,24 @@ export default function SettingsPage({ onOpenPortal, onSignOut }: Props) {
             {(user.user_metadata?.full_name as string) || user.email}
           </div>
           <div className="text-sm text-slate-500">{user.email}</div>
+          {currentAgent && (
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="text-xs text-slate-500">Agent profile</div>
+              <span className="text-sm font-medium text-slate-800">{currentAgent.name}</span>
+              <span className="text-xs text-slate-400">·</span>
+              <span className="text-xs text-slate-500">{currentAgent.role}</span>
+              <select
+                value={currentAgent.status}
+                onChange={(e) => updateAgentStatus(e.target.value as AgentStatus)}
+                className="ml-auto text-sm border border-slate-200 rounded-lg px-2 py-1 bg-white"
+              >
+                <option value="online">Online</option>
+                <option value="busy">Busy</option>
+                <option value="away">Away</option>
+                <option value="offline">Offline</option>
+              </select>
+            </div>
+          )}
           {onSignOut && (
             <button
               type="button"
@@ -62,7 +81,7 @@ export default function SettingsPage({ onOpenPortal, onSignOut }: Props) {
             <p className="text-sm text-slate-500 mt-1">
               {usingSupabase
                 ? requiresAuth
-                  ? 'Agent login is required. Tickets are stored in your Supabase project.'
+                  ? 'Agent login is required. Tickets sync in real time with your Supabase project.'
                   : 'Tickets are stored in your Supabase project.'
                 : 'No Supabase keys detected. Data stays in this browser. See SUPABASE_SETUP.md to enable cloud + agent accounts.'}
             </p>

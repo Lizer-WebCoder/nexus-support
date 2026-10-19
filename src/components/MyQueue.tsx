@@ -19,21 +19,28 @@ const statusStyles: Record<string, string> = {
 };
 
 export default function MyQueue() {
-  const { tickets } = useTickets();
+  const { tickets, currentAgent } = useTickets();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const myTickets = tickets.filter((t) => t.status !== 'resolved').slice(0, 6);
+  const open = tickets.filter((t) => t.status !== 'resolved');
+  const mine = currentAgent
+    ? open.filter((t) => t.assignee_id === currentAgent.id)
+    : open;
+  const myTickets = (mine.length > 0 ? mine : open).slice(0, 8);
   const selected = selectedId ? tickets.find((t) => t.id === selectedId) : null;
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
-          My Queue
+          {currentAgent && mine.length > 0 ? 'My Queue' : 'Open Queue'}
           <span className="bg-sky-100 text-sky-700 text-xs font-bold px-1.5 py-0.5 rounded-full">
             {myTickets.length}
           </span>
         </h2>
+        {currentAgent && mine.length === 0 && open.length > 0 && (
+          <span className="text-[10px] text-slate-400">Showing unassigned / all open</span>
+        )}
       </div>
 
       <div className="space-y-2">
