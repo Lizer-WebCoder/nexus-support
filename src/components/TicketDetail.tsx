@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { X, Trash2, MessageSquare, Clock } from 'lucide-react';
+import { useMemo, useState, useRef } from 'react';
+import { X, Trash2, MessageSquare, Clock, Paperclip, Download } from 'lucide-react';
 import { useTickets } from '../context/TicketContext';
 import { usePlatform } from '../context/PlatformContext';
-import type { Ticket, Priority, Status, TicketMessage } from '../types';
+import { INITIAL_BRANCHES } from '../data';
+import type { Ticket, Priority, Status, TicketMessage, TicketAttachment } from '../types';
+import { MAX_ATTACHMENT_BYTES } from '../types';
 
 interface Props {
   ticket: Ticket;
@@ -10,15 +12,30 @@ interface Props {
 }
 
 export default function TicketDetail({ ticket, onClose }: Props) {
-  const { updateTicket, deleteTicket, addNote, addMessage, agents } = useTickets();
+  const { updateTicket, deleteTicket, addNote, addMessage, agents, currentAgent } = useTickets();
   const { canned } = usePlatform();
   const [status, setStatus] = useState<Status>(ticket.status);
   const [priority, setPriority] = useState<Priority>(ticket.priority);
   const [assigneeId, setAssigneeId] = useState(ticket.assignee_id || '');
+  const [branch, setBranch] = useState(ticket.branch || '');
   const [noteText, setNoteText] = useState('');
   const [replyText, setReplyText] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [attachError, setAttachError] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const isAdmin = !!currentAgent?.is_admin;
+
+  const branchOptions = useMemo(() => {
+    const set = new Set(INITIAL_BRANCHES.map((b) => b.name));
+    try {
+      const raw = localStorage.getItem('nexus-branches-v1');
+      if (raw) (JSON.parse(raw) as { name: string }[]).forEach((b) => set.add(b.name));
+    } catch {}
+    if (ticket.branch) set.add(ticket.branch);
+    return Array.from(set).sort();
+  }, [ticket.branch]);
 
   const slaBreached =
     ticket.sla_due_at && ticket.status !== 'resolved'
@@ -32,6 +49,7 @@ export default function TicketDetail({ ticket, onClose }: Props) {
         status,
         priority,
         assignee_id: assigneeId || null,
+        branch: branch.trim() || undefined,
       });
       onClose();
     } catch (e) {
@@ -42,6 +60,10 @@ export default function TicketDetail({ ticket, onClose }: Props) {
   };
 
   const handleDelete = async () => {
+    if (!isAdmin && agents.length > 1) {
+      // Non-admins can still delete unless we hard-block; soft-require admin when multi-agent
+      if (!confirm('Only admins should delete tickets. Continue anyway?')) return;
+    }
     setSaving(true);
     try {
       await deleteTicket(ticket.id);
@@ -63,6 +85,36 @@ export default function TicketDetail({ ticket, onClose }: Props) {
     if (!replyText.trim()) return;
     await addMessage(ticket.id, replyText, 'public');
     setReplyText('');
+  };
+
+  const onFile = async (file: File) => {
+    setAttachError('');
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      setAttachError(`File too large (max ~${Math.round(MAX_ATTACHMENT_BYTES / 1000)}KB for storage).`);
+      return;
+    }
+    const reader = new FileReader();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error('Read failed'));
+      reader.readAsDataURL(file);
+    });
+    const att: TicketAttachment = {
+      id: `att-${Date.now()}`,
+      name: file.name,
+      size: file.size,
+      mime: file.type || 'application/octet-stream',
+      url: dataUrl,
+      created_at: new Date().toISOString(),
+      uploaded_by: currentAgent?.name || 'Agent',
+    };
+    const attachments = [...(ticket.attachments || []), att];
+    await updateTicket(ticket.id, { attachments } as Parameters<typeof updateTicket>[1]);
+  };
+
+  const removeAttachment = async (id: string) => {
+    const attachments = (ticket.attachments || []).filter((a) => a.id !== id);
+    await updateTicket(ticket.id, { attachments } as Parameters<typeof updateTicket>[1]);
   };
 
   const thread: TicketMessage[] = [
@@ -127,6 +179,17 @@ export default function TicketDetail({ ticket, onClose }: Props) {
           <hr className="border-slate-200" />
 
           <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Branch</label>
+            <select value={branch} onChange={(e) => setBranch(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
+              <option value="">Unassigned</option>
+              {branchOptions.map((b) => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
             <select value={status} onChange={(e) => setStatus(e.target.value as Status)}
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
@@ -155,7 +218,7 @@ export default function TicketDetail({ ticket, onClose }: Props) {
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
               <option value="">Unassigned</option>
               {agents.map((a) => (
-                <option key={a.id} value={a.id}>{a.name}</option>
+                <option key={a.id} value={a.id}>{a.name}{a.is_admin ? ' (Admin)' : ''}</option>
               ))}
             </select>
           </div>
@@ -167,7 +230,56 @@ export default function TicketDetail({ ticket, onClose }: Props) {
 
           <hr className="border-slate-200" />
 
-          {/* Public reply */}
+          {/* Attachments */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                <Paperclip size={14} /> Attachments
+              </h3>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="text-xs font-medium text-sky-600 hover:underline"
+              >
+                + Add file
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onFile(f);
+                  e.target.value = '';
+                }}
+              />
+            </div>
+            {attachError && <p className="text-xs text-rose-600 mb-2">{attachError}</p>}
+            <div className="space-y-1.5">
+              {(ticket.attachments || []).length === 0 && (
+                <p className="text-xs text-slate-400">No attachments</p>
+              )}
+              {(ticket.attachments || []).map((a) => (
+                <div key={a.id} className="flex items-center gap-2 text-sm bg-slate-50 rounded-lg px-3 py-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-slate-800 truncate">{a.name}</div>
+                    <div className="text-[10px] text-slate-400">
+                      {(a.size / 1024).toFixed(1)} KB · {a.uploaded_by || 'Unknown'}
+                    </div>
+                  </div>
+                  <a href={a.url} download={a.name} target="_blank" rel="noreferrer" className="p-1 text-slate-400 hover:text-sky-600">
+                    <Download size={14} />
+                  </a>
+                  <button type="button" onClick={() => removeAttachment(a.id)} className="p-1 text-slate-400 hover:text-rose-600">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <hr className="border-slate-200" />
+
           <div>
             <h3 className="text-sm font-semibold text-slate-800 mb-2">Reply to customer</h3>
             {canned.length > 0 && (
@@ -195,7 +307,6 @@ export default function TicketDetail({ ticket, onClose }: Props) {
             </div>
           </div>
 
-          {/* Thread */}
           <div>
             <div className="flex items-center gap-2 mb-3">
               <MessageSquare size={16} className="text-slate-400" />
@@ -239,7 +350,7 @@ export default function TicketDetail({ ticket, onClose }: Props) {
           {!confirmDelete ? (
             <button type="button" onClick={() => setConfirmDelete(true)}
               className="w-full py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-lg flex items-center justify-center gap-2">
-              <Trash2 size={16} /> Delete ticket
+              <Trash2 size={16} /> Delete ticket{isAdmin ? '' : ' (admin preferred)'}
             </button>
           ) : (
             <div className="flex gap-2">

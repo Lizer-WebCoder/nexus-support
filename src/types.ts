@@ -32,7 +32,6 @@ export interface Branch {
   members: BranchMember[];
 }
 
-/** @deprecated use Branch — kept for compatibility */
 export interface Customer {
   id: string;
   name: string;
@@ -55,6 +54,17 @@ export interface TicketMessage {
   created_at: string;
 }
 
+export interface TicketAttachment {
+  id: string;
+  name: string;
+  size: number;
+  mime: string;
+  /** data URL or remote URL */
+  url: string;
+  created_at: string;
+  uploaded_by?: string;
+}
+
 export interface Ticket {
   id: string;
   title: string;
@@ -64,15 +74,14 @@ export interface Ticket {
   channel: Channel;
   assignee_id?: string | null;
   customer_id?: string | null;
-  /** Person who submitted the request */
   customer_name: string;
   customer_email?: string;
-  /** Branch this ticket belongs to */
   branch?: string;
   created_at: string;
   updated_at?: string;
   notes?: TicketNote[];
   messages?: TicketMessage[];
+  attachments?: TicketAttachment[];
   tags?: string[];
   sla_due_at?: string | null;
   first_response_at?: string | null;
@@ -101,9 +110,7 @@ export interface ChatConversation {
   id: string;
   customer_name: string;
   customer_email?: string;
-  /** Branch the customer selected when starting chat */
   branch?: string;
-  /** Existing ticket they want help with (e.g. NX-2841) */
   ticket_id?: string;
   status: 'active' | 'waiting' | 'ended';
   preview: string;
@@ -206,8 +213,10 @@ export function computeSlaDue(priority: Priority, createdAt: string): string {
   return new Date(new Date(createdAt).getTime() + hours * 3600000).toISOString();
 }
 
-/** Resolve which branch a ticket belongs to */
 export function ticketBranch(t: Ticket): string {
   if (t.branch && t.branch.trim()) return t.branch.trim();
-  return (t.customer_name || 'Unassigned').trim();
+  return 'Unassigned';
 }
+
+/** Max attachment size (~1.5MB encoded) for local/json storage */
+export const MAX_ATTACHMENT_BYTES = 1_200_000;
