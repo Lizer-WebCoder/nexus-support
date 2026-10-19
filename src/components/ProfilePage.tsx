@@ -38,13 +38,8 @@ export default function ProfilePage() {
       if (supabase && user) {
         await supabase.auth.updateUser({ data: { full_name: name.trim() } });
         if (currentAgent) {
-          const initials = name
-            .trim()
-            .split(/\s+/)
-            .map((p) => p[0])
-            .join('')
-            .slice(0, 2)
-            .toUpperCase();
+          const parts = name.trim().split(/\s+/);
+          const initials = parts.map((p) => p[0]).join('').slice(0, 2).toUpperCase();
           await supabase
             .from('agents')
             .update({
@@ -91,17 +86,14 @@ export default function ProfilePage() {
     }
   };
 
+  const avatar = (name || 'A').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+
   return (
     <div className="max-w-xl space-y-6">
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-white text-lg font-bold">
-            {(name || 'A')
-              .split(' ')
-              .map((p) => p[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase()}
+            {avatar}
           </div>
           <div>
             <div className="text-lg font-semibold text-slate-900">{name || 'Agent'}</div>
@@ -125,7 +117,7 @@ export default function ProfilePage() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
               <input value={phone} onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" placeholder="+1" />
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" placeholder="Phone" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
