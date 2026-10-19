@@ -57,6 +57,8 @@ const DEFAULT_ANNOUNCE: Announcement[] = [
   { id: 'an1', title: 'Welcome', body: 'Share #/portal with customers.', severity: 'info', active: true, created_at: new Date().toISOString() },
 ];
 
+export type CreateChatMeta = { branch?: string; ticket_id?: string };
+
 interface PlatformContextValue {
   articles: KnowledgeArticle[];
   conversations: ChatConversation[];
@@ -74,7 +76,7 @@ interface PlatformContextValue {
   deleteArticle: (id: string) => Promise<void>;
   sendChatMessage: (conversationId: string, text: string, sender?: 'agent' | 'customer') => Promise<void>;
   setChatStatus: (id: string, status: ChatConversation['status']) => Promise<void>;
-  createChat: (customer_name: string, customer_email?: string) => Promise<ChatConversation>;
+  createChat: (customer_name: string, customer_email?: string, meta?: CreateChatMeta) => Promise<ChatConversation>;
   deleteChat: (id: string) => Promise<void>;
   markNotificationRead: (id: string) => Promise<void>;
   markAllNotificationsRead: () => Promise<void>;
@@ -168,11 +170,41 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     else setArticles((p) => p.filter((x) => x.id !== id));
   };
 
-  const createChat = async (customer_name: string, customer_email?: string) => {
-    const row: ChatConversation = { id: `c-${Date.now()}`, customer_name, customer_email, status: 'waiting', preview: '', unread: 0, messages: [], created_at: new Date().toISOString() };
+  const createChat = async (customer_name: string, customer_email?: string, meta?: CreateChatMeta) => {
+    const branch = meta?.branch?.trim() || undefined;
+    const ticket_id = meta?.ticket_id?.trim() || undefined;
+    const row: ChatConversation = {
+      id: `c-${Date.now()}`,
+      customer_name,
+      customer_email,
+      branch,
+      ticket_id,
+      status: 'waiting',
+      preview: '',
+      unread: 0,
+      messages: [],
+      created_at: new Date().toISOString(),
+    };
     if (supabase) {
-      const { data } = await supabase.from('chat_conversations').insert({ customer_name, customer_email, status: 'waiting', preview: '', unread: 0 }).select('*').single();
-      if (data) { await refreshPlatform(); return { ...(data as ChatConversation), messages: [] }; }
+      const payload: Record<string, unknown> = { customer_name, customer_email, status: 'waiting', preview: '', unread: 0 };
+      if (branch) payload.branch = branch;
+      if (ticket_id) payload.ticket_id = ticket_id;
+      const { data, error } = await supabase.from('chat_conversations').insert(payload).select('*').single();
+      if (error && (String(error.message || '').includes('branch') || String(error.message || '').includes('ticket_id'))) {
+        const { data: fallback } = await supabase
+          .from('chat_conversations')
+          .insert({ customer_name, customer_email, status: 'waiting', preview: '', unread: 0 })
+          .select('*')
+          .single();
+        if (fallback) {
+          await refreshPlatform();
+          return { ...(fallback as ChatConversation), branch, ticket_id, messages: [] };
+        }
+      }
+      if (data) {
+        await refreshPlatform();
+        return { ...(data as ChatConversation), messages: [] };
+      }
     }
     setConversations((p) => [row, ...p]);
     return row;
