@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Search, CheckCircle2, Ticket, BookOpen, ArrowLeft } from 'lucide-react';
+import { Search, CheckCircle2, Ticket, BookOpen, ArrowLeft, MessageSquare } from 'lucide-react';
 import { useTickets } from '../context/TicketContext';
 import type { Priority, Ticket as TicketType } from '../types';
+import PortalLiveChat from './PortalLiveChat';
 
 interface Props {
   onBackToAgent?: () => void;
 }
 
-type PortalView = 'home' | 'submit' | 'track' | 'success' | 'help';
+type PortalView = 'home' | 'submit' | 'track' | 'success' | 'help' | 'chat';
 
 const HELP_ARTICLES = [
   { title: 'Reset your password', body: 'Go to Sign in → Forgot password. Check spam if the email does not arrive within 5 minutes.' },
@@ -90,6 +91,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
 
   const homeCards = [
     { id: 'submit' as const, Icon: Ticket, title: 'Submit a request', desc: 'Report a problem or ask a question' },
+    { id: 'chat' as const, Icon: MessageSquare, title: 'Live chat', desc: 'Talk to an agent in real time' },
     { id: 'track' as const, Icon: Search, title: 'Track a ticket', desc: 'Check status with your ticket ID' },
     { id: 'help' as const, Icon: BookOpen, title: 'Help articles', desc: 'Find answers without waiting' },
   ];
@@ -113,6 +115,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
           </button>
           <nav className="flex items-center gap-1 text-sm">
             <button type="button" onClick={() => setView('submit')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Submit</button>
+            <button type="button" onClick={() => setView('chat')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Chat</button>
             <button type="button" onClick={() => setView('track')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Track</button>
             <button type="button" onClick={() => setView('help')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Help</button>
             {onBackToAgent && (
@@ -129,9 +132,9 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
           <div className="text-center space-y-8">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 tracking-tight">How can we help?</h1>
-              <p className="text-slate-500 mt-2">Submit a request or check the status of an existing ticket.</p>
+              <p className="text-slate-500 mt-2">Submit a request, chat with an agent, or check ticket status.</p>
             </div>
-            <div className="grid sm:grid-cols-3 gap-4 text-left">
+            <div className="grid sm:grid-cols-2 gap-4 text-left">
               {homeCards.map((card) => {
                 const Icon = card.Icon;
                 return (
@@ -152,6 +155,8 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
             </div>
           </div>
         )}
+
+        {view === 'chat' && <PortalLiveChat onBack={() => setView('home')} />}
 
         {view === 'submit' && (
           <div className="max-w-lg mx-auto">
@@ -181,24 +186,23 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Subject *</label>
-                <input value={title} onChange={(e) => setTitle(e.target.value)} required
-                  placeholder="Brief summary of your issue"
+                <input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Brief summary of your issue"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4}
-                  placeholder="Steps to reproduce, error messages, account details…"
+                  placeholder="Steps to reproduce, error messages…"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Priority</label>
                 <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
-                  <option value="low">Low — general question</option>
-                  <option value="medium">Medium — issue affecting work</option>
-                  <option value="high">High — major disruption</option>
-                  <option value="critical">Critical — service down</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
                 </select>
               </div>
               <button type="submit" disabled={saving}
@@ -240,7 +244,6 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <ArrowLeft size={16} /> Back
             </button>
             <h1 className="text-2xl font-bold text-slate-900 mb-1">Track a ticket</h1>
-            <p className="text-slate-500 text-sm mb-6">Enter the ticket ID from your confirmation.</p>
             <form onSubmit={track} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
               {trackError && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{trackError}</div>}
               <div>
@@ -251,14 +254,12 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Email (optional)</label>
                 <input type="email" value={trackEmail} onChange={(e) => setTrackEmail(e.target.value)}
-                  placeholder="Email used when submitting"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30" />
               </div>
               <button type="submit" className="w-full py-2.5 bg-sky-600 text-white text-sm font-semibold rounded-lg hover:bg-sky-700">
                 Look up ticket
               </button>
             </form>
-
             {tracked && (
               <div className="mt-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
                 <div className="flex items-center justify-between">
@@ -268,27 +269,6 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                   </span>
                 </div>
                 <div className="text-lg font-semibold text-slate-900">{tracked.title}</div>
-                {tracked.description && (
-                  <p className="text-sm text-slate-600">{tracked.description}</p>
-                )}
-                <div className="grid grid-cols-2 gap-3 text-sm pt-2 border-t border-slate-100">
-                  <div>
-                    <div className="text-xs text-slate-400">Priority</div>
-                    <div className="font-medium capitalize">{tracked.priority}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-400">Submitted</div>
-                    <div className="font-medium">{new Date(tracked.created_at).toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-400">Customer</div>
-                    <div className="font-medium">{tracked.customer_name}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-slate-400">Channel</div>
-                    <div className="font-medium capitalize">{tracked.channel}</div>
-                  </div>
-                </div>
               </div>
             )}
           </div>
@@ -300,8 +280,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <ArrowLeft size={16} /> Back
             </button>
             <h1 className="text-2xl font-bold text-slate-900 mb-1">Help articles</h1>
-            <p className="text-slate-500 text-sm mb-6">Quick answers before you open a ticket.</p>
-            <div className="space-y-3">
+            <div className="space-y-3 mt-6">
               {HELP_ARTICLES.map((a) => (
                 <div key={a.title} className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                   <div className="font-semibold text-slate-900">{a.title}</div>
@@ -309,10 +288,6 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                 </div>
               ))}
             </div>
-            <button type="button" onClick={() => setView('submit')}
-              className="mt-6 w-full py-2.5 text-sm font-medium text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg">
-              Still need help? Submit a request
-            </button>
           </div>
         )}
       </main>
