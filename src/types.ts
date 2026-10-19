@@ -18,6 +18,21 @@ export interface Agent {
   bio?: string;
 }
 
+export interface BranchMember {
+  id: string;
+  name: string;
+  email?: string;
+  role?: string;
+}
+
+export interface Branch {
+  id: string;
+  name: string;
+  email?: string;
+  members: BranchMember[];
+}
+
+/** @deprecated use Branch — kept for compatibility */
 export interface Customer {
   id: string;
   name: string;
@@ -49,8 +64,11 @@ export interface Ticket {
   channel: Channel;
   assignee_id?: string | null;
   customer_id?: string | null;
+  /** Person who submitted the request */
   customer_name: string;
   customer_email?: string;
+  /** Branch this ticket belongs to */
+  branch?: string;
   created_at: string;
   updated_at?: string;
   notes?: TicketNote[];
@@ -172,7 +190,6 @@ export interface TicketFilters {
   assignee?: string | 'all' | 'unassigned';
 }
 
-/** SLA hours by priority: first response / resolve */
 export const SLA_HOURS: Record<Priority, { first: number; resolve: number }> = {
   critical: { first: 0.25, resolve: 4 },
   high: { first: 1, resolve: 8 },
@@ -183,4 +200,10 @@ export const SLA_HOURS: Record<Priority, { first: number; resolve: number }> = {
 export function computeSlaDue(priority: Priority, createdAt: string): string {
   const hours = SLA_HOURS[priority]?.resolve ?? 24;
   return new Date(new Date(createdAt).getTime() + hours * 3600000).toISOString();
+}
+
+/** Resolve which branch a ticket belongs to */
+export function ticketBranch(t: Ticket): string {
+  if (t.branch && t.branch.trim()) return t.branch.trim();
+  return (t.customer_name || 'Unassigned').trim();
 }
