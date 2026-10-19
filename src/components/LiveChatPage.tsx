@@ -23,7 +23,6 @@ export default function LiveChatPage() {
     if (!selectedId && conversations[0]) setSelectedId(conversations[0].id);
   }, [conversations, selectedId]);
 
-  // Poll for new customer messages while on this page
   useEffect(() => {
     const t = setInterval(() => {
       refreshPlatform();
@@ -86,9 +85,9 @@ export default function LiveChatPage() {
     <div className="space-y-3">
       <div className="bg-sky-50 border border-sky-100 rounded-xl px-4 py-3 text-sm text-sky-800">
         <strong>How chat works:</strong> Customers open the{' '}
-        <span className="font-semibold">Customer portal → Live chat</span> and start a conversation.
-        Their messages appear here in real time. You can also start a chat with <strong>+</strong>,
-        reply as agent, or use <em>Simulate customer</em> to test.
+        <span className="font-semibold">Customer portal → Live chat</span>, pick their{' '}
+        <strong>branch</strong> and optional <strong>ticket number</strong>, then chat.
+        You see branch + ticket in the header so you can open the right ticket immediately.
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex h-[calc(100vh-12rem)] min-h-[420px]">
@@ -141,6 +140,12 @@ export default function LiveChatPage() {
                       <span className="bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{c.unread}</span>
                     )}
                   </div>
+                  {(c.branch || c.ticket_id) && (
+                    <div className="text-[11px] text-slate-500 mt-0.5 truncate">
+                      {c.branch || '—'}
+                      {c.ticket_id ? ` · ${c.ticket_id}` : ''}
+                    </div>
+                  )}
                   <div className="text-xs text-slate-500 truncate mt-0.5">{c.preview || 'No messages'}</div>
                   <div className={clsx(
                     'text-[10px] mt-1 capitalize',
@@ -163,6 +168,13 @@ export default function LiveChatPage() {
                   <div className="text-xs text-slate-500">
                     {selected.customer_email || 'No email'} · <span className="capitalize">{selected.status}</span>
                   </div>
+                  {(selected.branch || selected.ticket_id) && (
+                    <div className="text-xs text-sky-700 mt-1 font-medium">
+                      {selected.branch && <span>Branch: {selected.branch}</span>}
+                      {selected.branch && selected.ticket_id && <span> · </span>}
+                      {selected.ticket_id && <span>Ticket: {selected.ticket_id}</span>}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <select

@@ -101,6 +101,10 @@ export interface ChatConversation {
   id: string;
   customer_name: string;
   customer_email?: string;
+  /** Branch the customer selected when starting chat */
+  branch?: string;
+  /** Existing ticket they want help with (e.g. NX-2841) */
+  ticket_id?: string;
   status: 'active' | 'waiting' | 'ended';
   preview: string;
   unread: number;
