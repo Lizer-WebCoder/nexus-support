@@ -125,7 +125,7 @@ export default function ProfilePage() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
               <input value={phone} onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" placeholder="+1…" />
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" placeholder="+1" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
@@ -150,11 +150,11 @@ export default function ProfilePage() {
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Bio</label>
             <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" placeholder="Short intro for your team…" />
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" placeholder="Short intro for your team" />
           </div>
           <button type="submit" disabled={saving}
             className="w-full py-2.5 bg-sky-600 text-white text-sm font-semibold rounded-lg hover:bg-sky-700 disabled:opacity-50">
-            {saving ? 'Saving…' : 'Save profile'}
+            {saving ? 'Saving...' : 'Save profile'}
           </button>
         </form>
       </div>
