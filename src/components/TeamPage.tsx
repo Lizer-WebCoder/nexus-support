@@ -10,13 +10,15 @@ const statusConfig: Record<string, { label: string; color: string; dot: string }
 };
 
 export default function TeamPage() {
-  const { agents, tickets, currentAgent, updateAgentStatus } = useTickets();
+  const { agents, tickets, currentAgent, updateAgentStatus, setAgentAdmin } = useTickets();
+  const isAdmin = !!currentAgent?.is_admin;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-slate-500">
           {agents.filter((a) => a.status === 'online' || a.status === 'busy').length} of {agents.length} agents active
+          {isAdmin && <span className="ml-2 text-xs font-semibold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">You are admin</span>}
         </p>
         {currentAgent && (
           <div className="flex items-center gap-2">
@@ -34,6 +36,13 @@ export default function TeamPage() {
           </div>
         )}
       </div>
+
+      {!isAdmin && (
+        <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+          Admin controls (promote agents) appear for users marked as admin. The first agent account is auto-promoted.
+        </div>
+      )}
+
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
@@ -43,6 +52,7 @@ export default function TeamPage() {
               <th className="px-5 py-3 font-medium">Status</th>
               <th className="px-5 py-3 font-medium">Open tickets</th>
               <th className="px-5 py-3 font-medium">Resolved</th>
+              {isAdmin && <th className="px-5 py-3 font-medium">Admin</th>}
             </tr>
           </thead>
           <tbody>
@@ -66,6 +76,9 @@ export default function TeamPage() {
                         {isYou && (
                           <span className="ml-2 text-[10px] font-semibold text-sky-600 bg-sky-100 px-1.5 py-0.5 rounded-full">You</span>
                         )}
+                        {agent.is_admin && (
+                          <span className="ml-2 text-[10px] font-semibold text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded-full">Admin</span>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -75,6 +88,24 @@ export default function TeamPage() {
                   </td>
                   <td className="px-5 py-3.5 font-semibold tabular-nums text-slate-800">{open}</td>
                   <td className="px-5 py-3.5 tabular-nums text-slate-600">{resolved}</td>
+                  {isAdmin && (
+                    <td className="px-5 py-3.5">
+                      <button
+                        type="button"
+                        disabled={isYou && agent.is_admin}
+                        onClick={() => setAgentAdmin(agent.id, !agent.is_admin)}
+                        className={clsx(
+                          'text-xs font-medium px-2.5 py-1 rounded-lg border',
+                          agent.is_admin
+                            ? 'border-violet-200 text-violet-700 bg-violet-50 hover:bg-violet-100'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                          isYou && agent.is_admin && 'opacity-50 cursor-not-allowed'
+                        )}
+                      >
+                        {agent.is_admin ? 'Revoke' : 'Make admin'}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}

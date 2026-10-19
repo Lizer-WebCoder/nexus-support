@@ -8,14 +8,18 @@ import {
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured, getSupabaseConfigError } from '../lib/supabase';
 
+export type AccountRole = 'agent' | 'customer';
+
 interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
   requiresAuth: boolean;
   configError: string | null;
+  /** From user_metadata.role — defaults to agent for legacy accounts */
+  accountRole: AccountRole;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName?: string, role?: AccountRole) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -50,6 +54,11 @@ function friendlyAuthError(err: unknown): Error {
   return err;
 }
 
+function roleFromUser(user: User | null): AccountRole {
+  const r = (user?.user_metadata?.role as string | undefined) || 'agent';
+  return r === 'customer' ? 'customer' : 'agent';
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
@@ -81,13 +90,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw friendlyAuthError(error);
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, role: AccountRole = 'agent') => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName || email.split('@')[0] },
+        data: {
+          full_name: fullName || email.split('@')[0],
+          role,
+        },
       },
     });
     if (error) throw friendlyAuthError(error);
@@ -98,14 +110,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const user = session?.user ?? null;
+
   return (
     <AuthContext.Provider
       value={{
         session,
-        user: session?.user ?? null,
+        user,
         loading,
         requiresAuth: isSupabaseConfigured,
         configError,
+        accountRole: roleFromUser(user),
         signIn,
         signUp,
         signOut,
