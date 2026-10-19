@@ -81,7 +81,6 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
 
   return (
     <aside className="w-60 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0">
-      {/* Logo */}
       <div className="px-4 py-5 flex items-center gap-2.5">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 flex items-center justify-center shadow-sm">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -96,7 +95,6 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 pb-4 space-y-6">
         <div>
           <div className="px-3 mb-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -120,7 +118,6 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
         </div>
       </nav>
 
-      {/* Footer */}
       <div className="border-t border-slate-200 p-3 space-y-1">
         <button
           onClick={() => onNavigate('settings')}
