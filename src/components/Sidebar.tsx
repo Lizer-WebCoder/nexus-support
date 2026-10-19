@@ -45,7 +45,7 @@ const toolItems = [
 ];
 
 export default function Sidebar({ active, onNavigate }: SidebarProps) {
-  const renderItem = (item: typeof navItems[0]) => {
+  const renderItem = (item: (typeof navItems)[0]) => {
     const Icon = item.icon;
     const isActive = active === item.id;
     return (
