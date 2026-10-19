@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  // Needed for GitHub Pages (repo name as base path)
-  base: '/nexus-support/',
+  // Use '/' for Vercel / Netlify / most hosts.
+  // For GitHub Pages you can temporarily set base: '/nexus-support/'
+  base: '/',
 })
