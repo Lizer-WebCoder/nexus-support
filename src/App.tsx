@@ -92,7 +92,7 @@ function AppShell() {
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const { tickets, usingSupabase } = useTickets();
-  const { user, loading: authLoading, requiresAuth, signOut } = useAuth();
+  const { user, loading: authLoading, requiresAuth, signOut, accountRole } = useAuth();
   const { notifications, unreadCount, markNotificationRead, markAllNotificationsRead, conversations } = usePlatform();
   const openCount = tickets.filter((t) => t.status !== 'resolved').length;
   const chatBadge = conversations.filter((c) => c.status !== 'ended').length;
@@ -131,6 +131,11 @@ function AppShell() {
         Loading…
       </div>
     );
+  }
+
+  // Customer accounts use the portal only
+  if (requiresAuth && user && accountRole === 'customer') {
+    return <CustomerPortal onBackToAgent={goAgent} />;
   }
 
   if (requiresAuth && !user) {
