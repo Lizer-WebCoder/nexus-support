@@ -20,7 +20,6 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
   const { createTicket, findTicket } = useTickets();
   const [view, setView] = useState<PortalView>('home');
 
-  // Submit form
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
@@ -31,7 +30,6 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
   const [error, setError] = useState('');
   const [created, setCreated] = useState<TicketType | null>(null);
 
-  // Track form
   const [trackId, setTrackId] = useState('');
   const [trackEmail, setTrackEmail] = useState('');
   const [tracked, setTracked] = useState<TicketType | null>(null);
@@ -62,8 +60,9 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
       setTitle('');
       setDescription('');
       setPriority('medium');
-    } catch (err: any) {
-      setError(err.message || 'Could not submit request');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Could not submit request';
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -89,15 +88,22 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
     resolved: 'bg-emerald-100 text-emerald-700',
   };
 
+  const homeCards = [
+    { id: 'submit' as const, Icon: Ticket, title: 'Submit a request', desc: 'Report a problem or ask a question' },
+    { id: 'track' as const, Icon: Search, title: 'Track a ticket', desc: 'Check status with your ticket ID' },
+    { id: 'help' as const, Icon: BookOpen, title: 'Help articles', desc: 'Find answers without waiting' },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
-      {/* Header */}
       <header className="border-b border-slate-200/80 bg-white/80 backdrop-blur sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button onClick={() => setView('home')} className="flex items-center gap-2.5">
+          <button type="button" onClick={() => setView('home')} className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 flex items-center justify-center">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
             <div className="text-left">
@@ -106,11 +112,11 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
             </div>
           </button>
           <nav className="flex items-center gap-1 text-sm">
-            <button onClick={() => setView('submit')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Submit</button>
-            <button onClick={() => setView('track')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Track</button>
-            <button onClick={() => setView('help')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Help</button>
+            <button type="button" onClick={() => setView('submit')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Submit</button>
+            <button type="button" onClick={() => setView('track')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Track</button>
+            <button type="button" onClick={() => setView('help')} className="px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 font-medium">Help</button>
             {onBackToAgent && (
-              <button onClick={onBackToAgent} className="ml-2 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-600">
+              <button type="button" onClick={onBackToAgent} className="ml-2 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-600">
                 Agent login
               </button>
             )}
@@ -119,7 +125,6 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-10">
-        {/* HOME */}
         {view === 'home' && (
           <div className="text-center space-y-8">
             <div>
@@ -127,31 +132,30 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <p className="text-slate-500 mt-2">Submit a request or check the status of an existing ticket.</p>
             </div>
             <div className="grid sm:grid-cols-3 gap-4 text-left">
-              {[
-                { id: 'submit' as const, icon: Ticket, title: 'Submit a request', desc: 'Report a problem or ask a question' },
-                { id: 'track' as const, icon: Search, title: 'Track a ticket', desc: 'Check status with your ticket ID' },
-                { id: 'help' as const, icon: BookOpen, title: 'Help articles', desc: 'Find answers without waiting' },
-              ].map((card) => (
-                <button
-                  key={card.id}
-                  onClick={() => setView(card.id)}
-                  className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:border-sky-300 hover:shadow-md transition-all text-left"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-3">
-                    <card.icon size={20} />
-                  </div>
-                  <div className="font-semibold text-slate-900">{card.title}</div>
-                  <div className="text-sm text-slate-500 mt-1">{card.desc}</div>
-                </button>
-              ))}
+              {homeCards.map((card) => {
+                const Icon = card.Icon;
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => setView(card.id)}
+                    className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:border-sky-300 hover:shadow-md transition-all text-left"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-3">
+                      <Icon size={20} />
+                    </div>
+                    <div className="font-semibold text-slate-900">{card.title}</div>
+                    <div className="text-sm text-slate-500 mt-1">{card.desc}</div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* SUBMIT */}
         {view === 'submit' && (
           <div className="max-w-lg mx-auto">
-            <button onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">
+            <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">
               <ArrowLeft size={16} /> Back
             </button>
             <h1 className="text-2xl font-bold text-slate-900 mb-1">Submit a request</h1>
@@ -205,7 +209,6 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
           </div>
         )}
 
-        {/* SUCCESS */}
         {view === 'success' && created && (
           <div className="max-w-md mx-auto text-center space-y-5">
             <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
@@ -219,11 +222,11 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <div className="text-sm text-slate-600 mt-3">{created.title}</div>
             </div>
             <div className="flex gap-3 justify-center">
-              <button onClick={() => { setTrackId(created.id); setView('track'); }}
+              <button type="button" onClick={() => { setTrackId(created.id); setView('track'); }}
                 className="px-4 py-2 text-sm font-medium bg-sky-600 text-white rounded-lg hover:bg-sky-700">
                 Track this ticket
               </button>
-              <button onClick={() => setView('home')}
+              <button type="button" onClick={() => setView('home')}
                 className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">
                 Done
               </button>
@@ -231,10 +234,9 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
           </div>
         )}
 
-        {/* TRACK */}
         {view === 'track' && (
           <div className="max-w-lg mx-auto">
-            <button onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">
+            <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">
               <ArrowLeft size={16} /> Back
             </button>
             <h1 className="text-2xl font-bold text-slate-900 mb-1">Track a ticket</h1>
@@ -292,10 +294,9 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
           </div>
         )}
 
-        {/* HELP */}
         {view === 'help' && (
           <div className="max-w-lg mx-auto">
-            <button onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">
+            <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">
               <ArrowLeft size={16} /> Back
             </button>
             <h1 className="text-2xl font-bold text-slate-900 mb-1">Help articles</h1>
@@ -308,7 +309,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                 </div>
               ))}
             </div>
-            <button onClick={() => setView('submit')}
+            <button type="button" onClick={() => setView('submit')}
               className="mt-6 w-full py-2.5 text-sm font-medium text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg">
               Still need help? Submit a request
             </button>
