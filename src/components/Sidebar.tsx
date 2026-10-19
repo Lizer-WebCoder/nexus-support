@@ -60,7 +60,7 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
         )}
       >
         <Icon className="w-4.5 h-4.5 shrink-0" size={18} />
-        <span className="flex-1 text-left">{item.label}</span>
+        <span className={'flex-1 text-left'}>{item.label}</span>
         {item.badge !== undefined && (
           <span
             className={clsx(
@@ -100,21 +100,21 @@ export default function Sidebar({ active, onNavigate }: SidebarProps) {
           <div className="px-3 mb-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
             Navigation
           </div>
-          <div className="space-y-0.5">{navItems.map(renderItem)}</div>
+          <div className={'space-y-0.5'}>{navItems.map(renderItem)}</div>
         </div>
 
         <div>
           <div className="px-3 mb-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
             Management
           </div>
-          <div className="space-y-0.5">{managementItems.map(renderItem)}</div>
+          <div className={'space-y-0.5'}>{managementItems.map(renderItem)}</div>
         </div>
 
         <div>
           <div className="px-3 mb-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
             Tools
           </div>
-          <div className="space-y-0.5">{toolItems.map(renderItem)}</div>
+          <div className={'space-y-0.5'}>{toolItems.map(renderItem)}</div>
         </div>
       </nav>
 
