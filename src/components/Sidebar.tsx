@@ -1,5 +1,5 @@
 import {
-  LayoutDashboard, Ticket, Users, BookOpen, MessageSquare,
+  LayoutDashboard, Ticket, Building2, BookOpen, MessageSquare,
   BarChart3, UserCog, Zap, ClipboardList, ShieldCheck,
   Megaphone, FileText, Rocket, Settings, ChevronRight, LogOut, User,
 } from 'lucide-react';
@@ -36,7 +36,7 @@ export default function Sidebar({
   const navItems = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'tickets', label: 'Tickets', icon: Ticket, badge: ticketCount || undefined },
-    { id: 'customers', label: 'Customers', icon: Users },
+    { id: 'customers', label: 'Branches', icon: Building2 },
     { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen },
     { id: 'chat', label: 'Live Chat', icon: MessageSquare, badge: chatCount || undefined, badgeColor: 'bg-emerald-500' },
   ];
