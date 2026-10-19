@@ -59,7 +59,7 @@ export default function PortalLiveChat({ onBack }: Props) {
       setBranch(t.branch);
       setTicketHint(`Found ${t.id}: ${t.title} → branch set to ${t.branch}`);
     } else {
-      setTicketHint(`Found ${t.id}: ${t.title} (no branch on ticket — pick one below)`);
+      setTicketHint(`Found ${t.id}: ${t.title} (no branch on ticket — pick one below if you want)`);
     }
     if (t.customer_email && !email.trim()) setEmail(t.customer_email);
     if (t.customer_name && !name.trim()) setName(t.customer_name);
@@ -80,21 +80,19 @@ export default function PortalLiveChat({ onBack }: Props) {
       setError('Name is required');
       return;
     }
-    if (!branch.trim()) {
-      setError('Please select your branch');
-      return;
-    }
     setError('');
     setStarting(true);
     try {
       const tid = ticketId.trim() || undefined;
+      const br = branch.trim() || undefined;
       const c = await createChat(name.trim(), email.trim() || undefined, {
-        branch: branch.trim(),
+        branch: br,
         ticket_id: tid,
       });
       sessionStorage.setItem(STORAGE_KEY, c.id);
       setChatId(c.id);
-      const parts = [`Hi, I'm ${name.trim()}.`, `Branch: ${branch.trim()}.`];
+      const parts = [`Hi, I'm ${name.trim()}.`];
+      if (br) parts.push(`Branch: ${br}.`);
       if (tid) parts.push(`Ticket to resolve: ${tid}.`);
       parts.push('I need help.');
       await sendChatMessage(c.id, parts.join(' '), 'customer');
@@ -175,18 +173,22 @@ export default function PortalLiveChat({ onBack }: Props) {
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Branch *</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Branch <span className="font-normal text-slate-400">(optional)</span>
+            </label>
             <select
               value={branch}
               onChange={(e) => setBranch(e.target.value)}
-              required
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/30"
             >
-              <option value="">Select your branch…</option>
+              <option value="">Select branch (optional)…</option>
               {branchOptions.map((b) => (
                 <option key={b} value={b}>{b}</option>
               ))}
             </select>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Optional if you don’t have a ticket number. Auto-filled when a ticket is found.
+            </p>
           </div>
           <button type="submit" disabled={starting}
             className="w-full py-2.5 bg-sky-600 text-white text-sm font-semibold rounded-lg hover:bg-sky-700 disabled:opacity-50">
