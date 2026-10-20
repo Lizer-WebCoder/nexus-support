@@ -35,7 +35,7 @@ export default function FormsPage() {
           <label className="text-xs text-slate-500">Description</label>
           <input value={description} onChange={(e) => setDescription(e.target.value)} className="w-full px-3 py-2 text-sm border rounded-lg" />
         </div>
-        <button type="submit" className="inline-flex items-center gap-2 px-4 py-2 text-sm text-white bg-sky-600 rounded-lg"><Plus size={16} /> Add form</button>
+        <button type="submit" className="inline-flex items-center gap-2 px-4 py-2 text-sm text-white bg-brand-600 rounded-lg"><Plus size={16} /> Add form</button>
       </form>
       <div className="grid md:grid-cols-2 gap-4">
         {forms.map((f) => (
