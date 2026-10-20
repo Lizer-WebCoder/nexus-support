@@ -16,8 +16,16 @@ export interface Agent {
   timezone?: string;
   is_admin?: boolean;
   bio?: string;
-  /** Profile photo (data URL or public URL) */
   avatar_url?: string | null;
+  /** Public reply signature */
+  signature?: string | null;
+  /** Skill tags e.g. Billing, API */
+  skills?: string[] | null;
+  preferred_language?: string | null;
+  work_hours_start?: string | null;
+  work_hours_end?: string | null;
+  out_of_office?: boolean | null;
+  ooo_message?: string | null;
 }
 
 export interface BranchMember {
@@ -50,6 +58,13 @@ export interface TicketMessage {
   created_at: string;
 }
 
+export interface TicketNote {
+  id: string;
+  text: string;
+  author: string;
+  created_at: string;
+}
+
 export interface Ticket {
   id: string;
   title: string;
@@ -65,7 +80,11 @@ export interface Ticket {
   created_at: string;
   updated_at?: string;
   sla_due_at?: string | null;
+  first_response_at?: string | null;
   messages?: TicketMessage[];
+  notes?: TicketNote[];
+  /** Soft-delete timestamp */
+  deleted_at?: string | null;
 }
 
 export interface KnowledgeArticle {
@@ -105,6 +124,16 @@ export interface ChatConversation {
 
 export const MAX_CHAT_FILE_BYTES = 400_000;
 
+export interface AppNotification {
+  id: string;
+  user_id?: string | null;
+  title: string;
+  body: string;
+  link?: string | null;
+  read: boolean;
+  created_at: string;
+}
+
 export interface Announcement {
   id?: string;
   title: string;
@@ -126,12 +155,31 @@ export interface Automation {
   action_value: string;
 }
 
+export interface CannedResponse {
+  id: string;
+  title: string;
+  body: string;
+  shortcut?: string;
+}
+
 export interface Survey {
   id: string;
   ticket_id?: string;
   score: number;
   comment?: string;
   customer_name?: string;
+  created_at?: string;
+}
+
+/** Alias used by PlatformContext */
+export type SurveyResponse = Survey;
+
+export interface QualityReview {
+  id: string;
+  ticket_id?: string;
+  score: number;
+  notes?: string;
+  reviewer?: string;
   created_at?: string;
 }
 
@@ -143,10 +191,24 @@ export interface SupportForm {
   active: boolean;
 }
 
+export type FormDef = SupportForm;
+
 export interface ReleaseNote {
   id: string;
   version: string;
   title: string;
   notes: string;
   released_at: string;
+}
+
+export type Release = ReleaseNote;
+
+export interface AuditEntry {
+  id: string;
+  entity: string;
+  entity_id: string;
+  action: string;
+  detail?: string;
+  actor?: string;
+  created_at: string;
 }
