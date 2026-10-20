@@ -9,12 +9,12 @@ import TicketDetail from './TicketDetail';
 const priorityStyles: Record<string, string> = {
   critical: 'bg-rose-100 text-rose-700',
   high: 'bg-orange-100 text-orange-700',
-  medium: 'bg-sky-100 text-sky-700',
+  medium: 'bg-brand-100 text-brand-700',
   low: 'bg-slate-100 text-slate-600',
 };
 
 const statusStyles: Record<string, string> = {
-  new: 'bg-sky-50 text-sky-700 border-sky-200',
+  new: 'bg-brand-50 text-brand-700 border-brand-200',
   open: 'bg-amber-50 text-amber-700 border-amber-200',
   pending: 'bg-violet-50 text-violet-700 border-violet-200',
   resolved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -81,7 +81,7 @@ export default function TicketsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tickets..."
-              className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+              className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             />
           </div>
           <select
@@ -118,7 +118,7 @@ export default function TicketsPage() {
           </button>
           <button
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
           >
             <Plus size={16} />
             New Ticket
@@ -149,7 +149,7 @@ export default function TicketsPage() {
                 <tr
                   key={t.id}
                   onClick={() => setSelectedId(t.id)}
-                  className="border-b border-slate-100 hover:bg-sky-50/50 cursor-pointer transition-colors"
+                  className="border-b border-slate-100 hover:bg-brand-50/50 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3 font-mono text-xs text-slate-500">{t.id}</td>
                   <td className="px-4 py-3 font-medium text-slate-800 max-w-xs truncate">{t.title}</td>
