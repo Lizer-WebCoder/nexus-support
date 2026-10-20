@@ -29,7 +29,7 @@ export default function AutomationsPage() {
       <div className="flex justify-between items-center">
         <p className="text-sm text-slate-500">Rules that run when tickets are created (priority boost, routing helpers).</p>
         <button type="button" onClick={() => setForm({ name: '', enabled: true, trigger: 'ticket_created', condition_field: 'title', condition_op: 'contains', action: 'set_priority', action_value: 'high' })}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-sky-600 rounded-lg"><Plus size={16} /> New rule</button>
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg"><Plus size={16} /> New rule</button>
       </div>
 
       {form && (
@@ -58,7 +58,7 @@ export default function AutomationsPage() {
             </select>
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-sky-600 rounded-lg">Save</button>
+            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg">Save</button>
             <button type="button" onClick={() => setForm(null)} className="px-4 py-2 text-sm text-slate-600">Cancel</button>
           </div>
         </form>
