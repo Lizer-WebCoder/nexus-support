@@ -13,21 +13,21 @@ export default function Distribution() {
   };
 
   const items = [
-    { label: 'Critical', value: counts.critical, color: 'bg-rose-100 text-rose-700 border-rose-200' },
-    { label: 'High', value: counts.high, color: 'bg-orange-100 text-orange-700 border-orange-200' },
-    { label: 'Medium', value: counts.medium, color: 'bg-sky-100 text-sky-700 border-sky-200' },
-    { label: 'Low', value: counts.low, color: 'bg-slate-100 text-slate-600 border-slate-200' },
-    { label: 'On Hold', value: counts.onHold, color: 'bg-violet-100 text-violet-700 border-violet-200' },
-    { label: 'Unassigned', value: counts.unassigned, color: 'bg-amber-100 text-amber-700 border-amber-200' },
+    { label: 'Critical', value: counts.critical, color: 'bg-rose-50 text-rose-700 border-rose-100' },
+    { label: 'High', value: counts.high, color: 'bg-orange-50 text-orange-700 border-orange-100' },
+    { label: 'Medium', value: counts.medium, color: 'bg-brand-50 text-brand-700 border-brand-100' },
+    { label: 'Low', value: counts.low, color: 'bg-zinc-50 text-zinc-600 border-zinc-200' },
+    { label: 'On Hold', value: counts.onHold, color: 'bg-violet-50 text-violet-700 border-violet-100' },
+    { label: 'Unassigned', value: counts.unassigned, color: 'bg-amber-50 text-amber-800 border-amber-100' },
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-      <h2 className="text-sm font-semibold text-slate-800 mb-4">Ticket Distribution</h2>
+    <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-card p-5">
+      <h2 className="text-sm font-semibold text-zinc-800 mb-4">Ticket distribution</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {items.map((item) => (
-          <div key={item.label} className={`rounded-lg border px-3 py-3 text-center ${item.color}`}>
-            <div className="text-2xl font-bold tabular-nums">{item.value}</div>
+          <div key={item.label} className={`rounded-xl border px-3 py-3 text-center ${item.color}`}>
+            <div className="text-2xl font-bold tabular-nums tracking-tight">{item.value}</div>
             <div className="text-xs font-medium mt-1 opacity-80">{item.label}</div>
           </div>
         ))}
