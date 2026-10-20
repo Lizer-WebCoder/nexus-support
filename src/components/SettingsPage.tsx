@@ -59,7 +59,7 @@ export default function SettingsPage({ onOpenPortal, onSignOut }: Props) {
         <button
           type="button"
           onClick={onOpenPortal}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-lg"
         >
           Open customer portal <ExternalLink size={14} />
         </button>
@@ -89,7 +89,7 @@ export default function SettingsPage({ onOpenPortal, onSignOut }: Props) {
               href="https://github.com/Lizer-WebCoder/nexus-support/blob/main/SUPABASE_SETUP.md"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-sky-600 hover:text-sky-700"
+              className="inline-flex items-center gap-1.5 mt-3 text-sm font-medium text-brand-600 hover:text-brand-700"
             >
               Setup guide <ExternalLink size={14} />
             </a>
@@ -115,7 +115,7 @@ export default function SettingsPage({ onOpenPortal, onSignOut }: Props) {
             <div className="text-xs text-slate-500 mt-1">Open</div>
           </div>
         </div>
-        <button type="button" onClick={() => refresh()} className="mt-5 w-full py-2 text-sm font-medium text-sky-700 bg-sky-50 hover:bg-sky-100 rounded-lg">
+        <button type="button" onClick={() => refresh()} className="mt-5 w-full py-2 text-sm font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg">
           Refresh data
         </button>
       </div>
