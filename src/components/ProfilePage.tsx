@@ -41,8 +41,12 @@ export default function ProfilePage() {
           const parts = name.trim().split(/\s+/);
           const initials = parts.map((p) => p[0]).join('').slice(0, 2).toUpperCase();
           await supabase.from('agents').update({
-            name: name.trim(), initials,
-            phone: phone.trim() || null, bio: bio.trim() || null, timezone, status,
+            name: name.trim(),
+            initials,
+            phone: phone.trim() || null,
+            bio: bio.trim() || null,
+            timezone,
+            status,
           }).eq('id', currentAgent.id);
         }
         await refresh();
@@ -62,7 +66,10 @@ export default function ProfilePage() {
     e.preventDefault();
     setMsg('');
     setErr('');
-    if (password.length < 6) { setErr('Password must be at least 6 characters'); return; }
+    if (password.length < 6) {
+      setErr('Password must be at least 6 characters');
+      return;
+    }
     setSaving(true);
     try {
       if (!supabase) throw new Error('Cloud auth required to change password');
@@ -77,34 +84,66 @@ export default function ProfilePage() {
     }
   };
 
-  const avatar = (name || 'A').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+  const avatar = (name || 'A')
+    .split(' ')
+    .map((p) => p[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
-    <div className="max-w-xl space-y-6">
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-400 to-cyan-500 flex items-center justify-center text-white text-lg font-bold">{avatar}</div>
-          <div>
-            <div className="text-lg font-semibold text-slate-900">{name || 'Agent'}</div>
-            <div className="text-sm text-slate-500">{user?.email}</div>
-            {currentAgent && (<div className="text-xs text-slate-400 mt-0.5">{currentAgent.role} · {currentAgent.status}</div>)}
+    <div className="max-w-2xl mx-auto space-y-8 pb-10">
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-card p-8">
+        <div className="flex items-center gap-5 mb-8 pb-6 border-b border-zinc-100">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center text-white text-xl font-bold shadow-md shadow-brand-500/20">
+            {avatar}
+          </div>
+          <div className="min-w-0">
+            <div className="text-xl font-semibold text-zinc-900 tracking-tight truncate">{name || 'Agent'}</div>
+            <div className="text-sm text-zinc-500 mt-0.5 truncate">{user?.email}</div>
+            {currentAgent && (
+              <div className="text-xs text-zinc-400 mt-1.5">
+                {currentAgent.role} · <span className="text-brand-600 font-medium capitalize">{currentAgent.status}</span>
+              </div>
+            )}
           </div>
         </div>
-        {msg && <div className="mb-3 text-sm text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg">{msg}</div>}
-        {err && <div className="mb-3 text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{err}</div>}
-        <form onSubmit={saveProfile} className="space-y-4">
+
+        {msg && (
+          <div className="mb-5 text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 px-4 py-3 rounded-xl">{msg}</div>
+        )}
+        {err && (
+          <div className="mb-5 text-sm text-rose-600 bg-rose-50 border border-rose-100 px-4 py-3 rounded-xl">{err}</div>
+        )}
+
+        <form onSubmit={saveProfile} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Display name</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30" />
+            <label className="block text-sm font-medium text-zinc-700 mb-2">Display name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400"
+            />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" placeholder="Phone" />
+              <label className="block text-sm font-medium text-zinc-700 mb-2">Phone</label>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400"
+                placeholder="+1 555 000 0000"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
-              <select value={status} onChange={(e) => setStatus(e.target.value as AgentStatus)} className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
+              <label className="block text-sm font-medium text-zinc-700 mb-2">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as AgentStatus)}
+                className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400"
+              >
                 <option value="online">Online</option>
                 <option value="busy">Busy</option>
                 <option value="away">Away</option>
@@ -112,28 +151,58 @@ export default function ProfilePage() {
               </select>
             </div>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Timezone</label>
-            <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
+            <label className="block text-sm font-medium text-zinc-700 mb-2">Timezone</label>
+            <select
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400"
+            >
               {['UTC', 'America/New_York', 'America/Los_Angeles', 'Europe/London', 'Asia/Tokyo', 'Asia/Seoul', 'Asia/Manila'].map((tz) => (
                 <option key={tz} value={tz}>{tz}</option>
               ))}
             </select>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Bio</label>
-            <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" placeholder="Short intro for your team" />
+            <label className="block text-sm font-medium text-zinc-700 mb-2">Bio</label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={4}
+              className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 resize-y"
+              placeholder="Short intro for your team"
+            />
           </div>
-          <button type="submit" disabled={saving} className="w-full py-2.5 bg-sky-600 text-white text-sm font-semibold rounded-lg hover:bg-sky-700 disabled:opacity-50">
-            {saving ? 'Saving...' : 'Save profile'}
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 disabled:opacity-50 transition-colors"
+          >
+            {saving ? 'Saving…' : 'Save profile'}
           </button>
         </form>
       </div>
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <h2 className="text-sm font-semibold text-slate-800 mb-3">Change password</h2>
-        <form onSubmit={changePassword} className="space-y-3">
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} placeholder="New password (min 6 characters)" className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" />
-          <button type="submit" disabled={saving || !password} className="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50">
+
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-card p-8">
+        <h2 className="text-base font-semibold text-zinc-900 mb-1">Change password</h2>
+        <p className="text-sm text-zinc-500 mb-5">Use a strong password you don’t reuse elsewhere.</p>
+        <form onSubmit={changePassword} className="space-y-4">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={6}
+            placeholder="New password (min 6 characters)"
+            className="w-full px-4 py-2.5 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400"
+          />
+          <button
+            type="submit"
+            disabled={saving || !password}
+            className="px-5 py-2.5 text-sm font-medium text-brand-700 bg-brand-50 border border-brand-100 rounded-xl hover:bg-brand-100 disabled:opacity-50 transition-colors"
+          >
             Update password
           </button>
         </form>
