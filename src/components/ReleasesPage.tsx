@@ -25,14 +25,14 @@ export default function ReleasesPage() {
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" required className="px-3 py-2 text-sm border rounded-lg" />
         </div>
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Release notes" rows={3} className="w-full px-3 py-2 text-sm border rounded-lg" />
-        <button type="submit" className="inline-flex items-center gap-2 px-4 py-2 text-sm text-white bg-sky-600 rounded-lg"><Plus size={16} /> Publish</button>
+        <button type="submit" className="inline-flex items-center gap-2 px-4 py-2 text-sm text-white bg-brand-600 rounded-lg"><Plus size={16} /> Publish</button>
       </form>
       <div className="space-y-3">
         {releases.map((r) => (
           <div key={r.id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded">{r.version}</span>
+                <span className="text-xs font-mono font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded">{r.version}</span>
                 <span className="font-semibold text-slate-900">{r.title}</span>
               </div>
               <p className="text-sm text-slate-600 mt-2 whitespace-pre-wrap">{r.notes}</p>
