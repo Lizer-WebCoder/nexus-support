@@ -17,9 +17,7 @@ export interface Agent {
   is_admin?: boolean;
   bio?: string;
   avatar_url?: string | null;
-  /** Public reply signature */
   signature?: string | null;
-  /** Skill tags e.g. Billing, API */
   skills?: string[] | null;
   preferred_language?: string | null;
   work_hours_start?: string | null;
@@ -65,6 +63,19 @@ export interface TicketNote {
   created_at: string;
 }
 
+export interface TicketAttachment {
+  id: string;
+  name: string;
+  size: number;
+  mime: string;
+  url: string;
+  created_at: string;
+  uploaded_by?: string;
+}
+
+export const MAX_ATTACHMENT_BYTES = 400_000;
+export const MAX_CHAT_FILE_BYTES = 400_000;
+
 export interface Ticket {
   id: string;
   title: string;
@@ -83,8 +94,26 @@ export interface Ticket {
   first_response_at?: string | null;
   messages?: TicketMessage[];
   notes?: TicketNote[];
-  /** Soft-delete timestamp */
+  attachments?: TicketAttachment[];
   deleted_at?: string | null;
+}
+
+const SLA_HOURS: Record<Priority, number> = {
+  critical: 2,
+  high: 8,
+  medium: 24,
+  low: 72,
+};
+
+export function computeSlaDue(priority: Priority, fromIso?: string): string {
+  const start = fromIso ? new Date(fromIso).getTime() : Date.now();
+  const hours = SLA_HOURS[priority] ?? 24;
+  return new Date(start + hours * 60 * 60 * 1000).toISOString();
+}
+
+export function ticketBranch(t: Pick<Ticket, 'branch' | 'customer_name'>): string {
+  if (t.branch && t.branch.trim()) return t.branch.trim();
+  return 'Unassigned';
 }
 
 export interface KnowledgeArticle {
@@ -121,8 +150,6 @@ export interface ChatConversation {
   created_at?: string;
   updated_at?: string;
 }
-
-export const MAX_CHAT_FILE_BYTES = 400_000;
 
 export interface AppNotification {
   id: string;
@@ -171,7 +198,6 @@ export interface Survey {
   created_at?: string;
 }
 
-/** Alias used by PlatformContext */
 export type SurveyResponse = Survey;
 
 export interface QualityReview {
@@ -180,6 +206,7 @@ export interface QualityReview {
   score: number;
   notes?: string;
   reviewer?: string;
+  agent_name?: string;
   created_at?: string;
 }
 
