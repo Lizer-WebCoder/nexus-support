@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { useTickets } from '../context/TicketContext';
+import AgentAvatar from './AgentAvatar';
 
 const statusDot: Record<string, string> = {
   online: 'bg-emerald-400',
@@ -29,19 +30,12 @@ export default function TeamStatus() {
               key={agent.id}
               className="flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              <div className="relative">
-                <div
-                  className={clsx(
-                    'w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold',
-                    agent.color
-                  )}
-                >
-                  {agent.initials}
-                </div>
+              <div className="relative shrink-0">
+                <AgentAvatar agent={agent} size="md" />
                 <div
                   className={clsx(
                     'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white',
-                    statusDot[agent.status]
+                    statusDot[agent.status] || statusDot.offline
                   )}
                 />
               </div>
