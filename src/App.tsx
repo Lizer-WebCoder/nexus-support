@@ -92,7 +92,7 @@ function AppShell() {
   const [search, setSearch] = useState('');
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
-  const { tickets, usingSupabase } = useTickets();
+  const { tickets, usingSupabase, currentAgent } = useTickets();
   const { user, loading: authLoading, requiresAuth, signOut, accountRole } = useAuth();
   const { notifications, unreadCount, markNotificationRead, markAllNotificationsRead, conversations } = usePlatform();
   const openCount = tickets.filter((t) => t.status !== 'resolved').length;
@@ -165,8 +165,9 @@ function AppShell() {
         onNavigate={setActiveNav}
         ticketCount={openCount}
         chatCount={chatBadge}
-        userName={displayName}
+        userName={currentAgent?.name || displayName}
         userEmail={user?.email}
+        avatarUrl={currentAgent?.avatar_url || (user?.user_metadata?.avatar_url as string | undefined) || null}
         onSignOut={requiresAuth ? signOut : undefined}
         onProfile={() => setActiveNav('profile')}
       />
