@@ -62,6 +62,12 @@ export default function ProfilePage() {
       setTimezone(currentAgent.timezone || 'UTC');
       setStatus(currentAgent.status);
       setAvatarUrl(currentAgent.avatar_url || null);
+      if (!currentAgent.avatar_url) {
+        try {
+          const local = localStorage.getItem(`nexus-avatar-${currentAgent.id}`);
+          if (local) setAvatarUrl(local);
+        } catch {}
+      }
     } else if (user) {
       setName((user.user_metadata?.full_name as string) || user.email?.split('@')[0] || '');
       const metaAvatar = user.user_metadata?.avatar_url as string | undefined;
@@ -120,7 +126,6 @@ export default function ProfilePage() {
             })
             .eq('id', currentAgent.id);
           if (error) {
-            // Column may not exist yet — still save other fields
             if (String(error.message || '').toLowerCase().includes('avatar_url')) {
               await supabase.from('agents').update({
                 name: name.trim(),
@@ -130,7 +135,7 @@ export default function ProfilePage() {
                 timezone,
                 status,
               }).eq('id', currentAgent.id);
-              setErr('Photo needs a DB column. Run supabase-avatar.sql in Supabase, then save again.');
+              setErr('Photo needs a DB column. Run: alter table public.agents add column if not exists avatar_url text;');
             } else {
               throw error;
             }
@@ -139,15 +144,16 @@ export default function ProfilePage() {
         await refresh();
       } else if (currentAgent) {
         await updateAgentStatus(status);
+      }
+      // Always keep a local copy so Team/Sidebar show the photo even if DB column is missing
+      if (currentAgent) {
         try {
-          localStorage.setItem(
-            `nexus-avatar-${currentAgent.id}`,
-            avatarUrl || ''
-          );
+          if (avatarUrl) localStorage.setItem(`nexus-avatar-${currentAgent.id}`, avatarUrl);
+          else localStorage.removeItem(`nexus-avatar-${currentAgent.id}`);
         } catch {}
       }
       if (status !== currentAgent?.status) await updateAgentStatus(status);
-      if (!err) setMsg('Profile saved.');
+      setMsg('Profile saved. Open Team to see your photo.');
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Could not save profile');
     } finally {
@@ -160,8 +166,7 @@ export default function ProfilePage() {
     setMsg('');
     setErr('');
     if (password.length < 6) {
-      setErr('Password must be at least 6 characters');
-      return;
+      setErr('Password must be at least 6 characters');\n      return;
     }
     setSaving(true);
     try {
