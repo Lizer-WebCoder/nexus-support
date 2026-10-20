@@ -1,59 +1,71 @@
 import { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Megaphone, Plus, Trash2 } from 'lucide-react';
 import { usePlatform } from '../context/PlatformContext';
-import type { Announcement } from '../types';
 
 export default function AnnouncementsPage() {
   const { announcements, saveAnnouncement, deleteAnnouncement } = usePlatform();
-  const [form, setForm] = useState<Partial<Announcement> | null>(null);
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [severity, setSeverity] = useState<'info' | 'warning' | 'critical'>('info');
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form?.title || !form.body) return;
-    await saveAnnouncement({
-      id: form.id,
-      title: form.title,
-      body: form.body,
-      severity: form.severity || 'info',
-      active: form.active ?? true,
-    });
-    setForm(null);
+    if (!title.trim() || !body.trim()) return;
+    await saveAnnouncement({ title: title.trim(), body: body.trim(), severity, active: true });
+    setTitle('');
+    setBody('');
   };
 
-  const severityColor = { info: 'border-brand-200 bg-brand-50', warning: 'border-amber-200 bg-amber-50', critical: 'border-rose-200 bg-rose-50' };
-
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between">
-        <p className="text-sm text-slate-500">Banners for agents and the customer portal.</p>
-        <button type="button" onClick={() => setForm({ title: '', body: '', severity: 'info', active: true })}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg"><Plus size={16} /> New</button>
-      </div>
-      {form && (
-        <form onSubmit={submit} className="bg-white rounded-xl border p-5 space-y-3 shadow-sm">
-          <input value={form.title || ''} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Title" required className="w-full px-3 py-2 text-sm border rounded-lg" />
-          <textarea value={form.body || ''} onChange={(e) => setForm({ ...form, body: e.target.value })} placeholder="Body" required rows={3} className="w-full px-3 py-2 text-sm border rounded-lg" />
-          <select value={form.severity || 'info'} onChange={(e) => setForm({ ...form, severity: e.target.value as Announcement['severity'] })} className="px-3 py-2 text-sm border rounded-lg bg-white">
-            <option value="info">Info</option>
-            <option value="warning">Warning</option>
-            <option value="critical">Critical</option>
-          </select>
-          <div className="flex gap-2">
-            <button type="submit" className="px-4 py-2 text-sm text-white bg-brand-600 rounded-lg">Save</button>
-            <button type="button" onClick={() => setForm(null)} className="px-4 py-2 text-sm text-slate-600">Cancel</button>
+    <div className="space-y-5 max-w-3xl">
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-card p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Megaphone className="text-brand-600" size={20} />
+          <h2 className="text-lg font-semibold text-zinc-900">Announcements</h2>
+        </div>
+        <form onSubmit={submit} className="space-y-3">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Title"
+            className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            required
+          />
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Message"
+            rows={3}
+            className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            required
+          />
+          <div className="flex items-center gap-3">
+            <select
+              value={severity}
+              onChange={(e) => setSeverity(e.target.value as 'info' | 'warning' | 'critical')}
+              className="px-3 py-2 text-sm border border-zinc-200 rounded-xl bg-white"
+            >
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="critical">Critical</option>
+            </select>
+            <button type="submit" className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-xl hover:bg-brand-700">
+              <Plus size={16} /> Publish
+            </button>
           </div>
         </form>
-      )}
+      </div>
+
       <div className="space-y-3">
         {announcements.map((a) => (
-          <div key={a.id} className={`rounded-xl border p-4 ${severityColor[a.severity] || severityColor.info}`}>
+          <div key={a.id || a.title} className="bg-white rounded-xl border border-zinc-200 p-4 shadow-sm">
             <div className="flex justify-between gap-2">
               <div>
                 <div className="font-semibold text-slate-900">{a.title}</div>
                 <p className="text-sm text-slate-700 mt-1">{a.body}</p>
                 <div className="text-[11px] text-slate-500 mt-2 capitalize">{a.severity} · {a.active ? 'Active' : 'Off'}</div>
               </div>
-              <button type="button" onClick={() => deleteAnnouncement(a.id)} className="text-slate-400 hover:text-rose-600"><Trash2 size={16} /></button>
+              <button type="button" onClick={() => a.id && deleteAnnouncement(a.id)} className="text-slate-400 hover:text-rose-600"><Trash2 size={16} /></button>
             </div>
           </div>
         ))}
