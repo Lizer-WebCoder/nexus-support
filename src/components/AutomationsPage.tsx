@@ -66,7 +66,7 @@ export default function AutomationsPage() {
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm divide-y">
         {automations.map((a) => (
-          <div key={a.id} className="px-5 py-4 flex items-center gap-3">
+          <div key={a.id || a.name} className="px-5 py-4 flex items-center gap-3">
             <button type="button" onClick={() => saveAutomation({ ...a, enabled: !a.enabled })}
               className={`w-10 h-6 rounded-full relative transition-colors ${a.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}>
               <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${a.enabled ? 'left-4' : 'left-0.5'}`} />
@@ -77,7 +77,7 @@ export default function AutomationsPage() {
                 If {a.condition_field} {a.condition_op} “{a.condition_value}” → {a.action} {a.action_value}
               </div>
             </div>
-            <button type="button" onClick={() => deleteAutomation(a.id)} className="p-2 text-slate-400 hover:text-rose-600"><Trash2 size={16} /></button>
+            <button type="button" onClick={() => a.id && deleteAutomation(a.id)} className="p-2 text-slate-400 hover:text-rose-600"><Trash2 size={16} /></button>
           </div>
         ))}
         {automations.length === 0 && <div className="p-8 text-center text-slate-500 text-sm">No automations yet</div>}
