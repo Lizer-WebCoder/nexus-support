@@ -63,3 +63,32 @@ body {
 .recharts-default-tooltip .recharts-tooltip-item-value {
   color: #fafafa !important;
 }
+
+/* Force legacy sky/blue utilities onto the indigo brand palette */
+.bg-sky-50 { background-color: #eef2ff !important; }
+.bg-sky-100 { background-color: #e0e7ff !important; }
+.bg-sky-600 { background-color: #4f46e5 !important; }
+.bg-sky-700, .hover\:bg-sky-700:hover { background-color: #4338ca !important; }
+.bg-sky-50\/40 { background-color: rgb(238 242 255 / 0.4) !important; }
+.bg-sky-50\/50 { background-color: rgb(238 242 255 / 0.5) !important; }
+.text-sky-500, .text-sky-600, .text-sky-700 { color: #4f46e5 !important; }
+.text-sky-100 { color: #e0e7ff !important; }
+.text-sky-200 { color: #c7d2fe !important; }
+.border-sky-100, .border-sky-200 { border-color: #c7d2fe !important; }
+.border-sky-300 { border-color: #a5b4fc !important; }
+.ring-sky-500\/30:focus, .focus\:ring-sky-500\/30:focus { --tw-ring-color: rgb(99 102 241 / 0.3) !important; }
+.hover\:bg-sky-50:hover { background-color: #eef2ff !important; }
+.hover\:bg-sky-100:hover { background-color: #e0e7ff !important; }
+.hover\:text-sky-600:hover, .hover\:text-sky-700:hover { color: #4f46e5 !important; }
+.hover\:border-sky-300:hover { border-color: #a5b4fc !important; }
+
+/* Stronger customer-portal atmosphere */
+.portal-atmosphere {
+  background-color: #f5f3ff !important;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 100% -10%, rgb(99 102 241 / 0.28), transparent 55%),
+    radial-gradient(ellipse 60% 40% at -10% 30%, rgb(139 92 246 / 0.22), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 80% 100%, rgb(167 139 250 / 0.2), transparent 50%),
+    radial-gradient(circle at 1px 1px, rgb(99 102 241 / 0.12) 1px, transparent 0) !important;
+  background-size: auto, auto, auto, 28px 28px !important;
+}
