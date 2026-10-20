@@ -23,6 +23,7 @@ import QualityPage from './components/QualityPage';
 import AnnouncementsPage from './components/AnnouncementsPage';
 import FormsPage from './components/FormsPage';
 import ReleasesPage from './components/ReleasesPage';
+import NotificationEffects from './components/NotificationEffects';
 import { TicketProvider, useTickets } from './context/TicketContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PlatformProvider, usePlatform } from './context/PlatformContext';
@@ -249,6 +250,7 @@ function AppShell() {
                         onClick={() => {
                           markNotificationRead(n.id);
                           if (n.link === 'tickets') setActiveNav('tickets');
+                          if (n.link === 'chat') setActiveNav('chat');
                           setNotifOpen(false);
                         }}
                         className={`w-full text-left px-3 py-2.5 border-b border-zinc-50 hover:bg-zinc-50 ${!n.read ? 'bg-brand-50/60' : ''}`}
@@ -307,6 +309,7 @@ export default function App() {
     <AuthProvider>
       <TicketProvider>
         <PlatformProvider>
+          <NotificationEffects />
           <AppShell />
         </PlatformProvider>
       </TicketProvider>
