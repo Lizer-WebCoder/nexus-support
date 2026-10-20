@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
-  color: #1e293b;
-  background-color: #f8fafc;
+  color: #18181b;
+  background-color: #f4f4f5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -25,7 +25,6 @@ body {
   box-sizing: border-box;
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -34,9 +33,33 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d4d4d8;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #a1a1aa;
+}
+
+/* Recharts default item text can inherit poorly — force readable tooltips */
+.recharts-default-tooltip {
+  background: #18181b !important;
+  border: 1px solid #3f3f46 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+  padding: 10px 12px !important;
+}
+.recharts-default-tooltip .recharts-tooltip-label {
+  color: #a1a1aa !important;
+  margin-bottom: 4px !important;
+  font-size: 11px !important;
+}
+.recharts-default-tooltip .recharts-tooltip-item {
+  color: #fafafa !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+.recharts-default-tooltip .recharts-tooltip-item-name,
+.recharts-default-tooltip .recharts-tooltip-item-separator,
+.recharts-default-tooltip .recharts-tooltip-item-value {
+  color: #fafafa !important;
 }
