@@ -7,7 +7,6 @@ import type { AgentStatus } from '../types';
 
 const MAX_AVATAR_BYTES = 350_000;
 
-/** Resize image to square JPEG data URL (keeps payload small for DB storage). */
 async function fileToAvatarDataUrl(file: File): Promise<string> {
   if (!file.type.startsWith('image/')) throw new Error('Please choose an image file (PNG, JPG, WebP).');
   if (file.size > 6_000_000) throw new Error('Image is too large (max ~6MB before resize).');
@@ -164,9 +163,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setMsg('');
     setErr('');
-    if (password.length < 6) {
-      setErr('Password must be at least 6 characters');\n      return;
-    }
+    if (password.length < 6) { setErr('Password must be at least 6 characters'); return; }
     setSaving(true);
     try {
       if (!supabase) throw new Error('Cloud auth required to change password');
@@ -216,7 +213,7 @@ export default function ProfilePage() {
               )}
               <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-medium gap-0.5">
                 <Camera size={18} />
-                {uploading ? '…' : 'Change'}
+                {uploading ? '...' : 'Change'}
               </div>
             </button>
             {avatarUrl && (
@@ -314,14 +311,14 @@ export default function ProfilePage() {
             disabled={saving || uploading}
             className="w-full py-3 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 disabled:opacity-50 transition-colors"
           >
-            {saving ? 'Saving…' : 'Save profile'}
+            {saving ? 'Saving...' : 'Save profile'}
           </button>
         </form>
       </div>
 
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-card p-8">
         <h2 className="text-base font-semibold text-zinc-900 mb-1">Change password</h2>
-        <p className="text-sm text-zinc-500 mb-5">Use a strong password you don’t reuse elsewhere.</p>
+        <p className="text-sm text-zinc-500 mb-5">Use a strong password you do not reuse elsewhere.</p>
         <form onSubmit={changePassword} className="space-y-4">
           <input
             type="password"
