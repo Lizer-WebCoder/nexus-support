@@ -79,6 +79,15 @@ function saveLocal(tickets: Ticket[]) {
   } catch {}
 }
 
+function hydrateAvatar(agent: Agent): Agent {
+  if (agent.avatar_url) return agent;
+  try {
+    const local = localStorage.getItem(`nexus-avatar-${agent.id}`);
+    if (local) return { ...agent, avatar_url: local };
+  } catch {}
+  return agent;
+}
+
 function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return 'AG';
@@ -107,7 +116,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         supabase.from('agents').select('*'),
         supabase.from('customers').select('*'),
       ]);
-      const agentList = (aRes.data as Agent[]) || [];
+      const agentList = ((aRes.data as Agent[]) || []).map(hydrateAvatar);
       if (aRes.data) setAgents(agentList);
       if (cRes.data) setCustomers(cRes.data as Customer[]);
       if (tRes.data) {
@@ -139,14 +148,14 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       const { data: existing } = await supabase.from('agents').select('*').eq('user_id', user.id).maybeSingle();
       if (cancelled) return;
       if (existing) {
-        setCurrentAgent(existing as Agent);
+        setCurrentAgent(hydrateAvatar(existing as Agent));
         return;
       }
       if (user.email) {
         const { data: byEmail } = await supabase.from('agents').select('*').eq('email', user.email).maybeSingle();
         if (byEmail && !cancelled) {
           await supabase.from('agents').update({ user_id: user.id }).eq('id', byEmail.id);
-          const linked = { ...byEmail, user_id: user.id } as Agent;
+          const linked = hydrateAvatar({ ...byEmail, user_id: user.id } as Agent);
           setCurrentAgent(linked);
           setAgents((prev) => prev.map((a) => (a.id === linked.id ? linked : a)));
           return;
@@ -167,8 +176,9 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         .select('*')
         .single();
       if (created && !cancelled) {
-        setCurrentAgent(created as Agent);
-        setAgents((prev) => [...prev, created as Agent]);
+        const agent = hydrateAvatar(created as Agent);
+        setCurrentAgent(agent);
+        setAgents((prev) => [...prev, agent]);
       }
     })();
     return () => {
