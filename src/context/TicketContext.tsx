@@ -49,19 +49,10 @@ interface TicketContextValue {
 const TicketContext = createContext<TicketContextValue | null>(null);
 const STORAGE_KEY = 'nexus-tickets-v1';
 
-const AGENT_COLORS = [
-  'bg-sky-500',
-  'bg-emerald-500',
-  'bg-violet-500',
-  'bg-amber-500',
-  'bg-rose-500',
-  'bg-indigo-500',
-];
-
 function loadLocal(): Ticket[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return JSON.parse(raw) as Ticket[];
   } catch {}
   return INITIAL_TICKETS;
 }
@@ -81,31 +72,16 @@ function initialsFromName(name: string): string {
 
 export function TicketProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [tickets, setTickets] = useState<Ticket[]>(() =>
-    isSupabaseConfigured ? [] : loadLocal()
-  );
+  const [tickets, setTickets] = useState<Ticket[]>(() => (isSupabaseConfigured ? [] : loadLocal()));
   const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
   const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const [currentAgent, setCurrentAgent] = useState<Agent | null>(null);
-
-  const attachAssignees = useCallback(
-    (list: Ticket[], agentList: Agent[]): Ticket[] =>
-      list.map((t) => ({
-        ...t,
-        notes: Array.isArray(t.notes) ? t.notes : [],
-        messages: Array.isArray(t.messages) ? t.messages : [],
-        attachments: Array.isArray(t.attachments) ? t.attachments : [],
-        assignee: t.assignee_id
-          ? agentList.find((a) => a.id === t.assignee_id) || null
-          : null,
-      })),
-    []
-  );
+  const usingSupabase = isSupabaseConfigured;
 
   const refresh = useCallback(async () => {
-    if (!supabase) {
-      setTickets(loadLocal());
+    if (!isSupabaseConfigured || !supabase) {
+      setLoading(false);
       return;
     }
     setLoading(true);
@@ -119,32 +95,31 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       if (aRes.data) setAgents(agentList);
       if (cRes.data) setCustomers(cRes.data as Customer[]);
       if (tRes.data) {
-        setTickets(attachAssignees(tRes.data as Ticket[], agentList));
+        const list = (tRes.data as Ticket[]).map((t) => ({
+          ...t,
+          assignee: agentList.find((a) => a.id === t.assignee_id) || null,
+          notes: t.notes || [],
+          messages: t.messages || [],
+          attachments: t.attachments || [],
+        }));
+        setTickets(list);
       }
-    } catch (e) {
-      console.error('Supabase load failed, using local data', e);
-      setTickets(loadLocal());
     } finally {
       setLoading(false);
     }
-  }, [attachAssignees]);
+  }, []);
 
   useEffect(() => {
-    if (!supabase || !user) {
-      setCurrentAgent(null);
-      return;
-    }
-    const metaRole = (user.user_metadata?.role as string | undefined) || '';
-    if (metaRole === 'customer') {
+    void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!user || !supabase) {
       setCurrentAgent(null);
       return;
     }
     let cancelled = false;
     (async () => {
-      const displayName =
-        (user.user_metadata?.full_name as string | undefined) ||
-        user.email?.split('@')[0] ||
-        'Agent';
       const { data: existing } = await supabase
         .from('agents')
         .select('*')
@@ -153,12 +128,6 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       if (existing) {
         setCurrentAgent(existing as Agent);
-        setAgents((prev) => {
-          if (prev.some((a) => a.id === existing.id)) {
-            return prev.map((a) => (a.id === existing.id ? (existing as Agent) : a));
-          }
-          return [...prev, existing as Agent];
-        });
         return;
       }
       if (user.email) {
@@ -175,8 +144,9 @@ export function TicketProvider({ children }: { children: ReactNode }) {
           return;
         }
       }
-      const color = AGENT_COLORS[Math.floor(Math.random() * AGENT_COLORS.length)];
-      const { data: created, error } = await supabase
+      const displayName =
+        (user.user_metadata?.full_name as string) || user.email?.split('@')[0] || 'Agent';
+      const { data: created } = await supabase
         .from('agents')
         .insert({
           user_id: user.id,
@@ -184,30 +154,20 @@ export function TicketProvider({ children }: { children: ReactNode }) {
           initials: initialsFromName(displayName),
           role: 'Agent',
           status: 'online',
-          color,
           email: user.email || null,
+          color: '#6366f1',
         })
         .select('*')
         .single();
-      if (!error && created && !cancelled) {
-        let agentRow = created as Agent;
-        const { data: admins } = await supabase.from('agents').select('id').eq('is_admin', true).limit(1);
-        if (!admins?.length) {
-          await supabase.from('agents').update({ is_admin: true }).eq('id', created.id);
-          agentRow = { ...agentRow, is_admin: true };
-        }
-        setCurrentAgent(agentRow);
-        setAgents((prev) => [...prev, agentRow]);
+      if (created && !cancelled) {
+        setCurrentAgent(created as Agent);
+        setAgents((prev) => [...prev, created as Agent]);
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [user]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
 
   useEffect(() => {
     if (!supabase) return;
@@ -218,7 +178,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => refresh())
       .subscribe();
     return () => {
-      supabase.removeChannel(channel);
+      supabase?.removeChannel(channel);
     };
   }, [refresh]);
 
@@ -261,33 +221,24 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         channel: ticket.channel,
         assignee_id: ticket.assignee_id,
         customer_name: ticket.customer_name,
-        customer_email: ticket.customer_email || null,
-        notes: [],
-        messages: [],
-        attachments: [],
-        sla_due_at,
+        customer_email: ticket.customer_email,
+        branch: ticket.branch || null,
+        notes: ticket.notes,
+        messages: ticket.messages,
+        attachments: ticket.attachments,
+        sla_due_at: ticket.sla_due_at,
         created_at: ticket.created_at,
         updated_at: ticket.updated_at,
       };
-      if (branch) row.branch = branch;
       const { error } = await supabase.from('tickets').insert(row);
-      if (error) {
-        if (String(error.message || '').toLowerCase().includes('branch') || String(error.message || '').toLowerCase().includes('attachments')) {
-          delete row.branch;
-          delete row.attachments;
-          const retry = await supabase.from('tickets').insert(row);
-          if (retry.error) throw retry.error;
-        } else {
-          throw error;
-        }
-      }
+      if (error) throw error;
       await refresh();
     } else {
-      setTickets((prev) => attachAssignees([ticket, ...prev], agents));
+      setTickets((prev) => [ticket, ...prev]);
     }
     void notifyAgents({
       title: 'New ticket',
-      body: `${ticket.id}: ${ticket.title} · ${ticket.customer_name} (${ticket.channel})`,
+      body: `${ticket.id}: ${ticket.title} · ${ticket.customer_name}${ticket.channel ? ` (${ticket.channel})` : ''}`,
       link: 'tickets',
     });
     return ticket;
@@ -295,27 +246,51 @@ export function TicketProvider({ children }: { children: ReactNode }) {
 
   const updateTicket = async (
     id: string,
-    updates: Partial<Pick<Ticket, 'status' | 'priority' | 'assignee_id' | 'title' | 'description' | 'notes' | 'messages' | 'first_response_at' | 'branch' | 'attachments'>>
+    updates: Partial<
+      Pick<
+        Ticket,
+        | 'status'
+        | 'priority'
+        | 'assignee_id'
+        | 'title'
+        | 'description'
+        | 'notes'
+        | 'messages'
+        | 'first_response_at'
+        | 'branch'
+        | 'attachments'
+      >
+    >
   ) => {
-    const updated_at = new Date().toISOString();
+    const ticket = tickets.find((t) => t.id === id);
+    const payload = { ...updates, updated_at: new Date().toISOString() };
     if (supabase) {
-      const payload: Record<string, unknown> = { ...updates, updated_at };
       const { error } = await supabase.from('tickets').update(payload).eq('id', id);
       if (error) throw error;
       await refresh();
     } else {
       setTickets((prev) =>
-        attachAssignees(
-          prev.map((t) => (t.id === id ? { ...t, ...updates, updated_at } : t)),
-          agents
+        prev.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                ...updates,
+                updated_at: payload.updated_at,
+                assignee: updates.assignee_id !== undefined
+                  ? agents.find((a) => a.id === updates.assignee_id) || null
+                  : t.assignee,
+              }
+            : t
         )
       );
     }
-    const changed = Object.keys(updates).filter((k) => !['notes', 'messages', 'attachments'].includes(k));
-    if (changed.length > 0) {
-      const ticket = tickets.find((x) => x.id === id);
-      const assigneeId = updates.assignee_id !== undefined ? updates.assignee_id : ticket?.assignee_id;
-      const assignee = assigneeId ? agents.find((a) => a.id === assigneeId) : null;
+    const changed = Object.keys(updates).filter((k) => k !== 'messages' && k !== 'notes' && k !== 'attachments');
+    if (changed.length) {
+      const assignee = updates.assignee_id
+        ? agents.find((a) => a.id === updates.assignee_id)
+        : ticket?.assignee_id
+          ? agents.find((a) => a.id === ticket.assignee_id)
+          : null;
       const summary = changed.map((k) => `${k}: ${(updates as Record<string, unknown>)[k]}`).join(', ');
       void notifyAgents({
         title: 'Ticket updated',
@@ -396,25 +371,19 @@ export function TicketProvider({ children }: { children: ReactNode }) {
   };
 
   const findTicket = (id: string, email?: string) => {
-    const t = tickets.find((x) => x.id.toLowerCase() === id.trim().toLowerCase());
+    const t = tickets.find((x) => x.id === id);
     if (!t) return undefined;
-    if (email && t.customer_email) {
-      if (t.customer_email.toLowerCase() !== email.trim().toLowerCase()) return undefined;
-    }
+    if (email && t.customer_email && t.customer_email.toLowerCase() !== email.toLowerCase()) return undefined;
     return t;
   };
 
-  const ticketsForEmail = (email: string) => {
-    const e = email.trim().toLowerCase();
-    if (!e) return [];
-    return tickets.filter((t) => (t.customer_email || '').toLowerCase() === e);
-  };
+  const ticketsForEmail = (email: string) =>
+    tickets.filter((t) => (t.customer_email || '').toLowerCase() === email.toLowerCase());
 
   const setAgentAdmin = async (agentId: string, is_admin: boolean) => {
     if (supabase) {
-      const { error } = await supabase.from('agents').update({ is_admin }).eq('id', agentId);
-      if (error) throw error;
-      await refresh();
+      await supabase.from('agents').update({ is_admin }).eq('id', agentId);
+      setAgents((prev) => prev.map((a) => (a.id === agentId ? { ...a, is_admin } : a)));
       if (currentAgent?.id === agentId) setCurrentAgent({ ...currentAgent, is_admin });
     } else {
       setAgents((prev) => prev.map((a) => (a.id === agentId ? { ...a, is_admin } : a)));
@@ -429,7 +398,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         agents,
         customers,
         loading,
-        usingSupabase: isSupabaseConfigured,
+        usingSupabase,
         currentAgent,
         createTicket,
         updateTicket,
