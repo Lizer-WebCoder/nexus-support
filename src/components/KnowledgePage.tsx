@@ -36,19 +36,19 @@ export default function KnowledgePage() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search knowledge base..."
-              className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500/30" />
+              className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30" />
           </div>
           <div className="flex gap-1.5 flex-wrap">
             {categories.map((c) => (
               <button key={c} type="button" onClick={() => setCategory(c)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
-                  category === c ? 'bg-sky-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                  category === c ? 'bg-brand-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}>{c}</button>
             ))}
           </div>
         </div>
         <button type="button" onClick={() => setEditing({ title: '', category: 'General', body: '' })}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-sky-600 rounded-lg hover:bg-sky-700">
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700">
           <Plus size={16} /> New article
         </button>
       </div>
@@ -63,7 +63,7 @@ export default function KnowledgePage() {
           <textarea value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} required rows={5} placeholder="Article body"
             className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" />
           <div className="flex gap-2">
-            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-sky-600 rounded-lg">Save</button>
+            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg">Save</button>
             <button type="button" onClick={() => setEditing(null)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
           </div>
         </form>
@@ -75,7 +75,7 @@ export default function KnowledgePage() {
           <div key={a.id}>
             <div className="flex items-center gap-2 px-5 py-3 hover:bg-slate-50">
               <button type="button" onClick={() => setOpenId(openId === a.id ? null : a.id)} className="flex-1 flex items-center gap-3 text-left">
-                <BookOpen size={18} className="text-sky-500 shrink-0" />
+                <BookOpen size={18} className="text-brand-500 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-slate-800">{a.title}</div>
                   <div className="text-xs text-slate-400 mt-0.5">{a.category}</div>
@@ -83,7 +83,7 @@ export default function KnowledgePage() {
                 <ChevronRight size={16} className={`text-slate-300 transition-transform ${openId === a.id ? 'rotate-90' : ''}`} />
               </button>
               <button type="button" onClick={() => setEditing({ id: a.id, title: a.title, category: a.category, body: a.body })}
-                className="p-1.5 text-slate-400 hover:text-sky-600"><Pencil size={14} /></button>
+                className="p-1.5 text-slate-400 hover:text-brand-600"><Pencil size={14} /></button>
               <button type="button" onClick={() => deleteArticle(a.id)} className="p-1.5 text-slate-400 hover:text-rose-600"><Trash2 size={14} /></button>
             </div>
             {openId === a.id && (
