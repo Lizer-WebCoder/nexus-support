@@ -16,6 +16,8 @@ export interface Agent {
   timezone?: string;
   is_admin?: boolean;
   bio?: string;
+  /** Profile photo (data URL or public URL) */
+  avatar_url?: string | null;
 }
 
 export interface BranchMember {
@@ -39,52 +41,31 @@ export interface Customer {
   company?: string;
 }
 
-export interface TicketNote {
-  id: string;
-  text: string;
-  author: string;
-  created_at: string;
-}
-
 export interface TicketMessage {
   id: string;
-  text: string;
+  ticket_id?: string;
   author: string;
+  text: string;
   kind: 'public' | 'internal';
   created_at: string;
-}
-
-export interface TicketAttachment {
-  id: string;
-  name: string;
-  size: number;
-  mime: string;
-  url: string;
-  created_at: string;
-  uploaded_by?: string;
 }
 
 export interface Ticket {
   id: string;
   title: string;
-  description: string;
-  priority: Priority;
+  description?: string;
   status: Status;
+  priority: Priority;
   channel: Channel;
-  assignee_id?: string | null;
-  customer_id?: string | null;
   customer_name: string;
   customer_email?: string;
   branch?: string;
+  assignee_id?: string | null;
+  assignee?: Agent | null;
   created_at: string;
   updated_at?: string;
-  notes?: TicketNote[];
-  messages?: TicketMessage[];
-  attachments?: TicketAttachment[];
-  tags?: string[];
   sla_due_at?: string | null;
-  first_response_at?: string | null;
-  assignee?: Agent | null;
+  messages?: TicketMessage[];
 }
 
 export interface KnowledgeArticle {
@@ -103,7 +84,6 @@ export interface ChatMessage {
   sender: 'agent' | 'customer';
   text: string;
   created_at: string;
-  /** Optional image or file (data URL or remote URL) */
   attachment_url?: string;
   attachment_name?: string;
   attachment_mime?: string;
@@ -115,72 +95,47 @@ export interface ChatConversation {
   customer_email?: string;
   branch?: string;
   ticket_id?: string;
-  status: 'active' | 'waiting' | 'ended';
-  preview: string;
+  status: 'waiting' | 'active' | 'ended';
   unread: number;
+  preview?: string;
   messages?: ChatMessage[];
   created_at?: string;
   updated_at?: string;
 }
 
-export interface AppNotification {
-  id: string;
-  user_id?: string;
+export const MAX_CHAT_FILE_BYTES = 400_000;
+
+export interface Announcement {
+  id?: string;
   title: string;
   body: string;
-  link?: string;
-  read: boolean;
-  created_at: string;
+  severity: 'info' | 'warning' | 'critical';
+  active: boolean;
+  created_at?: string;
 }
 
 export interface Automation {
-  id: string;
+  id?: string;
   name: string;
   enabled: boolean;
   trigger: string;
-  condition_field?: string;
-  condition_op?: string;
-  condition_value?: string;
+  condition_field: string;
+  condition_op: string;
+  condition_value: string;
   action: string;
-  action_value?: string;
+  action_value: string;
 }
 
-export interface CannedResponse {
-  id: string;
-  title: string;
-  body: string;
-  shortcut?: string;
-}
-
-export interface SurveyResponse {
+export interface Survey {
   id: string;
   ticket_id?: string;
   score: number;
   comment?: string;
   customer_name?: string;
-  created_at: string;
+  created_at?: string;
 }
 
-export interface QualityReview {
-  id: string;
-  ticket_id?: string;
-  agent_name?: string;
-  score: number;
-  notes?: string;
-  reviewer?: string;
-  created_at: string;
-}
-
-export interface Announcement {
-  id: string;
-  title: string;
-  body: string;
-  severity: 'info' | 'warning' | 'critical';
-  active: boolean;
-  created_at: string;
-}
-
-export interface FormDef {
+export interface SupportForm {
   id: string;
   name: string;
   description?: string;
@@ -188,38 +143,10 @@ export interface FormDef {
   active: boolean;
 }
 
-export interface Release {
+export interface ReleaseNote {
   id: string;
   version: string;
   title: string;
   notes: string;
   released_at: string;
 }
-
-export interface TicketFilters {
-  status?: Status | 'all';
-  priority?: Priority | 'all';
-  channel?: Channel | 'all';
-  search?: string;
-  assignee?: string | 'all' | 'unassigned';
-}
-
-export const SLA_HOURS: Record<Priority, { first: number; resolve: number }> = {
-  critical: { first: 0.25, resolve: 4 },
-  high: { first: 1, resolve: 8 },
-  medium: { first: 4, resolve: 24 },
-  low: { first: 8, resolve: 72 },
-};
-
-export function computeSlaDue(priority: Priority, createdAt: string): string {
-  const hours = SLA_HOURS[priority]?.resolve ?? 24;
-  return new Date(new Date(createdAt).getTime() + hours * 3600000).toISOString();
-}
-
-export function ticketBranch(t: Ticket): string {
-  if (t.branch && t.branch.trim()) return t.branch.trim();
-  return 'Unassigned';
-}
-
-export const MAX_ATTACHMENT_BYTES = 1_200_000;
-export const MAX_CHAT_FILE_BYTES = 900_000;
