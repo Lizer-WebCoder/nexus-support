@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Search, CheckCircle2, Ticket, BookOpen, ArrowLeft, MessageSquare, LogIn, LogOut, User } from 'lucide-react';
+import { Search, CheckCircle2, Ticket, BookOpen, ArrowLeft, MessageSquare, LogIn, LogOut, User, Star } from 'lucide-react';
 import { useTickets } from '../context/TicketContext';
 import { useAuth } from '../context/AuthContext';
+import { usePlatform } from '../context/PlatformContext';
 import type { Priority, Ticket as TicketType } from '../types';
 import { INITIAL_BRANCHES } from '../data';
 import PortalLiveChat from './PortalLiveChat';
@@ -33,6 +34,7 @@ function LogoMark() {
 export default function CustomerPortal({ onBackToAgent }: Props) {
   const { createTicket, findTicket, tickets, ticketsForEmail } = useTickets();
   const { user, accountRole, signIn, signUp, signOut, requiresAuth, configError } = useAuth();
+  const { addSurvey, surveys } = usePlatform();
   const [view, setView] = useState<PortalView>('home');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -47,6 +49,10 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
   const [trackEmail, setTrackEmail] = useState('');
   const [tracked, setTracked] = useState<TicketType | null>(null);
   const [trackError, setTrackError] = useState('');
+  const [csatScore, setCsatScore] = useState(5);
+  const [csatComment, setCsatComment] = useState('');
+  const [csatDone, setCsatDone] = useState(false);
+  const [csatSaving, setCsatSaving] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
@@ -95,12 +101,33 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
     e.preventDefault();
     setTrackError('');
     setTracked(null);
+    setCsatDone(false);
+    setCsatComment('');
+    setCsatScore(5);
     const t = findTicket(trackId, trackEmail || undefined);
     if (!t) {
       setTrackError('No ticket found. Check the ID and email you used when submitting.');
       return;
     }
     setTracked(t);
+    setCsatDone(surveys.some((s) => s.ticket_id === t.id));
+  };
+
+  const submitCsat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tracked) return;
+    setCsatSaving(true);
+    try {
+      await addSurvey({
+        ticket_id: tracked.id,
+        score: csatScore,
+        comment: csatComment.trim() || undefined,
+        customer_name: tracked.customer_name || name || undefined,
+      });
+      setCsatDone(true);
+    } finally {
+      setCsatSaving(false);
+    }
   };
 
   const doAuth = async (e: React.FormEvent) => {
@@ -261,12 +288,51 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <button type="submit" className={btnPrimary}>Look up</button>
             </form>
             {tracked && (
-              <div className="mt-4 bg-white rounded-2xl border border-zinc-200 p-5 space-y-2">
+              <div className="mt-4 bg-white rounded-2xl border border-zinc-200 p-5 space-y-3">
                 <div className="flex justify-between"><span className="font-mono text-xs text-zinc-400">{tracked.id}</span>
                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${statusColor[tracked.status] || ''}`}>{tracked.status}</span>
                 </div>
                 <div className="font-semibold text-zinc-900">{tracked.title}</div>
                 <div className="text-xs text-zinc-500">{tracked.branch || 'No branch'} · {new Date(tracked.created_at).toLocaleString()}</div>
+                {tracked.status === 'resolved' && (
+                  <div className="pt-3 border-t border-zinc-100">
+                    {csatDone ? (
+                      <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
+                        Thanks for rating this support experience.
+                      </p>
+                    ) : (
+                      <form onSubmit={submitCsat} className="space-y-3">
+                        <p className="text-sm font-medium text-zinc-800">How was our support?</p>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <button
+                              key={n}
+                              type="button"
+                              onClick={() => setCsatScore(n)}
+                              className={`p-2 rounded-lg border ${csatScore >= n ? 'bg-brand-50 border-brand-200 text-brand-600' : 'border-zinc-200 text-zinc-300'}`}
+                            >
+                              <Star size={18} fill={csatScore >= n ? 'currentColor' : 'none'} />
+                            </button>
+                          ))}
+                        </div>
+                        <textarea
+                          value={csatComment}
+                          onChange={(e) => setCsatComment(e.target.value)}
+                          rows={2}
+                          placeholder="Optional comment"
+                          className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-xl"
+                        />
+                        <button
+                          type="submit"
+                          disabled={csatSaving}
+                          className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 disabled:opacity-50"
+                        >
+                          {csatSaving ? 'Sending…' : 'Submit rating'}
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -318,41 +384,33 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
           <div className="max-w-md mx-auto">
             <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-6"><ArrowLeft size={16} /> Back</button>
             <h1 className="text-2xl font-bold text-zinc-900 mb-1">Customer account</h1>
-            <p className="text-zinc-500 text-sm mb-6">Optional. Sign in to see all tickets under your email.</p>
-            {configError && <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">{configError}</div>}
+            <p className="text-zinc-500 text-sm mb-6">Optional — used to list tickets under your email.</p>
+            {configError && <div className="mb-4 text-sm text-amber-800 bg-amber-50 border border-amber-100 px-3 py-2 rounded-xl">{configError}</div>}
             {isCustomerSession ? (
-              <div className="bg-white/90 rounded-2xl border border-zinc-200 shadow-sm p-6 space-y-4">
-                <div className="text-sm text-zinc-600">Signed in as</div>
-                <div className="font-semibold text-zinc-900">{user?.email}</div>
-                <button type="button" onClick={() => setView('mytickets')} className={btnPrimary}>View my tickets</button>
-                <button type="button" onClick={() => signOut()} className="w-full py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-xl inline-flex items-center justify-center gap-2">
-                  <LogOut size={14} /> Sign out
+              <div className="bg-white/90 rounded-2xl border border-zinc-200 p-6 space-y-3">
+                <p className="text-sm text-zinc-700">Signed in as <strong>{user?.email}</strong></p>
+                <button type="button" onClick={() => signOut()} className="inline-flex items-center gap-2 px-4 py-2 text-sm border border-zinc-200 rounded-xl hover:bg-zinc-50">
+                  <LogOut size={16} /> Sign out
                 </button>
               </div>
-            ) : user && accountRole === 'agent' ? (
-              <div className="bg-white/90 rounded-2xl border border-zinc-200 shadow-sm p-6 space-y-3">
-                <p className="text-sm text-zinc-600">You are signed in as an <strong>agent</strong> ({user.email}).</p>
-                <button type="button" onClick={() => signOut()} className="w-full py-2 text-sm font-medium text-zinc-600 border rounded-xl">Sign out</button>
-              </div>
-            ) : requiresAuth ? (
-              <div className="bg-white/90 rounded-2xl border border-zinc-200 shadow-sm p-6">
-                <div className="flex rounded-lg bg-zinc-100 p-1 mb-4">
-                  <button type="button" onClick={() => setAuthMode('signin')} className={`flex-1 py-2 text-sm font-medium rounded-md ${authMode === 'signin' ? 'bg-white shadow-sm' : 'text-zinc-500'}`}>Sign in</button>
-                  <button type="button" onClick={() => setAuthMode('signup')} className={`flex-1 py-2 text-sm font-medium rounded-md ${authMode === 'signup' ? 'bg-white shadow-sm' : 'text-zinc-500'}`}>Register</button>
-                </div>
-                <form onSubmit={doAuth} className="space-y-3">
-                  {authError && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{authError}</div>}
-                  {authInfo && <div className="text-sm text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg">{authInfo}</div>}
-                  {authMode === 'signup' && (
-                    <div><label className="block text-sm font-medium text-zinc-700 mb-1">Full name</label><input value={authName} onChange={(e) => setAuthName(e.target.value)} className={field} /></div>
-                  )}
-                  <div><label className="block text-sm font-medium text-zinc-700 mb-1">Email</label><input type="email" required value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} className={field} /></div>
-                  <div><label className="block text-sm font-medium text-zinc-700 mb-1">Password</label><input type="password" required minLength={6} value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} className={field} /></div>
-                  <button type="submit" disabled={authLoading} className={btnPrimary}>{authLoading ? 'Please wait…' : authMode === 'signin' ? 'Sign in' : 'Create customer account'}</button>
-                </form>
-              </div>
             ) : (
-              <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-4">Accounts require Supabase. Use Track with ticket ID instead.</div>
+              <form onSubmit={doAuth} className="bg-white/90 rounded-2xl border border-zinc-200 p-6 space-y-4">
+                {authError && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{authError}</div>}
+                {authInfo && <div className="text-sm text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg">{authInfo}</div>}
+                <div className="flex gap-2 text-sm">
+                  <button type="button" onClick={() => setAuthMode('signin')} className={`px-3 py-1 rounded-lg ${authMode === 'signin' ? 'bg-brand-100 text-brand-800' : 'text-zinc-500'}`}>Sign in</button>
+                  <button type="button" onClick={() => setAuthMode('signup')} className={`px-3 py-1 rounded-lg ${authMode === 'signup' ? 'bg-brand-100 text-brand-800' : 'text-zinc-500'}`}>Create account</button>
+                </div>
+                {authMode === 'signup' && (
+                  <div><label className="block text-sm font-medium text-zinc-700 mb-1">Name</label><input value={authName} onChange={(e) => setAuthName(e.target.value)} className={field} /></div>
+                )}
+                <div><label className="block text-sm font-medium text-zinc-700 mb-1">Email</label><input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} required className={field} /></div>
+                <div><label className="block text-sm font-medium text-zinc-700 mb-1">Password</label><input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} required minLength={6} className={field} /></div>
+                <button type="submit" disabled={authLoading || !requiresAuth} className={btnPrimary}>
+                  {authLoading ? 'Please wait…' : authMode === 'signin' ? 'Sign in' : 'Create account'}
+                </button>
+                {!requiresAuth && <p className="text-xs text-zinc-500">Auth requires Supabase configuration.</p>}
+              </form>
             )}
           </div>
         )}
