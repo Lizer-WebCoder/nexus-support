@@ -145,7 +145,6 @@ export default function ProfilePage() {
       } else if (currentAgent) {
         await updateAgentStatus(status);
       }
-      // Always keep a local copy so Team/Sidebar show the photo even if DB column is missing
       if (currentAgent) {
         try {
           if (avatarUrl) localStorage.setItem(`nexus-avatar-${currentAgent.id}`, avatarUrl);
