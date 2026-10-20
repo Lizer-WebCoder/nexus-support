@@ -1,21 +1,102 @@
+import { useMemo } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { pulseData } from '../data';
 import { useTickets } from '../context/TicketContext';
 import ChartTooltip from './ChartTooltip';
 import { TrendingUp } from 'lucide-react';
 
+/** Build 12 × 2-hour buckets for the last 24 hours from real ticket created_at. */
+function buildPulse(tickets: { created_at: string }[]) {
+  const now = Date.now();
+  const bucketMs = 2 * 60 * 60 * 1000;
+  const buckets: { time: string; tickets: number; start: number }[] = [];
+
+  for (let i = 11; i >= 0; i--) {
+    const start = now - (i + 1) * bucketMs;
+    const end = now - i * bucketMs;
+    const labelDate = new Date(end);
+    const hh = String(labelDate.getHours()).padStart(2, '0');
+    const mm = String(labelDate.getMinutes()).padStart(2, '0');
+    buckets.push({ time: `${hh}:${mm}`, tickets: 0, start });
+  }
+
+  for (const t of tickets) {
+    const ts = new Date(t.created_at).getTime();
+    if (Number.isNaN(ts)) continue;
+    if (ts < now - 24 * 60 * 60 * 1000 || ts > now) continue;
+    for (let i = 0; i < buckets.length; i++) {
+      const bStart = buckets[i].start;
+      const bEnd = bStart + bucketMs;
+      if (ts >= bStart && ts < bEnd) {
+        buckets[i].tickets += 1;
+        break;
+      }
+    }
+  }
+
+  return buckets.map(({ time, tickets }) => ({ time, tickets }));
+}
+
+function isSameLocalDay(iso: string | undefined, ref = new Date()) {
+  if (!iso) return false;
+  const d = new Date(iso);
+  return (
+    d.getFullYear() === ref.getFullYear() &&
+    d.getMonth() === ref.getMonth() &&
+    d.getDate() === ref.getDate()
+  );
+}
+
 export default function TicketPulse() {
   const { tickets } = useTickets();
 
-  const statusCards = [
-    { label: 'New', value: tickets.filter((t) => t.status === 'new').length, color: 'bg-brand-50 text-brand-700 border-brand-100' },
-    { label: 'In Progress', value: tickets.filter((t) => t.status === 'open').length, color: 'bg-amber-50 text-amber-800 border-amber-100' },
-    { label: 'Pending', value: tickets.filter((t) => t.status === 'pending').length, color: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100' },
-    { label: 'Resolved Today', value: tickets.filter((t) => t.status === 'resolved').length, color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
-    { label: 'Breached SLAs', value: tickets.filter((t) => t.priority === 'critical' && t.status !== 'resolved').length, color: 'bg-rose-50 text-rose-700 border-rose-100' },
-  ];
+  const pulseData = useMemo(() => buildPulse(tickets), [tickets]);
+  const totalLast24 = useMemo(
+    () => pulseData.reduce((s, b) => s + b.tickets, 0),
+    [pulseData]
+  );
+
+  const now = Date.now();
+  const statusCards = useMemo(() => {
+    const active = tickets.filter((t) => !t.deleted_at);
+    return [
+      {
+        label: 'New',
+        value: active.filter((t) => t.status === 'new').length,
+        color: 'bg-brand-50 text-brand-700 border-brand-100',
+      },
+      {
+        label: 'In Progress',
+        value: active.filter((t) => t.status === 'open').length,
+        color: 'bg-amber-50 text-amber-800 border-amber-100',
+      },
+      {
+        label: 'Pending',
+        value: active.filter((t) => t.status === 'pending').length,
+        color: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100',
+      },
+      {
+        label: 'Resolved Today',
+        value: active.filter(
+          (t) =>
+            t.status === 'resolved' &&
+            isSameLocalDay(t.updated_at || t.created_at)
+        ).length,
+        color: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+      },
+      {
+        label: 'Breached SLAs',
+        value: active.filter(
+          (t) =>
+            t.status !== 'resolved' &&
+            t.sla_due_at &&
+            new Date(t.sla_due_at).getTime() < now
+        ).length,
+        color: 'bg-rose-50 text-rose-700 border-rose-100',
+      },
+    ];
+  }, [tickets, now]);
 
   return (
     <div className="bg-white rounded-2xl border border-zinc-200/80 shadow-card p-5">
@@ -26,6 +107,9 @@ export default function TicketPulse() {
           </span>
           Ticket activity — last 24 hours
         </h2>
+        <span className="text-xs text-zinc-500 tabular-nums">
+          {totalLast24} created in window · {tickets.filter((t) => !t.deleted_at).length} open total
+        </span>
       </div>
       <div className="h-36 mb-5">
         <ResponsiveContainer width="100%" height="100%">
@@ -38,7 +122,13 @@ export default function TicketPulse() {
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
             <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#a1a1aa' }} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#a1a1aa' }} />
+            <YAxis
+              allowDecimals={false}
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 11, fill: '#a1a1aa' }}
+              domain={[0, (max: number) => Math.max(3, max + 1)]}
+            />
             <Tooltip
               cursor={{ stroke: '#c7d2fe', strokeWidth: 1 }}
               content={<ChartTooltip />}
@@ -46,7 +136,7 @@ export default function TicketPulse() {
             <Area
               type="monotone"
               dataKey="tickets"
-              name="Tickets"
+              name="Created"
               stroke="#4f46e5"
               strokeWidth={2.5}
               fill="url(#colorTickets)"
