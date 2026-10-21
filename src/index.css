@@ -273,55 +273,82 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   }
 }
 
-/* Planets */
+/* Planets — low horizon, slow orbital drift */
 .login-planet {
   position: absolute;
   border-radius: 50%;
-  border: 2px solid rgba(100, 140, 255, 0.35);
   pointer-events: none;
-}
-.login-planet-left {
-  width: 42vw;
-  height: 42vw;
-  max-width: 320px;
-  max-height: 320px;
-  left: -18%;
-  bottom: -12%;
-  background: radial-gradient(circle at 35% 30%, #1a2a6a, #050818 70%);
-  box-shadow: inset -20px -10px 40px rgba(0, 0, 0, 0.6);
-  animation: login-planet-drift 40s ease-in-out infinite alternate;
-}
-.login-planet-right {
-  width: 28vw;
-  height: 28vw;
-  max-width: 200px;
-  max-height: 200px;
-  right: -8%;
-  top: 18%;
-  background: radial-gradient(circle at 40% 35%, #2a1060, #080020 70%);
-  border-color: rgba(180, 80, 255, 0.25);
-  animation: login-planet-drift 32s ease-in-out infinite alternate-reverse;
-}
-.login-ring {
-  position: absolute;
-  right: -5%;
-  top: 22%;
-  width: 34vw;
-  max-width: 240px;
-  height: 18px;
-  border: 2px solid rgba(120, 160, 255, 0.3);
-  border-radius: 50%;
-  transform: rotate(-25deg);
-  pointer-events: none;
-  animation: login-planet-drift 32s ease-in-out infinite alternate-reverse;
+  z-index: 1;
 }
 
-@keyframes login-planet-drift {
+/* Main gas giant — bottom-left, partially off-screen */
+.login-planet-main {
+  width: min(48vw, 380px);
+  height: min(48vw, 380px);
+  left: -12%;
+  bottom: -22%;
+  background:
+    radial-gradient(circle at 32% 28%, #3d5a9e 0%, #1a2a5c 45%, #060a18 75%);
+  border: 2px solid rgba(100, 140, 255, 0.25);
+  box-shadow:
+    inset -30px -18px 50px rgba(0, 0, 0, 0.65),
+    0 0 60px rgba(40, 80, 180, 0.2);
+  animation: login-planet-orbit 50s ease-in-out infinite alternate;
+}
+
+/* Thin ring around main planet */
+.login-planet-ring {
+  position: absolute;
+  left: -8%;
+  bottom: -8%;
+  width: min(58vw, 460px);
+  height: min(14vw, 90px);
+  border: 2px solid rgba(140, 170, 255, 0.28);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  transform: rotate(-18deg);
+  box-shadow: 0 0 20px rgba(100, 140, 255, 0.12);
+  animation: login-ring-orbit 50s ease-in-out infinite alternate;
+}
+
+/* Distant smaller body — lower right */
+.login-planet-far {
+  width: min(18vw, 140px);
+  height: min(18vw, 140px);
+  right: 8%;
+  bottom: 8%;
+  background: radial-gradient(circle at 40% 32%, #4a2080, #120028 70%);
+  border: 1px solid rgba(180, 100, 255, 0.3);
+  box-shadow: inset -10px -8px 24px rgba(0, 0, 0, 0.5);
+  animation: login-planet-far-drift 36s ease-in-out infinite alternate;
+  opacity: 0.85;
+}
+
+@keyframes login-planet-orbit {
+  from {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate(4%, -3%) rotate(8deg);
+  }
+}
+
+@keyframes login-ring-orbit {
+  from {
+    transform: rotate(-18deg) translate(0, 0);
+  }
+  to {
+    transform: rotate(-12deg) translate(3%, -2%);
+  }
+}
+
+@keyframes login-planet-far-drift {
   from {
     transform: translate(0, 0);
   }
   to {
-    transform: translate(2%, -3%);
+    transform: translate(-6%, -4%);
   }
 }
 
@@ -373,20 +400,11 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 
 .login-cosmos-vignette {
   background: radial-gradient(
-    ellipse 70% 60% at 50% 45%,
-    transparent 20%,
-    rgba(0, 0, 15, 0.55) 100%
+    ellipse 80% 70% at 50% 40%,
+    transparent 25%,
+    rgba(0, 0, 15, 0.4) 100%
   );
   z-index: 4;
-}
-
-.login-card-glow {
-  box-shadow:
-    0 0 0 1px rgba(232, 121, 249, 0.35),
-    0 0 40px 4px rgba(192, 38, 211, 0.35),
-    0 12px 40px rgba(0, 0, 0, 0.45);
-  position: relative;
-  z-index: 10;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -397,8 +415,9 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   .login-nebula-b,
   .login-beam-core,
   .login-beam-glow,
-  .login-planet,
-  .login-ring {
+  .login-planet-main,
+  .login-planet-far,
+  .login-planet-ring {
     animation: none !important;
   }
 }
