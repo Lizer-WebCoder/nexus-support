@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import type { Ticket, Agent, Customer, Priority, Channel, TicketNote, TicketMessage, AgentStatus } from '../types';
+import type { Ticket, Agent, Customer, Priority, Channel, TicketNote, TicketMessage, AgentStatus, Automation } from '../types';
 import { computeSlaDue } from '../types';
 import { INITIAL_TICKETS, INITIAL_AGENTS, INITIAL_CUSTOMERS, nextTicketId } from '../data';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -14,6 +14,7 @@ import { useAuth } from './AuthContext';
 import { notifyAgents } from '../lib/agentNotify';
 import { pushAudit } from '../lib/audit';
 import { pickAssignee } from '../lib/assign';
+import { applyTicketCreatedAutomations } from '../lib/automations';
 
 interface CreateTicketInput {
   title: string;
@@ -24,6 +25,7 @@ interface CreateTicketInput {
   customer_email?: string;
   branch?: string;
   assignee_id?: string;
+  tags?: string[];
 }
 
 interface TicketContextValue {
@@ -50,10 +52,12 @@ interface TicketContextValue {
         | 'branch'
         | 'attachments'
         | 'deleted_at'
+        | 'tags'
       >
     >
   ) => Promise<void>;
   deleteTicket: (id: string) => Promise<void>;
+  softDeleteTicket: (id: string) => Promise<void>;
   addNote: (ticketId: string, text: string, author?: string) => Promise<void>;
   addMessage: (ticketId: string, text: string, kind?: 'public' | 'internal') => Promise<void>;
   updateAgentStatus: (status: AgentStatus) => Promise<void>;
@@ -65,6 +69,7 @@ interface TicketContextValue {
 
 const TicketContext = createContext<TicketContextValue | null>(null);
 const STORAGE_KEY = 'nexus-tickets-v1';
+const AUTO_LS = 'nexus-auto-v1';
 
 function loadLocal(): Ticket[] {
   try {
@@ -78,6 +83,14 @@ function saveLocal(tickets: Ticket[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
   } catch {}
+}
+
+function loadAutomationsLocal(): Automation[] {
+  try {
+    const raw = localStorage.getItem(AUTO_LS);
+    if (raw) return JSON.parse(raw) as Automation[];
+  } catch {}
+  return [];
 }
 
 function hydrateAvatar(agent: Agent): Agent {
@@ -127,6 +140,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
           notes: t.notes || [],
           messages: t.messages || [],
           attachments: t.attachments || [],
+          tags: t.tags || [],
         }));
         setTickets(list);
       }
@@ -204,10 +218,39 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured && tickets.length) saveLocal(tickets);
   }, [tickets]);
 
+  const loadRules = async (): Promise<Automation[]> => {
+    if (supabase) {
+      const { data } = await supabase.from('automations').select('*');
+      if (data?.length) return data as Automation[];
+    }
+    return loadAutomationsLocal();
+  };
+
   const createTicket = async (data: CreateTicketInput): Promise<Ticket> => {
     const id = nextTicketId(tickets);
     const now = new Date().toISOString();
-    const sla_due_at = computeSlaDue(data.priority, now);
+    let priority = data.priority;
+    let tags = [...(data.tags || [])];
+
+    try {
+      const rules = await loadRules();
+      const applied = applyTicketCreatedAutomations(
+        {
+          title: data.title,
+          description: data.description,
+          priority: data.priority,
+          branch: data.branch,
+          customer_name: data.customer_name,
+        },
+        rules
+      );
+      if (applied.priority) priority = applied.priority;
+      if (applied.tagAdds?.length) tags = Array.from(new Set([...tags, ...applied.tagAdds]));
+    } catch {
+      // rules optional
+    }
+
+    const sla_due_at = computeSlaDue(priority, now);
     const autoAssignee =
       data.assignee_id ||
       pickAssignee(agents, tickets, { branch: data.branch?.trim() }) ||
@@ -216,13 +259,14 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       id,
       title: data.title,
       description: data.description || '',
-      priority: data.priority,
+      priority,
       status: 'new',
       channel: data.channel,
       assignee_id: autoAssignee,
       customer_name: data.customer_name,
       customer_email: data.customer_email || '',
       branch: data.branch?.trim() || undefined,
+      tags,
       created_at: now,
       updated_at: now,
       notes: [],
@@ -231,7 +275,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       sla_due_at,
     };
     if (supabase) {
-      const { error } = await supabase.from('tickets').insert({
+      const payload: Record<string, unknown> = {
         id: ticket.id,
         title: ticket.title,
         description: ticket.description,
@@ -248,8 +292,14 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         sla_due_at: ticket.sla_due_at,
         created_at: ticket.created_at,
         updated_at: ticket.updated_at,
-      });
-      if (error) throw error;
+        tags: ticket.tags,
+      };
+      const { error } = await supabase.from('tickets').insert(payload);
+      if (error) {
+        delete payload.tags;
+        const { error: e2 } = await supabase.from('tickets').insert(payload);
+        if (e2) throw e2;
+      }
       await refresh();
     } else {
       setTickets((prev) => [ticket, ...prev]);
@@ -263,7 +313,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       entity: 'ticket',
       entity_id: ticket.id,
       action: 'create',
-      detail: `${ticket.title}${autoAssignee ? ` · assigned ${autoAssignee}` : ''}`,
+      detail: `${ticket.title}${autoAssignee ? ` · assigned ${autoAssignee}` : ''}${priority !== data.priority ? ` · auto priority ${priority}` : ''}`,
       actor: currentAgent?.name || user?.email || 'Agent',
     });
     return ticket;
@@ -285,6 +335,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         | 'branch'
         | 'attachments'
         | 'deleted_at'
+        | 'tags'
       >
     >
   ) => {
@@ -333,6 +384,10 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         userId: (assignee as Agent & { user_id?: string })?.user_id || undefined,
       });
     }
+  };
+
+  const softDeleteTicket = async (id: string) => {
+    await updateTicket(id, { deleted_at: new Date().toISOString() });
   };
 
   const deleteTicket = async (id: string) => {
@@ -435,6 +490,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         createTicket,
         updateTicket,
         deleteTicket,
+        softDeleteTicket,
         addNote,
         addMessage,
         updateAgentStatus,
