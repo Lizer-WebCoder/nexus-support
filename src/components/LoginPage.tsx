@@ -81,18 +81,18 @@ function useAsteroids(count: number) {
   }, [count]);
 }
 
-type TrailPoint = { x: number; y: number; id: number };
+type TrailPoint = { x: number; y: number };
 
-const TRAIL_LEN = 18;
+const TRAIL_LEN = 28;
 
-/** Logo pilot with a real position-history trail attached to the mark. */
+/** Continuous light-beam trail that stays attached to the logo. */
 function LogoPilotStage() {
   const asteroids = useAsteroids(6);
   const pilotRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const history = useRef<TrailPoint[]>([]);
   const [trail, setTrail] = useState<TrailPoint[]>([]);
-  const idRef = useRef(0);
+  const [stageSize, setStageSize] = useState({ w: 1, h: 1 });
 
   useEffect(() => {
     let raf = 0;
@@ -100,8 +100,7 @@ function LogoPilotStage() {
 
     const tick = (t: number) => {
       raf = requestAnimationFrame(tick);
-      // sample ~30fps so the trail has spacing
-      if (t - lastSample < 32) return;
+      if (t - lastSample < 28) return;
       lastSample = t;
 
       const pilot = pilotRef.current;
@@ -110,28 +109,35 @@ function LogoPilotStage() {
 
       const pr = pilot.getBoundingClientRect();
       const sr = stage.getBoundingClientRect();
+      setStageSize({ w: sr.width, h: sr.height });
+
       const x = pr.left + pr.width / 2 - sr.left;
       const y = pr.top + pr.height / 2 - sr.top;
 
       const prev = history.current[0];
-      // skip if barely moved (avoids a blob when idle)
-      if (prev && Math.hypot(prev.x - x, prev.y - y) < 1.5) {
-        // still age the trail so it fades when stopped
-        if (history.current.length > 0) {
-          history.current = history.current.slice(0, Math.max(0, history.current.length - 1));
+      if (prev && Math.hypot(prev.x - x, prev.y - y) < 1.2) {
+        if (history.current.length > 2) {
+          history.current = history.current.slice(0, -1);
           setTrail([...history.current]);
         }
         return;
       }
 
-      idRef.current += 1;
-      history.current = [{ x, y, id: idRef.current }, ...history.current].slice(0, TRAIL_LEN);
+      history.current = [{ x, y }, ...history.current].slice(0, TRAIL_LEN);
       setTrail([...history.current]);
     };
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, []);
+
+  // Smooth path through history (logo is index 0)
+  const pathD =
+    trail.length >= 2
+      ? trail
+          .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+          .join(' ')
+      : '';
 
   return (
     <div
@@ -157,27 +163,67 @@ function LogoPilotStage() {
         />
       ))}
 
-      {/* Connected trail — opacity & size fall off with distance from logo (index) */}
-      {trail.map((p, i) => {
-        const t = i / Math.max(1, TRAIL_LEN - 1); // 0 = nearest logo, 1 = farthest
-        const opacity = Math.max(0, 0.85 * (1 - t) ** 1.6);
-        const size = 14 + (1 - t) * 10;
-        return (
-          <span
-            key={p.id}
-            className="login-trail-dot"
-            style={{
-              left: p.x,
-              top: p.y,
-              width: size,
-              height: size,
-              marginLeft: -size / 2,
-              marginTop: -size / 2,
-              opacity,
-            }}
+      {/* Light beam trail — continuous stroke, brightest at logo */}
+      {pathD && (
+        <svg
+          className="login-light-trail absolute inset-0 w-full h-full"
+          width={stageSize.w}
+          height={stageSize.h}
+          viewBox={`0 0 ${stageSize.w} ${stageSize.h}`}
+        >
+          <defs>
+            <linearGradient id="beamGrad" gradientUnits="userSpaceOnUse"
+              x1={trail[0]?.x ?? 0}
+              y1={trail[0]?.y ?? 0}
+              x2={trail[trail.length - 1]?.x ?? 0}
+              y2={trail[trail.length - 1]?.y ?? 0}
+            >
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+              <stop offset="18%" stopColor="#f0abfc" stopOpacity="0.75" />
+              <stop offset="45%" stopColor="#d946ef" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#a21caf" stopOpacity="0" />
+            </linearGradient>
+            <filter id="beamBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" />
+            </filter>
+            <filter id="beamBlurSoft" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="10" />
+            </filter>
+          </defs>
+          {/* Soft outer glow */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke="url(#beamGrad)"
+            strokeWidth={28}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#beamBlurSoft)"
+            opacity={0.55}
           />
-        );
-      })}
+          {/* Core beam */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke="url(#beamGrad)"
+            strokeWidth={10}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#beamBlur)"
+          />
+          {/* Bright inner core near logo */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={0.85}
+            style={{ strokeDasharray: '40 400' }}
+          />
+        </svg>
+      )}
 
       <div ref={pilotRef} className="login-pilot">
         <div className="login-pilot-glow" />
@@ -196,23 +242,7 @@ function CosmicFallBackground() {
       <div className="login-nebula login-nebula-a absolute inset-0" />
       <div className="login-nebula login-nebula-b absolute inset-0" />
 
-      <div className="login-beam absolute left-1/2 top-0 -translate-x-1/2 opacity-55">
-        <div className="login-beam-core" />
-        <div className="login-beam-glow" />
-        <div className="login-beam-particles">
-          {Array.from({ length: 8 }, (_, i) => (
-            <span
-              key={i}
-              className="login-beam-spark"
-              style={{
-                left: `${20 + (i % 5) * 15}%`,
-                animationDelay: `${i * 0.4}s`,
-                animationDuration: `${2.4 + (i % 4) * 0.4}s`,
-              }}
-            />
-          ))}
-        </div>
-      </div>
+      {/* No fixed top beam — the light trail is attached to the logo */}
 
       <div className="login-planet login-planet-main" />
       <div className="login-planet-ring" />
