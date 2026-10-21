@@ -24,6 +24,7 @@ export interface Agent {
   work_hours_end?: string | null;
   out_of_office?: boolean | null;
   ooo_message?: string | null;
+  branch?: string | null;
 }
 
 export interface BranchMember {
@@ -45,6 +46,8 @@ export interface Customer {
   name: string;
   email?: string;
   company?: string;
+  role?: string;
+  branch?: string | null;
 }
 
 export interface TicketMessage {
