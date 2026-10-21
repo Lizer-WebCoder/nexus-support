@@ -32,7 +32,6 @@ export default function TicketsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [, setTick] = useState(0);
 
-  // Refresh SLA countdown every 30s
   useEffect(() => {
     const id = window.setInterval(() => setTick((n) => n + 1), 30_000);
     return () => clearInterval(id);
@@ -49,7 +48,9 @@ export default function TicketsPage() {
         if (
           !t.title.toLowerCase().includes(q) &&
           !t.id.toLowerCase().includes(q) &&
-          !t.customer_name.toLowerCase().includes(q)
+          !t.customer_name.toLowerCase().includes(q) &&
+          !(t.branch || '').toLowerCase().includes(q) &&
+          !(t.customer_email || '').toLowerCase().includes(q)
         )
           return false;
       }
@@ -58,32 +59,15 @@ export default function TicketsPage() {
   }, [tickets, search, statusFilter, priorityFilter, showTrash]);
 
   const selected = selectedId ? tickets.find((t) => t.id === selectedId) : null;
-  const trashCount = tickets.filter((t) => t.deleted_at).length;
-
-  const softDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm('Move this ticket to trash?')) return;
-    await updateTicket(id, { deleted_at: new Date().toISOString() } as never);
-  };
-
-  const restore = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    await updateTicket(id, { deleted_at: null } as never);
-  };
-
-  const hardDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm('Permanently delete this ticket?')) return;
-    await deleteTicket(id);
-  };
 
   const exportCsv = () => {
-    const headers = ['ID', 'Title', 'Customer', 'Email', 'Priority', 'Status', 'Channel', 'Assignee', 'SLA due', 'Created'];
+    const headers = ['ID', 'Title', 'Customer', 'Email', 'Branch', 'Priority', 'Status', 'Channel', 'Assignee', 'SLA due', 'Created'];
     const rows = filtered.map((t) => [
       t.id,
       `"${t.title.replace(/"/g, '""')}"`,
       `"${t.customer_name.replace(/"/g, '""')}"`,
       t.customer_email || '',
+      t.branch || '',
       t.priority,
       t.status,
       t.channel,
@@ -96,80 +80,87 @@ export default function TicketsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `tickets-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = 'nexus-tickets.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
 
+  const softDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Move this ticket to trash?')) return;
+    await deleteTicket(id);
+  };
+
+  const restore = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await updateTicket(id, { deleted_at: null } as never);
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3 justify-between">
-        <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tickets…"
-              className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as Status | 'all')}
-            className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"
-          >
-            <option value="all">All statuses</option>
-            {(['new', 'open', 'pending', 'resolved', 'on-hold'] as Status[]).map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-          <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
-            className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"
-          >
-            <option value="all">All priorities</option>
-            {(['critical', 'high', 'medium', 'low'] as Priority[]).map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={() => setShowTrash((v) => !v)}
-            className={clsx(
-              'text-sm px-3 py-2 rounded-lg border',
-              showTrash ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-white border-slate-200 text-slate-600'
-            )}
-          >
-            Trash{trashCount ? ` (${trashCount})` : ''}
-          </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search tickets, customers, branches..."
+            className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={exportCsv}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50"
-          >
-            <Download size={16} /> Export
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
-          >
-            <Plus size={16} /> New ticket
-          </button>
-        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as Status | 'all')}
+          className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"
+        >
+          <option value="all">All statuses</option>
+          <option value="new">New</option>
+          <option value="open">Open</option>
+          <option value="pending">Pending</option>
+          <option value="on-hold">On hold</option>
+          <option value="resolved">Resolved</option>
+        </select>
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
+          className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"
+        >
+          <option value="all">All priorities</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <button
+          type="button"
+          onClick={() => setShowTrash((v) => !v)}
+          className={clsx(
+            'text-sm px-3 py-2 rounded-lg border',
+            showTrash ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-white border-slate-200 text-slate-600'
+          )}
+        >
+          Trash
+        </button>
+        <div className="flex-1" />
+        <button
+          type="button"
+          onClick={exportCsv}
+          className="inline-flex items-center gap-1.5 text-sm px-3 py-2 border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50"
+        >
+          <Download size={16} /> Export
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
+          className="inline-flex items-center gap-1.5 text-sm px-3 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 font-medium"
+        >
+          <Plus size={16} /> New ticket
+        </button>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-slate-500">Loading tickets...</div>
-        ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-slate-500">
-            {showTrash ? 'Trash is empty.' : 'No tickets match your filters.'}
-          </div>
+          <div className="p-10 text-center text-slate-400 text-sm">Loading tickets...</div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
@@ -177,6 +168,7 @@ export default function TicketsPage() {
                 <th className="px-4 py-3 font-medium">ID</th>
                 <th className="px-4 py-3 font-medium">Title</th>
                 <th className="px-4 py-3 font-medium">Customer</th>
+                <th className="px-4 py-3 font-medium">Branch</th>
                 <th className="px-4 py-3 font-medium">Priority</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">SLA</th>
@@ -196,7 +188,15 @@ export default function TicketsPage() {
                   >
                     <td className="px-4 py-3 font-mono text-xs text-slate-500">{t.id}</td>
                     <td className="px-4 py-3 font-medium text-slate-800 max-w-xs truncate">{t.title}</td>
-                    <td className="px-4 py-3 text-slate-600">{t.customer_name}</td>
+                    <td className="px-4 py-3">
+                      <div className="text-slate-800 font-medium">{t.customer_name}</div>
+                      {t.customer_email && (
+                        <div className="text-[11px] text-slate-400 truncate max-w-[140px]">{t.customer_email}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-600 text-xs max-w-[120px] truncate" title={t.branch || ''}>
+                      {t.branch || '—'}
+                    </td>
                     <td className="px-4 py-3">
                       <span className={clsx('text-[10px] font-bold uppercase px-1.5 py-0.5 rounded', priorityStyles[t.priority])}>
                         {t.priority}
@@ -222,21 +222,14 @@ export default function TicketsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 capitalize text-slate-600">{t.channel}</td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {t.assignee ? t.assignee.initials : <span className="text-slate-400">—</span>}
-                    </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-slate-600">{t.assignee?.initials || t.assignee?.name || '—'}</td>
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       {showTrash ? (
-                        <div className="flex gap-1">
-                          <button type="button" title="Restore" onClick={(e) => void restore(t.id, e)} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded">
-                            <RotateCcw size={14} />
-                          </button>
-                          <button type="button" title="Delete forever" onClick={(e) => void hardDelete(t.id, e)} className="p-1 text-rose-600 hover:bg-rose-50 rounded">
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
+                        <button type="button" onClick={(e) => void restore(t.id, e)} className="p-1.5 text-slate-400 hover:text-emerald-600" title="Restore">
+                          <RotateCcw size={14} />
+                        </button>
                       ) : (
-                        <button type="button" title="Move to trash" onClick={(e) => void softDelete(t.id, e)} className="p-1 text-slate-400 hover:text-rose-600 rounded">
+                        <button type="button" onClick={(e) => void softDelete(t.id, e)} className="p-1.5 text-slate-400 hover:text-rose-600" title="Trash">
                           <Trash2 size={14} />
                         </button>
                       )}
@@ -247,15 +240,15 @@ export default function TicketsPage() {
             </tbody>
           </table>
         )}
+        {!loading && filtered.length === 0 && (
+          <div className="p-10 text-center text-slate-400 text-sm">No tickets match.</div>
+        )}
       </div>
 
-      <div className="text-xs text-slate-500">
-        Showing {filtered.length} of {tickets.filter((t) => (showTrash ? t.deleted_at : !t.deleted_at)).length} tickets
-        {showTrash ? ' in trash' : ''}
-      </div>
+      <div className="text-xs text-slate-500">Showing {filtered.length} of {tickets.filter((t) => !!t.deleted_at === showTrash).length} tickets</div>
 
       {showCreate && <CreateTicketModal onClose={() => setShowCreate(false)} />}
-      {selected && !selected.deleted_at && <TicketDetail ticket={selected} onClose={() => setSelectedId(null)} />}
+      {selected && <TicketDetail ticket={selected} onClose={() => setSelectedId(null)} />}
     </div>
   );
 }
