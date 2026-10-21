@@ -1,6 +1,6 @@
 export type Priority = 'critical' | 'high' | 'medium' | 'low';
-export type Status = 'new' | 'open' | 'pending' | 'on-hold' | 'resolved';
-export type Channel = 'email' | 'chat' | 'portal' | 'phone' | 'social';
+export type Status = 'new' | 'open' | 'pending' | 'resolved' | 'on-hold';
+export type Channel = 'email' | 'chat' | 'phone' | 'portal' | 'social';
 export type AgentStatus = 'online' | 'busy' | 'away' | 'offline';
 
 export interface Agent {
@@ -17,6 +17,10 @@ export interface Agent {
   is_admin?: boolean;
   avatar_url?: string | null;
   branch?: string | null;
+  skills?: string[];
+  working_hours?: string;
+  ooo?: boolean;
+  signature?: string;
 }
 
 export interface BranchMember {
@@ -40,7 +44,6 @@ export interface Customer {
   company?: string;
   role?: string;
   branch?: string | null;
-  /** pending = awaiting admin approval; approved = can use portal fully */
   status?: 'pending' | 'approved' | 'rejected' | null;
   created_at?: string;
 }
@@ -96,7 +99,138 @@ export interface Ticket {
   csat?: number | null;
 }
 
+const SLA_HOURS: Record<Priority, number> = {
+  critical: 4,
+  high: 8,
+  medium: 24,
+  low: 72,
+};
+
+export function computeSlaDue(priority: Priority, fromIso?: string): string {
+  const start = fromIso ? new Date(fromIso).getTime() : Date.now();
+  const hours = SLA_HOURS[priority] ?? 24;
+  return new Date(start + hours * 3_600_000).toISOString();
+}
+
 export function ticketBranch(t: Pick<Ticket, 'branch' | 'customer_name'>): string {
   if (t.branch && t.branch.trim()) return t.branch.trim();
   return '';
+}
+
+export interface KnowledgeArticle {
+  id: string;
+  title: string;
+  body: string;
+  category?: string;
+  tags?: string[];
+  updated_at?: string;
+  published?: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  conversation_id?: string;
+  author: string;
+  text: string;
+  created_at: string;
+  is_agent?: boolean;
+  file_url?: string;
+  file_name?: string;
+}
+
+export interface ChatConversation {
+  id: string;
+  customer_name: string;
+  customer_email?: string;
+  status: 'open' | 'closed' | 'waiting';
+  agent_id?: string;
+  created_at: string;
+  updated_at?: string;
+  messages?: ChatMessage[];
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  body?: string;
+  read?: boolean;
+  created_at: string;
+  type?: string;
+  link?: string;
+  agent_id?: string;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  active?: boolean;
+  created_at?: string;
+}
+
+export interface Automation {
+  id: string;
+  name: string;
+  trigger: string;
+  action: string;
+  active: boolean;
+  description?: string;
+}
+
+export interface CannedResponse {
+  id: string;
+  title: string;
+  body: string;
+  shortcut?: string;
+}
+
+export interface Survey {
+  id: string;
+  ticket_id?: string;
+  score: number;
+  comment?: string;
+  customer_name?: string;
+  created_at?: string;
+}
+
+export type SurveyResponse = Survey;
+
+export interface QualityReview {
+  id: string;
+  ticket_id?: string;
+  score: number;
+  notes?: string;
+  reviewer?: string;
+  agent_name?: string;
+  created_at?: string;
+}
+
+export interface SupportForm {
+  id: string;
+  name: string;
+  description?: string;
+  fields: { id: string; label: string; type: string; required?: boolean }[];
+  active: boolean;
+}
+
+export type FormDef = SupportForm;
+
+export interface ReleaseNote {
+  id: string;
+  version: string;
+  title: string;
+  notes: string;
+  released_at: string;
+}
+
+export type Release = ReleaseNote;
+
+export interface AuditEntry {
+  id: string;
+  entity: string;
+  entity_id: string;
+  action: string;
+  detail?: string;
+  actor?: string;
+  created_at: string;
 }
