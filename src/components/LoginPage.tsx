@@ -56,7 +56,6 @@ function useAsteroids(count: number) {
       '48% 52% 60% 40%',
       '65% 35% 45% 55%',
     ];
-    // Spread across lower third so logo can dodge while flying
     const starts = [18, 28, 38, 55, 68, 78];
 
     return Array.from({ length: count }, (_, i) => {
@@ -81,7 +80,15 @@ function useAsteroids(count: number) {
 
 type TrailPoint = { x: number; y: number };
 
-const TRAIL_LEN = 36;
+const TRAIL_LEN = 32;
+
+function easeInOut(t: number) {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+
+function randomIn(min: number, max: number) {
+  return min + Math.random() * (max - min);
+}
 
 function LogoPilotStage() {
   const asteroids = useAsteroids(5);
@@ -91,44 +98,108 @@ function LogoPilotStage() {
   const [trail, setTrail] = useState<TrailPoint[]>([]);
   const [stageSize, setStageSize] = useState({ w: 1, h: 1 });
 
+  // Random waypoint flight — no fixed loop
   useEffect(() => {
     let raf = 0;
     let lastSample = 0;
 
-    const tick = (t: number) => {
+    // Position in stage pixels (center of logo)
+    let x = 0;
+    let y = 0;
+    let fromX = 0;
+    let fromY = 0;
+    let toX = 0;
+    let toY = 0;
+    let toScale = 1;
+    let fromScale = 1;
+    let scale = 1;
+    let startT = 0;
+    let duration = 2500;
+    let ready = false;
+
+    const pickTarget = (w: number, h: number) => {
+      // Stay in middle band so it doesn't cover the login card / left text too hard
+      const marginX = w * 0.12;
+      const marginY = h * 0.1;
+      // Prefer larger jumps for variety
+      let nx = randomIn(marginX, w - marginX);
+      let ny = randomIn(marginY, h - marginY);
+      // Occasionally dive low or climb high
+      if (Math.random() < 0.25) ny = randomIn(h * 0.55, h * 0.88);
+      if (Math.random() < 0.25) ny = randomIn(h * 0.08, h * 0.28);
+      if (Math.random() < 0.2) nx = randomIn(marginX, w * 0.35);
+      if (Math.random() < 0.2) nx = randomIn(w * 0.55, w - marginX);
+
+      fromX = x;
+      fromY = y;
+      fromScale = scale;
+      toX = nx;
+      toY = ny;
+      toScale = randomIn(0.88, 1.14);
+      startT = performance.now();
+      // Longer for long distances, shorter for nearby hops
+      const dist = Math.hypot(toX - fromX, toY - fromY);
+      duration = Math.min(4200, Math.max(1400, dist * 2.2 + randomIn(200, 800)));
+    };
+
+    const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
-      if (t - lastSample < 22) return;
-      lastSample = t;
 
-      const pilot = pilotRef.current;
       const stage = stageRef.current;
-      if (!pilot || !stage) return;
+      const pilot = pilotRef.current;
+      if (!stage || !pilot) return;
 
-      const pr = pilot.getBoundingClientRect();
       const sr = stage.getBoundingClientRect();
-      setStageSize({ w: sr.width, h: sr.height });
+      if (sr.width < 10 || sr.height < 10) return;
 
-      const x = pr.left + pr.width / 2 - sr.left;
-      const y = pr.top + pr.height / 2 - sr.top;
+      if (!ready) {
+        x = sr.width * 0.5;
+        y = sr.height * 0.35;
+        fromX = x;
+        fromY = y;
+        toX = x;
+        toY = y;
+        ready = true;
+        pickTarget(sr.width, sr.height);
+        setStageSize({ w: sr.width, h: sr.height });
+      }
 
-      const prev = history.current[0];
-      if (prev && Math.hypot(prev.x - x, prev.y - y) < 2) {
-        if (history.current.length > 3) {
+      // Update stage size occasionally
+      if (Math.abs(sr.width - stageSize.w) > 8 || Math.abs(sr.height - stageSize.h) > 8) {
+        setStageSize({ w: sr.width, h: sr.height });
+      }
+
+      const t = Math.min(1, (now - startT) / duration);
+      const e = easeInOut(t);
+      x = fromX + (toX - fromX) * e;
+      y = fromY + (toY - fromY) * e;
+      scale = fromScale + (toScale - fromScale) * e;
+
+      pilot.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${scale})`;
+
+      if (t >= 1) {
+        pickTarget(sr.width, sr.height);
+      }
+
+      // Trail sample
+      if (now - lastSample >= 24) {
+        lastSample = now;
+        const prev = history.current[0];
+        if (!prev || Math.hypot(prev.x - x, prev.y - y) >= 2.5) {
+          history.current = [{ x, y }, ...history.current].slice(0, TRAIL_LEN);
+          setTrail([...history.current]);
+        } else if (history.current.length > 4) {
           history.current = history.current.slice(0, -1);
           setTrail([...history.current]);
         }
-        return;
       }
-
-      history.current = [{ x, y }, ...history.current].slice(0, TRAIL_LEN);
-      setTrail([...history.current]);
     };
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Smooth quadratic path for a continuous shooting-star ribbon
   const pathD = useMemo(() => {
     if (trail.length < 2) return '';
     let d = `M ${trail[0].x.toFixed(1)} ${trail[0].y.toFixed(1)}`;
@@ -182,80 +253,70 @@ function LogoPilotStage() {
               x2={trail[trail.length - 1]?.x ?? 0}
               y2={trail[trail.length - 1]?.y ?? 0}
             >
-              <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
-              <stop offset="12%" stopColor="#fce7f3" stopOpacity="0.95" />
-              <stop offset="35%" stopColor="#e879f9" stopOpacity="0.65" />
-              <stop offset="65%" stopColor="#c026d3" stopOpacity="0.28" />
-              <stop offset="100%" stopColor="#701a75" stopOpacity="0" />
+              <stop offset="0%" stopColor="#f0abfc" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#e879f9" stopOpacity="0.55" />
+              <stop offset="55%" stopColor="#c026d3" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#86198f" stopOpacity="0" />
             </linearGradient>
             <filter id="starGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feGaussianBlur stdDeviation="7" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
             <filter id="starBloom" x="-150%" y="-150%" width="400%" height="400%">
-              <feGaussianBlur stdDeviation="14" />
+              <feGaussianBlur stdDeviation="16" />
             </filter>
           </defs>
 
-          {/* Wide bloom — soft shooting-star wash */}
+          {/* Soft bloom only — no hard white core line */}
           <path
             d={pathD}
             fill="none"
             stroke="url(#starTrailGrad)"
-            strokeWidth={42}
+            strokeWidth={48}
             strokeLinecap="round"
             strokeLinejoin="round"
             filter="url(#starBloom)"
-            opacity={0.45}
+            opacity={0.5}
           />
-
-          {/* Mid ribbon */}
           <path
             d={pathD}
             fill="none"
             stroke="url(#starTrailGrad)"
-            strokeWidth={16}
+            strokeWidth={18}
             strokeLinecap="round"
             strokeLinejoin="round"
             filter="url(#starGlow)"
-            opacity={0.9}
-          />
-
-          {/* Hot white core */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke="#ffffff"
-            strokeWidth={4}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity={0.95}
+            opacity={0.85}
           />
         </svg>
       )}
 
-      {/* Spark particles along trail */}
-      {trail.slice(2, 14).map((p, i) => {
-        const t = i / 12;
+      {trail.slice(2, 12).map((p, i) => {
+        const t = i / 10;
         return (
           <span
-            key={`spark-${i}-${Math.round(p.x)}-${Math.round(p.y)}`}
+            key={`spark-${i}-${Math.round(p.x)}`}
             className="login-trail-spark"
             style={{
-              left: p.x + ((i % 3) - 1) * 6,
-              top: p.y + ((i % 2) * 4 - 2),
-              opacity: Math.max(0, 0.7 * (1 - t)),
-              width: 3 + (1 - t) * 3,
-              height: 3 + (1 - t) * 3,
+              left: p.x + ((i % 3) - 1) * 5,
+              top: p.y + ((i % 2) * 3 - 1),
+              opacity: Math.max(0, 0.55 * (1 - t)),
+              width: 2 + (1 - t) * 3,
+              height: 2 + (1 - t) * 3,
             }}
           />
         );
       })}
 
-      <div ref={pilotRef} className="login-pilot">
+      {/* JS-positioned pilot (no CSS keyframe loop) */}
+      <div
+        ref={pilotRef}
+        className="login-pilot login-pilot-js"
+        style={{ left: 0, top: 0, transform: 'translate(-50%, -50%)' }}
+      >
         <div className="login-pilot-glow" />
         <NexusLogoMark size={64} />
       </div>
