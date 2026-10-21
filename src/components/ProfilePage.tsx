@@ -1,30 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
-import { Camera, Trash2 } from 'lucide-react';
+import { Camera, Trash2, ZoomIn, ZoomOut, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTickets } from '../context/TicketContext';
 import { supabase } from '../lib/supabase';
 import type { AgentStatus } from '../types';
 
 const MAX_AVATAR_BYTES = 350_000;
+const OUTPUT_SIZE = 256;
 
-async function fileToAvatarDataUrl(file: File): Promise<string> {
-  if (!file.type.startsWith('image/')) throw new Error('Please choose an image file (PNG, JPG, WebP).');
-  if (file.size > 6_000_000) throw new Error('Image is too large (max ~6MB before resize).');
-
-  const bitmap = await createImageBitmap(file);
-  const size = 256;
+function cropToDataUrl(
+  img: HTMLImageElement,
+  crop: { x: number; y: number; size: number }
+): string {
   const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
+  canvas.width = OUTPUT_SIZE;
+  canvas.height = OUTPUT_SIZE;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not process image');
-
-  const min = Math.min(bitmap.width, bitmap.height);
-  const sx = (bitmap.width - min) / 2;
-  const sy = (bitmap.height - min) / 2;
-  ctx.drawImage(bitmap, sx, sy, min, min, 0, 0, size, size);
-  bitmap.close();
-
+  const sx = Math.max(0, Math.min(crop.x, img.naturalWidth - 1));
+  const sy = Math.max(0, Math.min(crop.y, img.naturalHeight - 1));
+  const s = Math.min(crop.size, img.naturalWidth - sx, img.naturalHeight - sy);
+  ctx.drawImage(img, sx, sy, s, s, 0, 0, OUTPUT_SIZE, OUTPUT_SIZE);
   let quality = 0.85;
   let dataUrl = canvas.toDataURL('image/jpeg', quality);
   while (dataUrl.length > MAX_AVATAR_BYTES && quality > 0.4) {
@@ -53,6 +49,14 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [imgNatural, setImgNatural] = useState({ w: 0, h: 0 });
+  const [crop, setCrop] = useState({ x: 0, y: 0, size: 100 });
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef({ mx: 0, my: 0, cx: 0, cy: 0 });
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (currentAgent) {
       setName(currentAgent.name);
@@ -74,21 +78,88 @@ export default function ProfilePage() {
     }
   }, [currentAgent, user]);
 
-  const onPickPhoto = async (file: File | undefined) => {
-    if (!file) return;
+  const openCropper = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setErr('Please choose an image file (PNG, JPG, WebP).');
+      return;
+    }
+    if (file.size > 8_000_000) {
+      setErr('Image is too large (max ~8MB).');
+      return;
+    }
     setErr('');
-    setMsg('');
+    const url = URL.createObjectURL(file);
+    setCropSrc(url);
+  };
+
+  const onCropImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    imgRef.current = img;
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    setImgNatural({ w, h });
+    const size = Math.min(w, h);
+    setCrop({ x: (w - size) / 2, y: (h - size) / 2, size });
+  };
+
+  const zoomCrop = (factor: number) => {
+    setCrop((c) => {
+      const minSize = Math.min(imgNatural.w, imgNatural.h) * 0.15;
+      const maxSize = Math.min(imgNatural.w, imgNatural.h);
+      const size = Math.min(maxSize, Math.max(minSize, c.size * factor));
+      const cx = c.x + c.size / 2;
+      const cy = c.y + c.size / 2;
+      let x = cx - size / 2;
+      let y = cy - size / 2;
+      x = Math.max(0, Math.min(x, imgNatural.w - size));
+      y = Math.max(0, Math.min(y, imgNatural.h - size));
+      return { x, y, size };
+    });
+  };
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    setDragging(true);
+    dragStart.current = { mx: e.clientX, my: e.clientY, cx: crop.x, cy: crop.y };
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragging || !stageRef.current || !imgNatural.w) return;
+    const stage = stageRef.current.getBoundingClientRect();
+    const scale = Math.max(stage.width / imgNatural.w, stage.height / imgNatural.h);
+    const dx = (e.clientX - dragStart.current.mx) / scale;
+    const dy = (e.clientY - dragStart.current.my) / scale;
+    let x = dragStart.current.cx - dx;
+    let y = dragStart.current.cy - dy;
+    x = Math.max(0, Math.min(x, imgNatural.w - crop.size));
+    y = Math.max(0, Math.min(y, imgNatural.h - crop.size));
+    setCrop((c) => ({ ...c, x, y }));
+  };
+
+  const onPointerUp = () => setDragging(false);
+
+  const applyCrop = () => {
+    if (!imgRef.current) return;
     setUploading(true);
     try {
-      const dataUrl = await fileToAvatarDataUrl(file);
+      const dataUrl = cropToDataUrl(imgRef.current, crop);
       setAvatarUrl(dataUrl);
       setMsg('Photo ready — click Save profile to apply.');
+      if (cropSrc) URL.revokeObjectURL(cropSrc);
+      setCropSrc(null);
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : 'Could not read image');
+      setErr(e instanceof Error ? e.message : 'Could not crop image');
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
     }
+  };
+
+  const cancelCrop = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    if (fileRef.current) fileRef.current.value = '';
   };
 
   const clearPhoto = () => {
@@ -104,10 +175,7 @@ export default function ProfilePage() {
     try {
       if (supabase && user) {
         await supabase.auth.updateUser({
-          data: {
-            full_name: name.trim(),
-            avatar_url: avatarUrl || null,
-          },
+          data: { full_name: name.trim(), avatar_url: avatarUrl || null },
         });
         if (currentAgent) {
           const parts = name.trim().split(/\s+/);
@@ -126,14 +194,17 @@ export default function ProfilePage() {
             .eq('id', currentAgent.id);
           if (error) {
             if (String(error.message || '').toLowerCase().includes('avatar_url')) {
-              await supabase.from('agents').update({
-                name: name.trim(),
-                initials,
-                phone: phone.trim() || null,
-                bio: bio.trim() || null,
-                timezone,
-                status,
-              }).eq('id', currentAgent.id);
+              await supabase
+                .from('agents')
+                .update({
+                  name: name.trim(),
+                  initials,
+                  phone: phone.trim() || null,
+                  bio: bio.trim() || null,
+                  timezone,
+                  status,
+                })
+                .eq('id', currentAgent.id);
               setErr('Photo needs a DB column. Run: alter table public.agents add column if not exists avatar_url text;');
             } else {
               throw error;
@@ -163,7 +234,10 @@ export default function ProfilePage() {
     e.preventDefault();
     setMsg('');
     setErr('');
-    if (password.length < 6) { setErr('Password must be at least 6 characters'); return; }
+    if (password.length < 6) {
+      setErr('Password must be at least 6 characters');
+      return;
+    }
     setSaving(true);
     try {
       if (!supabase) throw new Error('Cloud auth required to change password');
@@ -185,6 +259,18 @@ export default function ProfilePage() {
     .slice(0, 2)
     .toUpperCase();
 
+  const stageW = 320;
+  const stageH = 320;
+  const coverScale =
+    imgNatural.w > 0 ? Math.max(stageW / imgNatural.w, stageH / imgNatural.h) : 1;
+  const dispW = imgNatural.w * coverScale;
+  const dispH = imgNatural.h * coverScale;
+  const offX = (stageW - dispW) / 2;
+  const offY = (stageH - dispH) / 2;
+  const frameLeft = offX + crop.x * coverScale;
+  const frameTop = offY + crop.y * coverScale;
+  const frameSize = crop.size * coverScale;
+
   return (
     <div className="max-w-2xl mx-auto space-y-8 pb-10">
       <div className="bg-white rounded-2xl border border-zinc-200 shadow-card p-8">
@@ -195,7 +281,10 @@ export default function ProfilePage() {
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif"
               className="hidden"
-              onChange={(e) => void onPickPhoto(e.target.files?.[0])}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) openCropper(f);
+              }}
             />
             <button
               type="button"
@@ -213,7 +302,7 @@ export default function ProfilePage() {
               )}
               <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-medium gap-0.5">
                 <Camera size={18} />
-                {uploading ? '...' : 'Change'}
+                {uploading ? '...' : 'Crop & set'}
               </div>
             </button>
             {avatarUrl && (
@@ -235,7 +324,7 @@ export default function ProfilePage() {
                 {currentAgent.role} · <span className="text-brand-600 font-medium capitalize">{currentAgent.status}</span>
               </div>
             )}
-            <p className="text-[11px] text-zinc-400 mt-2">Click the avatar to upload a square photo (auto-cropped).</p>
+            <p className="text-[11px] text-zinc-400 mt-2">Upload a photo, then drag and zoom to choose the crop area.</p>
           </div>
         </div>
 
@@ -337,6 +426,65 @@ export default function ProfilePage() {
           </button>
         </form>
       </div>
+
+      {cropSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+          <div className="bg-white rounded-2xl shadow-xl border border-zinc-200 w-full max-w-md p-5 space-y-4">
+            <div>
+              <h3 className="text-base font-semibold text-zinc-900">Crop profile photo</h3>
+              <p className="text-xs text-zinc-500 mt-0.5">Drag the image to move. Use zoom to frame the face.</p>
+            </div>
+            <div
+              ref={stageRef}
+              className="relative mx-auto overflow-hidden rounded-xl bg-zinc-900 touch-none select-none"
+              style={{ width: stageW, height: stageH, cursor: dragging ? 'grabbing' : 'grab' }}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerUp}
+            >
+              <img
+                src={cropSrc}
+                alt=""
+                onLoad={onCropImageLoad}
+                draggable={false}
+                className="absolute max-w-none pointer-events-none"
+                style={{
+                  width: dispW,
+                  height: dispH,
+                  left: offX,
+                  top: offY,
+                }}
+              />
+              <div
+                className="absolute border-2 border-white rounded-lg pointer-events-none shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
+                style={{ left: frameLeft, top: frameTop, width: frameSize, height: frameSize }}
+              />
+            </div>
+            <div className="flex items-center justify-center gap-3">
+              <button type="button" onClick={() => zoomCrop(1.15)} className="p-2 rounded-lg border border-zinc-200 hover:bg-zinc-50" title="Zoom in">
+                <ZoomIn size={18} />
+              </button>
+              <button type="button" onClick={() => zoomCrop(1 / 1.15)} className="p-2 rounded-lg border border-zinc-200 hover:bg-zinc-50" title="Zoom out">
+                <ZoomOut size={18} />
+              </button>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button type="button" onClick={cancelCrop} className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-800">
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={applyCrop}
+                disabled={uploading || !imgNatural.w}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-brand-600 text-white rounded-xl hover:bg-brand-700 disabled:opacity-50"
+              >
+                <Check size={16} /> Use this crop
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
