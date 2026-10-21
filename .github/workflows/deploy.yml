@@ -8,16 +8,17 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: pages-deploy
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      # Full-length SHAs required by org policy
       - name: Checkout
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
 
@@ -26,39 +27,46 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm ci || npm install
-
-      - name: Build
+      - name: Install and build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: npm run build
+        run: |
+          npm ci || npm install
+          npm run build
+          touch dist/.nojekyll
 
-      - name: Deploy dist to gh-pages
+      # Keep gh-pages branch in sync (for branch-based Pages)
+      - name: Push dist to gh-pages branch
         run: |
           set -e
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          if git ls-remote --heads origin gh-pages | grep -q gh-pages; then
-            git clone --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages-dir
-          else
-            mkdir gh-pages-dir
-            cd gh-pages-dir
-            git init
-            git checkout -b gh-pages
-            cd ..
-          fi
-          find gh-pages-dir -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          rm -rf gh-pages-dir
+          mkdir gh-pages-dir
           cp -r dist/. gh-pages-dir/
-          touch gh-pages-dir/.nojekyll
           cd gh-pages-dir
+          git init
+          git checkout -b gh-pages
           git add -A
-          if git diff --staged --quiet; then
-            echo "No changes to deploy"
-            exit 0
-          fi
           git commit -m "deploy: ${GITHUB_SHA}"
           git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Official Pages artifact (for Actions-based Pages)
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d16ff24fec6e79ab7a2c44c # v3.0.1
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0bedac5b3c1c5aa # v4.0.5
