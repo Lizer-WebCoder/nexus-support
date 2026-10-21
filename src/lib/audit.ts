@@ -1,8 +1,11 @@
 import type { AuditEntry } from '../types';
+import { supabase, isSupabaseConfigured } from './supabase';
 
 const KEY = 'nexus-audit-v1';
 
-export function pushAudit(entry: Omit<AuditEntry, 'id' | 'created_at'> & { id?: string; created_at?: string }) {
+export function pushAudit(
+  entry: Omit<AuditEntry, 'id' | 'created_at'> & { id?: string; created_at?: string }
+) {
   const row: AuditEntry = {
     id: entry.id || `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     entity: entry.entity,
@@ -17,6 +20,18 @@ export function pushAudit(entry: Omit<AuditEntry, 'id' | 'created_at'> & { id?: 
     const next = [row, ...prev].slice(0, 200);
     localStorage.setItem(KEY, JSON.stringify(next));
   } catch {}
+
+  // Best-effort cloud persistence
+  if (isSupabaseConfigured && supabase) {
+    void supabase.from('audit_log').insert({
+      entity: row.entity,
+      entity_id: row.entity_id,
+      action: row.action,
+      detail: row.detail || null,
+      actor: row.actor || null,
+      created_at: row.created_at,
+    });
+  }
   return row;
 }
 
@@ -26,4 +41,15 @@ export function loadAudit(): AuditEntry[] {
   } catch {
     return [];
   }
+}
+
+export async function loadAuditCloud(): Promise<AuditEntry[]> {
+  if (!isSupabaseConfigured || !supabase) return loadAudit();
+  const { data } = await supabase
+    .from('audit_log')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (data?.length) return data as AuditEntry[];
+  return loadAudit();
 }
