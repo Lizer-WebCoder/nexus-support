@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Ticket, Building2, BookOpen, MessageSquare,
   BarChart3, UserCog, Zap, ClipboardList, ShieldCheck,
-  Megaphone, FileText, Rocket, Settings, LogOut, User, Users,
+  Megaphone, FileText, Rocket, Settings, LogOut, User, Users, MessageSquareText,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -59,6 +59,7 @@ export default function Sidebar({
     { id: 'team', label: 'Team', icon: UserCog },
     ...(isAdmin ? [{ id: 'users', label: 'Users', icon: Users }] : []),
     { id: 'automations', label: 'Automations', icon: Zap },
+    { id: 'macros', label: 'Macros', icon: MessageSquareText },
   ];
 
   const toolItems = [
