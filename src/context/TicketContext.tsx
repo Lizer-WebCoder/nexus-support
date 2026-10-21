@@ -13,6 +13,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { notifyAgents } from '../lib/agentNotify';
 import { pushAudit } from '../lib/audit';
+import { pickAssignee } from '../lib/assign';
 
 interface CreateTicketInput {
   title: string;
@@ -207,6 +208,10 @@ export function TicketProvider({ children }: { children: ReactNode }) {
     const id = nextTicketId(tickets);
     const now = new Date().toISOString();
     const sla_due_at = computeSlaDue(data.priority, now);
+    const autoAssignee =
+      data.assignee_id ||
+      pickAssignee(agents, tickets, { branch: data.branch?.trim() }) ||
+      null;
     const ticket: Ticket = {
       id,
       title: data.title,
@@ -214,7 +219,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       priority: data.priority,
       status: 'new',
       channel: data.channel,
-      assignee_id: data.assignee_id || null,
+      assignee_id: autoAssignee,
       customer_name: data.customer_name,
       customer_email: data.customer_email || '',
       branch: data.branch?.trim() || undefined,
@@ -254,7 +259,13 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       body: `${ticket.id}: ${ticket.title} · ${ticket.customer_name}${ticket.channel ? ` (${ticket.channel})` : ''}`,
       link: 'tickets',
     });
-    pushAudit({ entity: 'ticket', entity_id: ticket.id, action: 'create', detail: ticket.title, actor: currentAgent?.name || user?.email || 'Agent' });
+    pushAudit({
+      entity: 'ticket',
+      entity_id: ticket.id,
+      action: 'create',
+      detail: `${ticket.title}${autoAssignee ? ` · assigned ${autoAssignee}` : ''}`,
+      actor: currentAgent?.name || user?.email || 'Agent',
+    });
     return ticket;
   };
 
@@ -319,12 +330,15 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         title: 'Ticket updated',
         body: `${id}${ticket ? ` · ${ticket.title}` : ''} — ${summary}`,
         link: 'tickets',
-        userId: assignee?.user_id || undefined,
+        userId: (assignee as Agent & { user_id?: string })?.user_id || undefined,
       });
     }
   };
 
   const deleteTicket = async (id: string) => {
+    if (!currentAgent?.is_admin) {
+      throw new Error('Only admins can permanently delete tickets');
+    }
     if (supabase) {
       const { error } = await supabase.from('tickets').delete().eq('id', id);
       if (error) throw error;
@@ -370,7 +384,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         title: 'Ticket reply',
         body: `${ticketId}: new message on “${ticket.title}”`,
         link: 'tickets',
-        userId: assignee?.user_id || undefined,
+        userId: (assignee as Agent & { user_id?: string })?.user_id || undefined,
       });
     }
   };
@@ -389,7 +403,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
   };
 
   const findTicket = (id: string, email?: string) => {
-    const t = tickets.find((x) => x.id === id);
+    const t = tickets.find((x) => x.id.toLowerCase() === id.trim().toLowerCase());
     if (!t) return undefined;
     if (email && t.customer_email && t.customer_email.toLowerCase() !== email.toLowerCase()) return undefined;
     return t;
