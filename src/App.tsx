@@ -19,6 +19,7 @@ import CustomerPortal from './components/CustomerPortal';
 import LoginPage from './components/LoginPage';
 import ProfilePage from './components/ProfilePage';
 import AutomationsPage from './components/AutomationsPage';
+import MacrosPage from './components/MacrosPage';
 import SurveysPage from './components/SurveysPage';
 import QualityPage from './components/QualityPage';
 import AnnouncementsPage from './components/AnnouncementsPage';
@@ -74,6 +75,7 @@ const TITLES: Record<string, string> = {
   settings: 'Settings',
   profile: 'My Profile',
   automations: 'Automations',
+  macros: 'Macros',
   surveys: 'Surveys',
   quality: 'Quality',
   announcements: 'Announcements',
@@ -331,6 +333,7 @@ function AppShell() {
           )}
           {activeNav === 'profile' && <ProfilePage />}
           {activeNav === 'automations' && <AutomationsPage />}
+          {activeNav === 'macros' && <MacrosPage />}
           {activeNav === 'surveys' && <SurveysPage />}
           {activeNav === 'quality' && <QualityPage />}
           {activeNav === 'announcements' && <AnnouncementsPage />}
