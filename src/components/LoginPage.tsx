@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 interface Props {
@@ -46,10 +46,6 @@ function NexusLogoMark({ size = 56 }: { size?: number }) {
   );
 }
 
-/**
- * Asteroids only in left/right corridors so they never cross the logo's center lane.
- * Logo stays ~52% and only weaves ±55px (~5%) — rocks stay outside that band.
- */
 function useAsteroids(count: number) {
   return useMemo(() => {
     const radii = [
@@ -60,7 +56,6 @@ function useAsteroids(count: number) {
       '48% 52% 60% 40%',
       '65% 35% 45% 55%',
     ];
-    // Side lanes only — avoid 44%–60% (logo zone)
     const leftLane = [28, 31, 34, 36];
     const rightLane = [66, 69, 72, 75];
 
@@ -69,10 +64,7 @@ function useAsteroids(count: number) {
       const onLeft = i % 2 === 0;
       const lane = onLeft ? leftLane : rightLane;
       const left = lane[i % lane.length] + (seed % 3);
-      // Drift keeps rock in its side corridor (never toward center hard)
-      const drift = onLeft
-        ? -(15 + (seed % 25))
-        : 15 + (seed % 25);
+      const drift = onLeft ? -(15 + (seed % 25)) : 15 + (seed % 25);
 
       return {
         id: i,
@@ -89,13 +81,64 @@ function useAsteroids(count: number) {
   }, [count]);
 }
 
+type TrailPoint = { x: number; y: number; id: number };
+
+const TRAIL_LEN = 18;
+
+/** Logo pilot with a real position-history trail attached to the mark. */
 function LogoPilotStage() {
   const asteroids = useAsteroids(6);
-  // Trail ghosts = siblings on same path, lagged (not nested inside pilot)
-  const trails = [0.2, 0.4, 0.6, 0.85];
+  const pilotRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const history = useRef<TrailPoint[]>([]);
+  const [trail, setTrail] = useState<TrailPoint[]>([]);
+  const idRef = useRef(0);
+
+  useEffect(() => {
+    let raf = 0;
+    let lastSample = 0;
+
+    const tick = (t: number) => {
+      raf = requestAnimationFrame(tick);
+      // sample ~30fps so the trail has spacing
+      if (t - lastSample < 32) return;
+      lastSample = t;
+
+      const pilot = pilotRef.current;
+      const stage = stageRef.current;
+      if (!pilot || !stage) return;
+
+      const pr = pilot.getBoundingClientRect();
+      const sr = stage.getBoundingClientRect();
+      const x = pr.left + pr.width / 2 - sr.left;
+      const y = pr.top + pr.height / 2 - sr.top;
+
+      const prev = history.current[0];
+      // skip if barely moved (avoids a blob when idle)
+      if (prev && Math.hypot(prev.x - x, prev.y - y) < 1.5) {
+        // still age the trail so it fades when stopped
+        if (history.current.length > 0) {
+          history.current = history.current.slice(0, Math.max(0, history.current.length - 1));
+          setTrail([...history.current]);
+        }
+        return;
+      }
+
+      idRef.current += 1;
+      history.current = [{ x, y, id: idRef.current }, ...history.current].slice(0, TRAIL_LEN);
+      setTrail([...history.current]);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   return (
-    <div className="login-pilot-stage absolute inset-0 pointer-events-none z-[5] hidden lg:block" aria-hidden>
+    <div
+      ref={stageRef}
+      className="login-pilot-stage absolute inset-0 pointer-events-none z-[5] hidden lg:block"
+      aria-hidden
+    >
       {asteroids.map((a) => (
         <span
           key={a.id}
@@ -114,16 +157,29 @@ function LogoPilotStage() {
         />
       ))}
 
-      {/* Trail segments — same keyframes as logo, delayed so they lag behind */}
-      {trails.map((delay, i) => (
-        <div
-          key={delay}
-          className={`login-pilot-trail login-pilot-trail-${i + 1}`}
-          style={{ animationDelay: `-${delay}s` }}
-        />
-      ))}
+      {/* Connected trail — opacity & size fall off with distance from logo (index) */}
+      {trail.map((p, i) => {
+        const t = i / Math.max(1, TRAIL_LEN - 1); // 0 = nearest logo, 1 = farthest
+        const opacity = Math.max(0, 0.85 * (1 - t) ** 1.6);
+        const size = 14 + (1 - t) * 10;
+        return (
+          <span
+            key={p.id}
+            className="login-trail-dot"
+            style={{
+              left: p.x,
+              top: p.y,
+              width: size,
+              height: size,
+              marginLeft: -size / 2,
+              marginTop: -size / 2,
+              opacity,
+            }}
+          />
+        );
+      })}
 
-      <div className="login-pilot">
+      <div ref={pilotRef} className="login-pilot">
         <div className="login-pilot-glow" />
         <NexusLogoMark size={64} />
       </div>
