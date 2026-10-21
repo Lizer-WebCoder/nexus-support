@@ -40,7 +40,6 @@ body {
   background: #a1a1aa;
 }
 
-/* Recharts default item text can inherit poorly — force readable tooltips */
 .recharts-default-tooltip {
   background: #18181b !important;
   border: 1px solid #3f3f46 !important;
@@ -64,7 +63,6 @@ body {
   color: #fafafa !important;
 }
 
-/* Force legacy sky/blue utilities onto the indigo brand palette */
 .bg-sky-50 { background-color: #eef2ff !important; }
 .bg-sky-100 { background-color: #e0e7ff !important; }
 .bg-sky-600 { background-color: #4f46e5 !important; }
@@ -82,13 +80,92 @@ body {
 .hover\:text-sky-600:hover, .hover\:text-sky-700:hover { color: #4f46e5 !important; }
 .hover\:border-sky-300:hover { border-color: #a5b4fc !important; }
 
-/* Stronger customer-portal atmosphere */
 .portal-atmosphere {
   background-color: #f5f3ff !important;
   background-image:
-    radial-gradient(ellipse 80% 50% at 100% -10%, rgb(99 102 241 / 0.28), transparent 55%),
-    radial-gradient(ellipse 60% 40% at -10% 30%, rgb(139 92 246 / 0.22), transparent 50%),
-    radial-gradient(ellipse 50% 40% at 80% 100%, rgb(167 139 250 / 0.2), transparent 50%),
-    radial-gradient(circle at 1px 1px, rgb(99 102 241 / 0.12) 1px, transparent 0) !important;
-  background-size: auto, auto, auto, 28px 28px !important;
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(139, 92, 246, 0.18), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(99, 102, 241, 0.12), transparent),
+    radial-gradient(ellipse 50% 30% at 50% 100%, rgba(167, 139, 250, 0.1), transparent);
+  background-size: auto, auto, auto;
+  background-repeat: no-repeat;
+  min-height: 100vh;
 }
+
+/* ========== Dark mode (Settings toggle) ========== */
+html.nexus-dark {
+  color-scheme: dark;
+  color: #f4f4f5;
+  background-color: #09090b;
+}
+html.nexus-dark body {
+  background-color: #09090b;
+  color: #f4f4f5;
+}
+html.nexus-dark .bg-white { background-color: #18181b !important; }
+html.nexus-dark .bg-zinc-100,
+html.nexus-dark .bg-slate-50 {
+  background-color: #09090b !important;
+}
+html.nexus-dark .bg-zinc-50,
+html.nexus-dark .bg-slate-100 {
+  background-color: #27272a !important;
+}
+html.nexus-dark .text-zinc-900,
+html.nexus-dark .text-slate-900,
+html.nexus-dark .text-slate-800 {
+  color: #fafafa !important;
+}
+html.nexus-dark .text-zinc-800,
+html.nexus-dark .text-slate-700 {
+  color: #e4e4e7 !important;
+}
+html.nexus-dark .text-zinc-600,
+html.nexus-dark .text-slate-600 {
+  color: #a1a1aa !important;
+}
+html.nexus-dark .text-zinc-500,
+html.nexus-dark .text-slate-500,
+html.nexus-dark .text-slate-400 {
+  color: #71717a !important;
+}
+html.nexus-dark .border-zinc-200,
+html.nexus-dark .border-slate-200,
+html.nexus-dark .border-slate-100,
+html.nexus-dark .border-zinc-100 {
+  border-color: #3f3f46 !important;
+}
+html.nexus-dark .hover\:bg-zinc-100:hover,
+html.nexus-dark .hover\:bg-slate-50:hover {
+  background-color: #27272a !important;
+}
+html.nexus-dark input,
+html.nexus-dark select,
+html.nexus-dark textarea {
+  background-color: #27272a !important;
+  border-color: #3f3f46 !important;
+  color: #f4f4f5 !important;
+}
+html.nexus-dark input::placeholder,
+html.nexus-dark textarea::placeholder {
+  color: #71717a !important;
+}
+html.nexus-dark .shadow-card,
+html.nexus-dark .shadow-sm,
+html.nexus-dark .shadow-lg,
+html.nexus-dark .shadow-xl {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45) !important;
+}
+html.nexus-dark .bg-brand-50 { background-color: rgba(99, 102, 241, 0.15) !important; }
+html.nexus-dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.12) !important; }
+html.nexus-dark .bg-rose-50 { background-color: rgba(244, 63, 94, 0.12) !important; }
+html.nexus-dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.12) !important; }
+html.nexus-dark .bg-violet-50 { background-color: rgba(139, 92, 246, 0.12) !important; }
+html.nexus-dark main { background-color: #09090b; }
+html.nexus-dark .bg-white\/90 { background-color: rgba(24, 24, 27, 0.92) !important; }
+html.nexus-dark ::-webkit-scrollbar-thumb { background: #52525b; }
+html.nexus-dark .portal-atmosphere {
+  background-color: #0c0a12 !important;
+}
+
+html.nexus-compact .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
