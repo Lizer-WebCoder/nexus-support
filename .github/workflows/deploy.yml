@@ -17,12 +17,12 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      # Pin to full SHA — org requires this
+      # Full-length SHAs required by org policy
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
 
       - name: Setup Node
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a5914cb # v5.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '20'
 
