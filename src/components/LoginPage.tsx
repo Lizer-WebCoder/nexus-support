@@ -71,7 +71,7 @@ function CosmicFallBackground() {
         ))}
       </div>
 
-      <div className="login-faller absolute left-1/2 top-[22%]">
+      <div className="login-faller absolute left-1/2 top-[18%]">
         <svg width="44" height="52" viewBox="0 0 48 56" fill="none" className="login-faller-svg">
           <ellipse cx="24" cy="14" rx="8" ry="9" fill="#e8e0ff" />
           <path
@@ -88,13 +88,10 @@ function CosmicFallBackground() {
   );
 }
 
-const FEATURES = [
-  'Live chat & tickets',
-  'Branch routing',
-  'SLA & automations',
-  'Customer portal',
-  'Macros & KB',
-  'CSAT surveys',
+const CAPABILITIES = [
+  { title: 'Omnichannel inbox', blurb: 'Portal, chat, and email land in one queue.' },
+  { title: 'Branch-aware routing', blurb: 'Tickets stay with the right team automatically.' },
+  { title: 'SLA + automations', blurb: 'Rules fire on create, priority, and breach.' },
 ];
 
 export default function LoginPage({ onOpenPortal }: Props) {
@@ -131,86 +128,80 @@ export default function LoginPage({ onOpenPortal }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* ===== Left: animation + product story ===== */}
-      <aside className="relative lg:w-[48%] xl:w-[52%] min-h-[280px] lg:min-h-screen flex flex-col overflow-hidden">
+    <div className="min-h-screen grid lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+      {/* Left — story + motion */}
+      <aside className="relative min-h-[320px] lg:min-h-screen overflow-hidden">
         <CosmicFallBackground />
 
-        <div className="relative z-10 flex flex-col flex-1 p-8 sm:p-10 lg:p-12 xl:p-14">
-          <div className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.18em] uppercase text-fuchsia-200/90">
-            <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 animate-pulse" />
-            Tech support system
-          </div>
-
-          <div className="mt-auto mb-auto py-10 lg:py-0">
-            <h1 className="text-3xl sm:text-4xl xl:text-[2.75rem] font-bold text-white leading-[1.15] tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
-              One desk for
-              <br />
-              every ticket.
-            </h1>
-            <p className="mt-4 text-sm sm:text-base text-fuchsia-100/85 max-w-md leading-relaxed">
-              Nexus Ops is a multi-branch support platform for agents and customers. Open tickets from
-              the portal or live chat, route by branch, hit SLAs with automations, and keep every
-              conversation in one place.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-2">
-              {FEATURES.map((label) => (
-                <span
-                  key={label}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium text-fuchsia-50 bg-white/10 border border-white/15 backdrop-blur-sm"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  {label}
-                </span>
-              ))}
+        <div className="relative z-10 h-full flex flex-col p-7 sm:p-10 lg:p-12">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-white/15 border border-white/25 backdrop-blur flex items-center justify-center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <circle cx="12" cy="12" r="3" fill="white" />
+                <path d="M12 3a9 9 0 0 1 9 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+                <path d="M12 21a9 9 0 0 1-9-9" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity="0.55" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-white tracking-tight">Nexus Ops</div>
+              <div className="text-[11px] text-fuchsia-200/70">Support operations platform</div>
             </div>
           </div>
 
-          <p className="text-[11px] text-fuchsia-200/50 mt-8 lg:mt-0">
-            Nexus Ops · Agent workspace · {new Date().getFullYear()}
-          </p>
+          <div className="mt-12 lg:mt-16 max-w-lg">
+            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-fuchsia-300/80 mb-3">
+              Built for agent teams
+            </p>
+            <h1 className="text-[1.85rem] sm:text-4xl font-semibold text-white leading-tight tracking-tight">
+              Resolve faster.
+              <span className="block text-fuchsia-200/90 font-normal mt-1">Stay organized across every branch.</span>
+            </h1>
+            <p className="mt-5 text-sm text-fuchsia-100/75 leading-relaxed max-w-md">
+              Nexus Ops connects your customer portal, live chat, and agent desk. Route by branch,
+              enforce SLAs, run macros, and give customers a clear path from request to resolution.
+            </p>
+          </div>
+
+          <div className="mt-10 space-y-3 max-w-md">
+            {CAPABILITIES.map((c) => (
+              <div
+                key={c.title}
+                className="rounded-xl border border-white/10 bg-black/25 backdrop-blur-md px-4 py-3"
+              >
+                <div className="text-sm font-medium text-white">{c.title}</div>
+                <div className="text-xs text-fuchsia-100/60 mt-0.5">{c.blurb}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-auto pt-10 text-[11px] text-fuchsia-200/40">
+            Agents only · Customers use the portal
+          </div>
         </div>
       </aside>
 
-      {/* ===== Right: auth form ===== */}
-      <main className="flex-1 flex items-center justify-center bg-[#f7f8fb] px-6 py-10 sm:px-10">
-        <div className="w-full max-w-[380px]">
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center mx-auto shadow-lg shadow-violet-500/25">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <circle cx="12" cy="12" r="3" fill="white" />
-                <path d="M12 3a9 9 0 0 1 9 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-                <path
-                  d="M12 21a9 9 0 0 1-9-9"
-                  stroke="white"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  opacity="0.55"
-                />
-              </svg>
-            </div>
-            <p className="mt-4 text-[11px] font-semibold tracking-[0.16em] uppercase text-zinc-400">
-              Agent portal
-            </p>
-            <h2 className="mt-1 text-2xl font-bold text-zinc-900 tracking-tight">
-              {mode === 'signin' ? 'Sign in' : 'Create account'}
+      {/* Right — auth */}
+      <main className="flex items-center justify-center bg-zinc-950 px-6 py-12 sm:px-10">
+        <div className="w-full max-w-[360px]">
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-white tracking-tight">
+              {mode === 'signin' ? 'Welcome back' : 'Join the desk'}
             </h2>
-            <p className="mt-1.5 text-sm text-zinc-500">
+            <p className="mt-1.5 text-sm text-zinc-400">
               {mode === 'signin'
-                ? 'Enter your credentials to open the support desk.'
-                : 'Register an agent account for your workspace.'}
+                ? 'Sign in with your agent credentials.'
+                : 'Create an agent account for this workspace.'}
             </p>
           </div>
 
           {configError && (
-            <div className="mb-4 text-sm text-amber-800 bg-amber-50 border border-amber-200 px-3 py-3 rounded-xl">
+            <div className="mb-4 text-sm text-amber-200 bg-amber-500/10 border border-amber-500/30 px-3 py-3 rounded-xl">
               <p className="font-medium mb-1">Supabase configuration problem</p>
-              <p className="text-amber-700/90">{configError}</p>
+              <p className="text-amber-100/80">{configError}</p>
             </div>
           )}
 
-          <div className="flex rounded-lg bg-zinc-100 p-1 mb-5">
+          <div className="flex gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800 mb-6">
             <button
               type="button"
               onClick={() => {
@@ -218,8 +209,10 @@ export default function LoginPage({ onOpenPortal }: Props) {
                 setError('');
                 setInfo('');
               }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                mode === 'signin' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500'
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                mode === 'signin'
+                  ? 'bg-zinc-100 text-zinc-900'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               Sign in
@@ -231,8 +224,10 @@ export default function LoginPage({ onOpenPortal }: Props) {
                 setError('');
                 setInfo('');
               }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                mode === 'signup' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500'
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                mode === 'signup'
+                  ? 'bg-zinc-100 text-zinc-900'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               Create account
@@ -241,94 +236,86 @@ export default function LoginPage({ onOpenPortal }: Props) {
 
           <form onSubmit={submit} className="space-y-4">
             {error && (
-              <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg whitespace-pre-wrap">
+              <div className="text-sm text-rose-300 bg-rose-500/10 border border-rose-500/25 px-3 py-2 rounded-lg whitespace-pre-wrap">
                 {error}
               </div>
             )}
             {info && (
-              <div className="text-sm text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg">{info}</div>
+              <div className="text-sm text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 px-3 py-2 rounded-lg">
+                {info}
+              </div>
             )}
 
             {mode === 'signup' && (
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Full name</label>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Full name</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/25 focus:border-violet-400"
-                  placeholder="Sarah Chen"
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/40 focus:border-fuchsia-500/50"
+                  placeholder="Alex Rivera"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Work email</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm" aria-hidden>
-                  ✉
-                </span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  className="w-full pl-9 pr-3.5 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/25 focus:border-violet-400"
-                  placeholder="you@company.com"
-                />
-              </div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Work email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/40 focus:border-fuchsia-500/50"
+                placeholder="you@company.com"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Password</label>
-              <div className="relative flex">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm" aria-hidden>
-                  🔒
-                </span>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                  className="w-full pl-9 pr-16 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/25 focus:border-violet-400"
-                  placeholder="••••••••"
-                />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-medium text-zinc-400">Password</label>
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-[11px] font-semibold tracking-wide text-zinc-500 hover:text-zinc-800"
+                  className="text-[11px] font-medium text-zinc-500 hover:text-zinc-300"
                 >
-                  {showPassword ? 'HIDE' : 'SHOW'}
+                  {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/40 focus:border-fuchsia-500/50"
+                placeholder="••••••••"
+              />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 mt-1 bg-zinc-900 text-white text-sm font-semibold rounded-xl hover:bg-zinc-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 mt-1 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 disabled:opacity-50 transition-all shadow-lg shadow-fuchsia-900/40"
             >
-              {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create agent account'}
-              {!loading && <span aria-hidden>→</span>}
+              {loading ? 'Please wait…' : mode === 'signin' ? 'Enter workspace' : 'Create agent account'}
             </button>
           </form>
 
-          <p className="text-center text-xs text-zinc-500 mt-8">
-            Customers use the{' '}
-            <button
-              type="button"
-              onClick={onOpenPortal}
-              className="text-violet-600 font-medium hover:underline"
-            >
-              customer portal
-            </button>
-            {' '}(account + admin approval required).
-          </p>
-          <p className="text-center text-xs text-zinc-400 mt-2">
-            Trouble signing in? Contact your administrator.
-          </p>
+          <div className="mt-8 pt-6 border-t border-zinc-800 space-y-2 text-center">
+            <p className="text-xs text-zinc-500">
+              Not an agent?{' '}
+              <button
+                type="button"
+                onClick={onOpenPortal}
+                className="text-fuchsia-400 hover:text-fuchsia-300 font-medium"
+              >
+                Open customer portal
+              </button>
+            </p>
+            <p className="text-[11px] text-zinc-600">Need access? Ask your admin to approve your account.</p>
+          </div>
         </div>
       </main>
     </div>
