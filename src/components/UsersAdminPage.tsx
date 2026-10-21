@@ -63,18 +63,6 @@ export default function UsersAdminPage() {
     setBranchNames(loadBranchNames());
   }, []);
 
-  if (!currentAgent?.is_admin) {
-    return (
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center max-w-lg mx-auto">
-        <Shield className="mx-auto text-slate-300 mb-3" size={36} />
-        <h2 className="text-lg font-semibold text-slate-800 mb-1">Admin only</h2>
-        <p className="text-sm text-slate-500">
-          User management is restricted to admin accounts. Ask an existing admin to promote you from Team.
-        </p>
-      </div>
-    );
-  }
-
   const rows: UnifiedUser[] = useMemo(() => {
     const agentRows: UnifiedUser[] = agents.map((a) => ({
       key: `agent-${a.id}`,
@@ -87,19 +75,27 @@ export default function UsersAdminPage() {
       branch: a.branch || '',
       agent: a,
     }));
-    const customerRows: UnifiedUser[] = customers.map((c) => ({
-      key: `customer-${c.id}`,
-      kind: 'customer',
-      id: c.id,
-      name: c.name,
-      email: c.email || '',
-      role: c.role || 'Customer',
-      is_admin: false,
-      branch: c.branch || c.company || '',
-      customer: c,
-    }));
+    const branchNameSet = new Set(branchNames.map((b) => b.trim().toUpperCase()));
+    const customerRows: UnifiedUser[] = customers
+      .filter((c) => {
+        const n = (c.name || '').trim().toUpperCase();
+        if (n.endsWith(' BRANCH')) return false;
+        if (branchNameSet.has(n)) return false;
+        return true;
+      })
+      .map((c) => ({
+        key: `customer-${c.id}`,
+        kind: 'customer' as const,
+        id: c.id,
+        name: c.name,
+        email: c.email || '',
+        role: c.role || 'Customer',
+        is_admin: false,
+        branch: c.branch || '',
+        customer: c,
+      }));
     return [...agentRows, ...customerRows].sort((a, b) => a.name.localeCompare(b.name));
-  }, [agents, customers]);
+  }, [agents, customers, branchNames]);
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
@@ -161,22 +157,19 @@ export default function UsersAdminPage() {
           await setAgentAdmin(editing.id, editAdmin);
         }
         await refresh();
-      } else {
-        if (supabase) {
-          const payload: Record<string, unknown> = {
-            name: editName.trim(),
-            role: editRole.trim() || 'Customer',
-            branch: editBranch.trim() || null,
-            company: editBranch.trim() || null,
-          };
-          const { error } = await supabase.from('customers').update(payload).eq('id', editing.id);
-          if (error) {
-            const { error: e2 } = await supabase
-              .from('customers')
-              .update({ name: editName.trim(), company: editBranch.trim() || null })
-              .eq('id', editing.id);
-            if (e2) throw e2;
-          }
+      } else if (supabase) {
+        const payload: Record<string, unknown> = {
+          name: editName.trim(),
+          role: editRole.trim() || 'Customer',
+          branch: editBranch.trim() || null,
+        };
+        const { error } = await supabase.from('customers').update(payload).eq('id', editing.id);
+        if (error) {
+          const { error: e2 } = await supabase
+            .from('customers')
+            .update({ name: editName.trim() })
+            .eq('id', editing.id);
+          if (e2) throw e2;
         }
         await refresh();
       }
@@ -213,13 +206,25 @@ export default function UsersAdminPage() {
     }
   };
 
+  if (!currentAgent?.is_admin) {
+    return (
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center max-w-lg mx-auto">
+        <Shield className="mx-auto text-slate-300 mb-3" size={36} />
+        <h2 className="text-lg font-semibold text-slate-800 mb-1">Admin only</h2>
+        <p className="text-sm text-slate-500">
+          User management is restricted to admin accounts. Ask an existing admin to promote you from Team.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3 justify-between">
         <div>
           <h2 className="text-sm font-semibold text-slate-800">All users</h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Admins, agents, and customers. Edit roles, branch, send password resets.
+            People only (not workplaces). Assign each person to a branch workplace.
           </p>
         </div>
         <button
@@ -231,18 +236,8 @@ export default function UsersAdminPage() {
         </button>
       </div>
 
-      {!usingSupabase && (
-        <div className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-          Local mode: changes apply in this browser only.
-        </div>
-      )}
-
-      {msg && (
-        <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">{msg}</div>
-      )}
-      {err && (
-        <div className="text-sm text-rose-700 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">{err}</div>
-      )}
+      {msg && <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">{msg}</div>}
+      {err && <div className="text-sm text-rose-700 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">{err}</div>}
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[180px] max-w-sm">
@@ -261,9 +256,7 @@ export default function UsersAdminPage() {
             onClick={() => setFilter(f)}
             className={clsx(
               'text-xs font-medium px-3 py-1.5 rounded-lg border capitalize',
-              filter === f
-                ? 'bg-brand-50 border-brand-200 text-brand-700'
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              filter === f ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
             )}
           >
             {f}
@@ -278,16 +271,14 @@ export default function UsersAdminPage() {
               <th className="px-4 py-3 font-medium">User</th>
               <th className="px-4 py-3 font-medium">Type</th>
               <th className="px-4 py-3 font-medium">Role</th>
-              <th className="px-4 py-3 font-medium">Branch</th>
+              <th className="px-4 py-3 font-medium">Branch workplace</th>
               <th className="px-4 py-3 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-slate-400">
-                  No users match your filters.
-                </td>
+                <td colSpan={5} className="px-4 py-10 text-center text-slate-400">No users match.</td>
               </tr>
             )}
             {filtered.map((u) => (
@@ -305,9 +296,7 @@ export default function UsersAdminPage() {
                       <div className="font-medium text-slate-800 truncate">
                         {u.name}
                         {u.id === currentAgent.id && (
-                          <span className="ml-1.5 text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded-full">
-                            You
-                          </span>
+                          <span className="ml-1.5 text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded-full">You</span>
                         )}
                       </div>
                       <div className="text-xs text-slate-400 truncate">{u.email || 'No email'}</div>
@@ -315,40 +304,19 @@ export default function UsersAdminPage() {
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span
-                    className={clsx(
-                      'text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded',
-                      u.kind === 'agent' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700'
-                    )}
-                  >
+                  <span className={clsx('text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded', u.kind === 'agent' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700')}>
                     {u.kind}
                   </span>
                 </td>
                 <td className="px-4 py-3">
                   <span className="text-slate-700">{u.role}</span>
-                  {u.is_admin && (
-                    <span className="ml-1.5 text-[10px] font-semibold text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded-full">
-                      Admin
-                    </span>
-                  )}
+                  {u.is_admin && <span className="ml-1.5 text-[10px] font-semibold text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded-full">Admin</span>}
                 </td>
                 <td className="px-4 py-3 text-slate-600">{u.branch || '—'}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(u)}
-                      className="text-xs font-medium px-2 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!u.email || resetBusy}
-                      onClick={() => void sendPasswordReset(u.email)}
-                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg border border-brand-100 text-brand-700 bg-brand-50 hover:bg-brand-100 disabled:opacity-40"
-                      title="Send password reset email"
-                    >
+                    <button type="button" onClick={() => openEdit(u)} className="text-xs font-medium px-2 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">Edit</button>
+                    <button type="button" disabled={!u.email || resetBusy} onClick={() => void sendPasswordReset(u.email)} className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg border border-brand-100 text-brand-700 bg-brand-50 hover:bg-brand-100 disabled:opacity-40">
                       <KeyRound size={12} /> Reset
                     </button>
                   </div>
@@ -360,7 +328,7 @@ export default function UsersAdminPage() {
       </div>
 
       <div className="text-xs text-slate-500">
-        Showing {filtered.length} of {rows.length} users · {agents.length} agents · {customers.length} customers
+        People only. Workplaces live under Branches — open a branch to see who belongs there.
       </div>
 
       {editing && (
@@ -369,125 +337,55 @@ export default function UsersAdminPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-base font-semibold text-slate-900">Edit user</h3>
-                <p className="text-xs text-slate-500 mt-0.5 capitalize">
-                  {editing.kind} · {editing.email || 'no email'}
-                </p>
+                <p className="text-xs text-slate-500 mt-0.5 capitalize">{editing.kind} · {editing.email || 'no email'}</p>
               </div>
-              <button type="button" onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">
-                x
-              </button>
+              <button type="button" onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">x</button>
             </div>
-
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Display name</label>
-              <input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-              />
+              <input value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" />
             </div>
-
             {editing.kind === 'agent' ? (
               <>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Job title / role label</label>
-                  <input
-                    value={editRole}
-                    onChange={(e) => setEditRole(e.target.value)}
-                    disabled={editAdmin}
-                    placeholder="Agent, Lead, Support"
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
-                  />
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Job title</label>
+                  <input value={editRole} onChange={(e) => setEditRole(e.target.value)} disabled={editAdmin} className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50" />
                 </div>
                 <label className="flex items-center gap-2 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={editAdmin}
-                    disabled={editing.id === currentAgent.id}
-                    onChange={(e) => {
-                      setEditAdmin(e.target.checked);
-                      if (e.target.checked) setEditRole('Admin');
-                    }}
-                    className="rounded border-slate-300"
-                  />
-                  <Shield size={14} className="text-violet-600" />
-                  Admin access (full system + Users page)
+                  <input type="checkbox" checked={editAdmin} disabled={editing.id === currentAgent.id} onChange={(e) => { setEditAdmin(e.target.checked); if (e.target.checked) setEditRole('Admin'); }} className="rounded border-slate-300" />
+                  <Shield size={14} className="text-violet-600" /> Admin access
                 </label>
-                {editing.id === currentAgent.id && (
-                  <p className="text-[11px] text-slate-400">You cannot remove your own admin flag here.</p>
-                )}
               </>
             ) : (
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Customer role label</label>
-                <input
-                  value={editRole}
-                  onChange={(e) => setEditRole(e.target.value)}
-                  placeholder="Customer, VIP"
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
-                />
+                <label className="block text-xs font-medium text-slate-600 mb-1">Customer role</label>
+                <input value={editRole} onChange={(e) => setEditRole(e.target.value)} className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" />
               </div>
             )}
-
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
-                <Building2 size={12} /> Assigned branch
-              </label>
-              <select
-                value={editBranch}
-                onChange={(e) => setEditBranch(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
-              >
+              <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1"><Building2 size={12} /> Branch workplace</label>
+              <select value={editBranch} onChange={(e) => setEditBranch(e.target.value)} className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
                 <option value="">None</option>
-                {branchNames.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
+                {branchNames.map((b) => <option key={b} value={b}>{b}</option>)}
               </select>
-              <p className="text-[11px] text-slate-400 mt-1">Branches come from the Branches page list.</p>
             </div>
-
             <div className="flex flex-wrap gap-2 pt-2">
-              <button
-                type="button"
-                disabled={saving || !editName.trim()}
-                onClick={() => void saveEdit()}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50"
-              >
-                <Save size={14} /> {saving ? 'Saving...' : 'Save changes'}
+              <button type="button" disabled={saving || !editName.trim()} onClick={() => void saveEdit()} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50">
+                <Save size={14} /> {saving ? 'Saving...' : 'Save'}
               </button>
-              <button
-                type="button"
-                disabled={!editing.email || resetBusy}
-                onClick={() => void sendPasswordReset(editing.email)}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 disabled:opacity-40"
-              >
-                <Mail size={14} /> Send reset email
+              <button type="button" disabled={!editing.email || resetBusy} onClick={() => void sendPasswordReset(editing.email)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-200 rounded-lg">
+                <Mail size={14} /> Reset email
               </button>
-              <button
-                type="button"
-                onClick={() => setEditing(null)}
-                className="px-3 py-2 text-sm text-slate-500 hover:text-slate-700"
-              >
-                Cancel
-              </button>
+              <button type="button" onClick={() => setEditing(null)} className="px-3 py-2 text-sm text-slate-500">Cancel</button>
             </div>
           </div>
         </div>
       )}
 
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 space-y-1">
-        <div className="font-semibold text-slate-700 flex items-center gap-1">
-          <UserRound size={12} /> Password reset
-        </div>
-        <p>
-          Reset sends Supabase recovery email. The user opens the link and chooses a new password.
-          Admins cannot set a raw password from the browser (Supabase security).
-        </p>
-        <p className="text-slate-500">
-          Optional SQL for branch assignment: alter table agents add column if not exists branch text;
-        </p>
+        <div className="font-semibold text-slate-700 flex items-center gap-1"><UserRound size={12} /> Model</div>
+        <p>Branch = workplace (CIRIAN, ORMOC, …). User = person who belongs to a branch. Open Branches and click one to see its people and tickets.</p>
+        <p className="text-slate-500">SQL: alter table agents add column if not exists branch text; alter table customers add column if not exists branch text;</p>
       </div>
     </div>
   );
