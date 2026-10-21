@@ -6,8 +6,12 @@ on:
       - main
   workflow_dispatch:
 
+# Pushes with the default GITHUB_TOKEN do NOT trigger Pages rebuild.
+# Prefer secret PAGES_TOKEN (classic PAT with "repo" scope), else fall back to GITHUB_TOKEN.
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: pages-deploy
@@ -35,16 +39,15 @@ jobs:
         run: |
           npm run build
           touch dist/.nojekyll
-          echo "Built assets:"
-          ls -la dist/assets | head -20
 
       - name: Deploy dist to gh-pages
+        env:
+          # Create repo secret PAGES_TOKEN = classic PAT (repo scope) so Pages rebuilds
+          TOKEN: ${{ secrets.PAGES_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -e
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Fresh orphan branch every time so Pages always sees a new commit
           rm -rf work-gh-pages
           mkdir work-gh-pages
           cp -a dist/. work-gh-pages/
@@ -52,8 +55,6 @@ jobs:
           git init
           git checkout --orphan gh-pages
           git add -A
-          git commit -m "deploy ${GITHUB_SHA} $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:gh-pages
-          echo "Pushed gh-pages successfully"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git commit -m "deploy ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:gh-pages
+          echo "Pushed to gh-pages"
