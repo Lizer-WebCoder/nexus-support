@@ -40,54 +40,12 @@ body {
   background: #a1a1aa;
 }
 
-.recharts-default-tooltip {
-  background: #18181b !important;
-  border: 1px solid #3f3f46 !important;
-  border-radius: 10px !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
-  padding: 10px 12px !important;
-}
-.recharts-default-tooltip .recharts-tooltip-label {
-  color: #a1a1aa !important;
-  margin-bottom: 4px !important;
-  font-size: 11px !important;
-}
-.recharts-default-tooltip .recharts-tooltip-item {
-  color: #fafafa !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-}
-.recharts-default-tooltip .recharts-tooltip-item-name,
-.recharts-default-tooltip .recharts-tooltip-item-separator,
-.recharts-default-tooltip .recharts-tooltip-item-value {
-  color: #fafafa !important;
-}
-
-.bg-sky-50 { background-color: #eef2ff !important; }
-.bg-sky-100 { background-color: #e0e7ff !important; }
-.bg-sky-600 { background-color: #4f46e5 !important; }
-.bg-sky-700, .hover\:bg-sky-700:hover { background-color: #4338ca !important; }
-.bg-sky-50\/40 { background-color: rgb(238 242 255 / 0.4) !important; }
-.bg-sky-50\/50 { background-color: rgb(238 242 255 / 0.5) !important; }
-.text-sky-500, .text-sky-600, .text-sky-700 { color: #4f46e5 !important; }
-.text-sky-100 { color: #e0e7ff !important; }
-.text-sky-200 { color: #c7d2fe !important; }
-.border-sky-100, .border-sky-200 { border-color: #c7d2fe !important; }
-.border-sky-300 { border-color: #a5b4fc !important; }
-.ring-sky-500\/30:focus, .focus\:ring-sky-500\/30:focus { --tw-ring-color: rgb(99 102 241 / 0.3) !important; }
-.hover\:bg-sky-50:hover { background-color: #eef2ff !important; }
-.hover\:bg-sky-100:hover { background-color: #e0e7ff !important; }
-.hover\:text-sky-600:hover, .hover\:text-sky-700:hover { color: #4f46e5 !important; }
-.hover\:border-sky-300:hover { border-color: #a5b4fc !important; }
-
 .portal-atmosphere {
   background-color: #f5f3ff !important;
   background-image:
     radial-gradient(ellipse 80% 50% at 20% -10%, rgba(139, 92, 246, 0.18), transparent),
     radial-gradient(ellipse 60% 40% at 90% 10%, rgba(99, 102, 241, 0.12), transparent),
     radial-gradient(ellipse 50% 30% at 50% 100%, rgba(167, 139, 250, 0.1), transparent);
-  background-size: auto, auto, auto;
-  background-repeat: no-repeat;
   min-height: 100vh;
 }
 
@@ -102,41 +60,25 @@ html.nexus-dark body {
 }
 html.nexus-dark .bg-white { background-color: #18181b !important; }
 html.nexus-dark .bg-zinc-100,
-html.nexus-dark .bg-slate-50 {
-  background-color: #09090b !important;
-}
+html.nexus-dark .bg-slate-50 { background-color: #09090b !important; }
 html.nexus-dark .bg-zinc-50,
-html.nexus-dark .bg-slate-100 {
-  background-color: #27272a !important;
-}
+html.nexus-dark .bg-slate-100 { background-color: #27272a !important; }
 html.nexus-dark .text-zinc-900,
 html.nexus-dark .text-slate-900,
-html.nexus-dark .text-slate-800 {
-  color: #fafafa !important;
-}
+html.nexus-dark .text-slate-800 { color: #fafafa !important; }
 html.nexus-dark .text-zinc-800,
-html.nexus-dark .text-slate-700 {
-  color: #e4e4e7 !important;
-}
+html.nexus-dark .text-slate-700 { color: #e4e4e7 !important; }
 html.nexus-dark .text-zinc-600,
-html.nexus-dark .text-slate-600 {
-  color: #a1a1aa !important;
-}
+html.nexus-dark .text-slate-600 { color: #a1a1aa !important; }
 html.nexus-dark .text-zinc-500,
 html.nexus-dark .text-slate-500,
-html.nexus-dark .text-slate-400 {
-  color: #71717a !important;
-}
+html.nexus-dark .text-slate-400 { color: #71717a !important; }
 html.nexus-dark .border-zinc-200,
 html.nexus-dark .border-slate-200,
 html.nexus-dark .border-slate-100,
-html.nexus-dark .border-zinc-100 {
-  border-color: #3f3f46 !important;
-}
+html.nexus-dark .border-zinc-100 { border-color: #3f3f46 !important; }
 html.nexus-dark .hover\:bg-zinc-100:hover,
-html.nexus-dark .hover\:bg-slate-50:hover {
-  background-color: #27272a !important;
-}
+html.nexus-dark .hover\:bg-slate-50:hover { background-color: #27272a !important; }
 html.nexus-dark input,
 html.nexus-dark select,
 html.nexus-dark textarea {
@@ -145,29 +87,9 @@ html.nexus-dark textarea {
   color: #f4f4f5 !important;
 }
 html.nexus-dark input::placeholder,
-html.nexus-dark textarea::placeholder {
-  color: #71717a !important;
-}
-html.nexus-dark .shadow-card,
-html.nexus-dark .shadow-sm,
-html.nexus-dark .shadow-lg,
-html.nexus-dark .shadow-xl {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45) !important;
-}
-html.nexus-dark .bg-brand-50 { background-color: rgba(99, 102, 241, 0.15) !important; }
-html.nexus-dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.12) !important; }
-html.nexus-dark .bg-rose-50 { background-color: rgba(244, 63, 94, 0.12) !important; }
-html.nexus-dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.12) !important; }
-html.nexus-dark .bg-violet-50 { background-color: rgba(139, 92, 246, 0.12) !important; }
+html.nexus-dark textarea::placeholder { color: #71717a !important; }
 html.nexus-dark main { background-color: #09090b; }
-html.nexus-dark .bg-white\/90 { background-color: rgba(24, 24, 27, 0.92) !important; }
-html.nexus-dark ::-webkit-scrollbar-thumb { background: #52525b; }
-html.nexus-dark .portal-atmosphere {
-  background-color: #0c0a12 !important;
-}
-
-html.nexus-compact .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
-html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 
 .login-cosmos-sky {
   background:
@@ -272,9 +194,7 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   filter: drop-shadow(0 0 18px rgba(232, 121, 249, 0.55));
   will-change: transform;
 }
-.login-pilot-js {
-  animation: none !important;
-}
+.login-pilot-js { animation: none !important; }
 
 .login-pilot-glow {
   position: absolute;
@@ -319,16 +239,22 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   to { transform: rotate(360deg); }
 }
 
+/* Rocky asteroids */
 .login-asteroid {
   position: absolute;
-  bottom: -10%;
+  bottom: -12%;
   z-index: 5;
-  border: 1px solid rgba(180, 160, 220, 0.3);
-  box-shadow: inset -3px -2px 6px rgba(0, 0, 0, 0.5);
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
   animation-name: login-rock-rise;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   opacity: 0;
+}
+.login-asteroid-svg {
+  display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
 @keyframes login-rock-rise {
@@ -336,12 +262,105 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
     transform: translate(0, 0) rotate(0deg) scale(0.65);
     opacity: 0;
   }
-  5% { opacity: 0.9; }
-  70% { opacity: 0.75; }
+  5% { opacity: 0.95; }
+  70% { opacity: 0.8; }
   100% {
     transform: translate(var(--rock-drift, 20px), -78vh) rotate(var(--rock-spin, 180deg)) scale(1.1);
     opacity: 0;
   }
+}
+
+/* Mid-field planets */
+.login-planet-mid {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+}
+.login-planet-mid-a {
+  width: 56px;
+  height: 56px;
+  left: 62%;
+  top: 18%;
+  background: radial-gradient(circle at 35% 30%, #6ee7b7, #065f46 70%);
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  box-shadow: inset -6px -4px 12px rgba(0, 0, 0, 0.45);
+  opacity: 0.75;
+  animation: login-planet-far-drift 40s ease-in-out infinite alternate;
+}
+.login-planet-mid-b {
+  width: 36px;
+  height: 36px;
+  left: 22%;
+  top: 48%;
+  background: radial-gradient(circle at 40% 32%, #fcd34d, #92400e 75%);
+  border: 1px solid rgba(252, 211, 77, 0.3);
+  box-shadow: inset -4px -3px 10px rgba(0, 0, 0, 0.4);
+  opacity: 0.7;
+  animation: login-planet-far-drift 28s ease-in-out infinite alternate-reverse;
+}
+
+/* UFO / ship flybys */
+.login-flyby {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  will-change: transform;
+}
+.login-flyby-ltr {
+  left: -80px;
+  animation-name: login-flyby-ltr;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.login-flyby-rtl {
+  right: -80px;
+  animation-name: login-flyby-rtl;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes login-flyby-ltr {
+  from { transform: translateX(0) translateY(0); }
+  30%  { transform: translateX(30vw) translateY(-8px); }
+  60%  { transform: translateX(60vw) translateY(6px); }
+  to   { transform: translateX(110vw) translateY(-4px); }
+}
+@keyframes login-flyby-rtl {
+  from { transform: translateX(0) translateY(0); }
+  30%  { transform: translateX(-30vw) translateY(6px); }
+  60%  { transform: translateX(-60vw) translateY(-8px); }
+  to   { transform: translateX(-110vw) translateY(4px); }
+}
+.login-flyby-craft {
+  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.5));
+}
+.login-flyby-chat {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #1e1b4b;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 10px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  position: relative;
+  animation: login-chat-pop 0.35s ease-out;
+}
+.login-flyby-chat::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  margin-left: -4px;
+  border: 5px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.92);
+}
+@keyframes login-chat-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -351,8 +370,12 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   .login-planet-main,
   .login-planet-far,
   .login-planet-ring,
+  .login-planet-mid-a,
+  .login-planet-mid-b,
   .login-logo-arcs,
-  .login-asteroid {
+  .login-asteroid,
+  .login-flyby-ltr,
+  .login-flyby-rtl {
     animation: none !important;
   }
 }
