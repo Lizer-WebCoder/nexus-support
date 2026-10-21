@@ -91,7 +91,6 @@ body {
   min-height: 100vh;
 }
 
-/* ========== Dark mode (Settings toggle) ========== */
 html.nexus-dark {
   color-scheme: dark;
   color: #f4f4f5;
@@ -322,47 +321,86 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   z-index: 4;
 }
 
-/* ===== Center pilot: logo + asteroids ===== */
-.login-pilot-stage {
-  /* stage sits in the open middle of the viewport */
-}
-
+/* ===== Center pilot: logo trail + rising asteroids ===== */
 .login-pilot {
   position: absolute;
   left: 52%;
-  top: 42%;
+  top: 40%;
   z-index: 6;
-  animation: login-pilot-dodge 18s ease-in-out infinite;
+  animation: login-pilot-dodge 16s ease-in-out infinite;
   filter: drop-shadow(0 0 18px rgba(232, 121, 249, 0.55));
 }
 
 .login-pilot-glow {
   position: absolute;
-  inset: -20px;
+  inset: -18px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(192, 38, 211, 0.35), transparent 70%);
   animation: login-beam-pulse 2.5s ease-in-out infinite;
+  z-index: 0;
 }
 
-/* Irregular path: left/right + scale = depth (forward/back) */
+.login-pilot-trail {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 121, 249, 0.55), transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  animation: login-pilot-dodge 16s ease-in-out infinite;
+}
+.login-pilot-trail-1 {
+  animation-delay: -0.18s;
+  opacity: 0.55;
+  filter: blur(2px);
+}
+.login-pilot-trail-2 {
+  animation-delay: -0.36s;
+  opacity: 0.38;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  filter: blur(4px);
+}
+.login-pilot-trail-3 {
+  animation-delay: -0.55s;
+  opacity: 0.25;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  filter: blur(6px);
+}
+.login-pilot-trail-4 {
+  animation-delay: -0.75s;
+  opacity: 0.14;
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
+  filter: blur(8px);
+}
+
 @keyframes login-pilot-dodge {
   0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
-  12%  { transform: translate(-50%, -50%) translate(-70px, 18px) scale(0.92); }
-  25%  { transform: translate(-50%, -50%) translate(55px, -28px) scale(1.08); }
-  38%  { transform: translate(-50%, -50%) translate(-40px, 40px) scale(0.95); }
-  50%  { transform: translate(-50%, -50%) translate(80px, 8px) scale(1.12); }
-  62%  { transform: translate(-50%, -50%) translate(-90px, -22px) scale(0.9); }
-  75%  { transform: translate(-50%, -50%) translate(30px, 32px) scale(1.05); }
-  88%  { transform: translate(-50%, -50%) translate(-25px, -35px) scale(0.98); }
+  10%  { transform: translate(-50%, -50%) translate(-75px, 12px) scale(0.94); }
+  22%  { transform: translate(-50%, -50%) translate(60px, -30px) scale(1.08); }
+  35%  { transform: translate(-50%, -50%) translate(-50px, 35px) scale(0.96); }
+  48%  { transform: translate(-50%, -50%) translate(85px, 5px) scale(1.1); }
+  60%  { transform: translate(-50%, -50%) translate(-95px, -20px) scale(0.9); }
+  72%  { transform: translate(-50%, -50%) translate(35px, 28px) scale(1.04); }
+  85%  { transform: translate(-50%, -50%) translate(-30px, -40px) scale(0.97); }
   100% { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
 }
 
-/* Logo: arcs spin slowly around the core */
 .login-logo-mark {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 2;
 }
 .login-logo-core {
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
@@ -377,61 +415,34 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   to { transform: rotate(360deg); }
 }
 
-/* Sparse asteroids on different paths */
+/* Asteroids spawn at bottom and rise toward logo */
 .login-asteroid {
   position: absolute;
-  border-radius: 40% 55% 45% 60%;
-  background:
-    radial-gradient(circle at 30% 30%, #7a6a9a, #2a2038 70%);
-  border: 1px solid rgba(180, 160, 220, 0.35);
-  box-shadow: inset -3px -2px 6px rgba(0, 0, 0, 0.5);
-  opacity: 0.75;
+  bottom: -8%;
   z-index: 5;
+  border: 1px solid rgba(180, 160, 220, 0.3);
+  box-shadow: inset -3px -2px 6px rgba(0, 0, 0, 0.5);
+  animation-name: login-rock-rise;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+  opacity: 0;
 }
 
-.login-asteroid-a {
-  left: 40%;
-  top: 20%;
-  animation-name: login-rock-a;
-}
-.login-asteroid-b {
-  left: 58%;
-  top: 55%;
-  animation-name: login-rock-b;
-}
-.login-asteroid-c {
-  left: 48%;
-  top: 35%;
-  animation-name: login-rock-c;
-}
-.login-asteroid-d {
-  left: 62%;
-  top: 28%;
-  animation-name: login-rock-d;
-}
-
-@keyframes login-rock-a {
-  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
-  8%   { opacity: 0.8; }
-  50%  { transform: translate(40px, 120px) rotate(160deg); opacity: 0.7; }
-  100% { transform: translate(-30px, 240px) rotate(320deg); opacity: 0; }
-}
-@keyframes login-rock-b {
-  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
-  10%  { opacity: 0.75; }
-  100% { transform: translate(-90px, -180px) rotate(-240deg); opacity: 0; }
-}
-@keyframes login-rock-c {
-  0%   { transform: translate(0, 0) rotate(20deg); opacity: 0; }
-  12%  { opacity: 0.7; }
-  100% { transform: translate(110px, 90px) rotate(280deg); opacity: 0; }
-}
-@keyframes login-rock-d {
-  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
-  15%  { opacity: 0.65; }
-  100% { transform: translate(-50px, 160px) rotate(200deg); opacity: 0; }
+@keyframes login-rock-rise {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(0.7);
+    opacity: 0;
+  }
+  6% {
+    opacity: 0.85;
+  }
+  55% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(var(--rock-drift, 30px), -72vh) rotate(var(--rock-spin, 180deg)) scale(1.05);
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -445,6 +456,7 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   .login-planet-far,
   .login-planet-ring,
   .login-pilot,
+  .login-pilot-trail,
   .login-logo-arcs,
   .login-asteroid {
     animation: none !important;
