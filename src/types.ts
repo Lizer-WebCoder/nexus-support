@@ -11,6 +11,7 @@ export interface Agent {
   status: AgentStatus;
   color: string;
   email?: string;
+  user_id?: string | null;
   phone?: string;
   bio?: string;
   timezone?: string;
@@ -74,8 +75,8 @@ export interface TicketAttachment {
   uploaded_by?: string;
 }
 
-export const MAX_ATTACHMENT_BYTES = 400_000;
-export const MAX_CHAT_FILE_BYTES = 400_000;
+export const MAX_ATTACHMENT_BYTES = 8_000_000;
+export const MAX_CHAT_FILE_BYTES = 8_000_000;
 
 export interface Ticket {
   id: string;
@@ -84,14 +85,15 @@ export interface Ticket {
   priority: Priority;
   status: Status;
   channel: Channel;
-  assignee_id?: string;
-  assignee?: Agent;
+  assignee_id?: string | null;
+  assignee?: Agent | null;
   customer_name: string;
   customer_email?: string;
   branch?: string;
   created_at: string;
   updated_at?: string;
   sla_due_at?: string | null;
+  first_response_at?: string | null;
   deleted_at?: string | null;
   messages?: TicketMessage[];
   notes?: TicketNote[];
@@ -130,9 +132,10 @@ export interface KnowledgeArticle {
 export interface ChatMessage {
   id: string;
   conversation_id?: string;
-  author: string;
+  sender: 'agent' | 'customer';
   text: string;
   created_at: string;
+  author?: string;
   is_agent?: boolean;
   file_url?: string;
   file_name?: string;
@@ -142,8 +145,12 @@ export interface ChatConversation {
   id: string;
   customer_name: string;
   customer_email?: string;
-  status: 'open' | 'closed' | 'waiting';
+  status: 'open' | 'closed' | 'waiting' | 'active' | 'ended';
   agent_id?: string;
+  branch?: string;
+  ticket_id?: string;
+  preview?: string;
+  unread?: number;
   created_at: string;
   updated_at?: string;
   messages?: ChatMessage[];
@@ -158,6 +165,7 @@ export interface AppNotification {
   type?: string;
   link?: string;
   agent_id?: string;
+  user_id?: string;
 }
 
 export interface Announcement {
@@ -165,6 +173,7 @@ export interface Announcement {
   title: string;
   body: string;
   active?: boolean;
+  severity?: 'info' | 'warning' | 'critical';
   created_at?: string;
 }
 
@@ -173,8 +182,13 @@ export interface Automation {
   name: string;
   trigger: string;
   action: string;
-  active: boolean;
+  active?: boolean;
+  enabled?: boolean;
   description?: string;
+  condition_field?: string;
+  condition_op?: string;
+  condition_value?: string;
+  action_value?: string;
 }
 
 export interface CannedResponse {
