@@ -196,49 +196,6 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   to { transform: translate(-3%, 4%) scale(1.06); }
 }
 
-.login-beam {
-  width: min(22vw, 120px);
-  height: 40%;
-  pointer-events: none;
-  z-index: 2;
-}
-.login-beam-core {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(255, 120, 255, 0.7) 0%, rgba(200, 0, 255, 0.35) 30%, transparent 100%);
-  filter: blur(2px);
-  clip-path: polygon(38% 0%, 62% 0%, 54% 100%, 46% 100%);
-  animation: login-beam-pulse 3s ease-in-out infinite;
-}
-.login-beam-glow {
-  position: absolute;
-  inset: -20% -40% 0;
-  background: radial-gradient(ellipse 50% 40% at 50% 0%, rgba(255, 0, 220, 0.35), transparent 70%);
-  animation: login-beam-pulse 3s ease-in-out infinite 0.4s;
-}
-
-@keyframes login-beam-pulse {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
-}
-
-.login-beam-particles { position: absolute; inset: 0; }
-.login-beam-spark {
-  position: absolute;
-  top: -5%;
-  width: 3px;
-  height: 8px;
-  border-radius: 999px;
-  background: #ff99ff;
-  box-shadow: 0 0 8px #ff66ff;
-  animation: login-spark-fall linear infinite;
-}
-
-@keyframes login-spark-fall {
-  from { transform: translateY(0); opacity: 1; }
-  to { transform: translateY(120vh); opacity: 0; }
-}
-
 .login-planet { position: absolute; border-radius: 50%; pointer-events: none; z-index: 1; }
 .login-planet-main {
   width: min(48vw, 380px);
@@ -312,7 +269,7 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   left: 52%;
   top: 40%;
   z-index: 6;
-  animation: login-pilot-dodge 16s ease-in-out infinite;
+  animation: login-pilot-dodge 22s ease-in-out infinite;
   filter: drop-shadow(0 0 18px rgba(232, 121, 249, 0.55));
 }
 
@@ -325,7 +282,22 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   z-index: 0;
 }
 
-/* Real trail dots (positions set in JS from logo history) */
+@keyframes login-beam-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.login-trail-spark {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px #f0abfc, 0 0 12px #e879f9;
+  pointer-events: none;
+  z-index: 5;
+  margin-left: -2px;
+  margin-top: -2px;
+}
+
 .login-trail-dot {
   position: absolute;
   border-radius: 50%;
@@ -342,15 +314,17 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 }
 
 @keyframes login-pilot-dodge {
-  0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
-  12%  { transform: translate(-50%, -50%) translate(-48px, 10px) scale(0.96); }
-  25%  { transform: translate(-50%, -50%) translate(42px, -22px) scale(1.06); }
-  38%  { transform: translate(-50%, -50%) translate(-38px, 28px) scale(0.97); }
-  50%  { transform: translate(-50%, -50%) translate(50px, 6px) scale(1.08); }
-  62%  { transform: translate(-50%, -50%) translate(-52px, -16px) scale(0.94); }
-  75%  { transform: translate(-50%, -50%) translate(28px, 22px) scale(1.03); }
-  88%  { transform: translate(-50%, -50%) translate(-22px, -28px) scale(0.98); }
-  100% { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+  0%   { transform: translate(-50%, -50%) translate(0, -28vh) scale(0.92); }
+  10%  { transform: translate(-50%, -50%) translate(-18vw, -12vh) scale(1); }
+  20%  { transform: translate(-50%, -50%) translate(14vw, 8vh) scale(1.08); }
+  32%  { transform: translate(-50%, -50%) translate(-10vw, 22vh) scale(0.95); }
+  42%  { transform: translate(-50%, -50%) translate(12vw, 32vh) scale(1.05); }
+  52%  { transform: translate(-50%, -50%) translate(-16vw, 18vh) scale(0.9); }
+  62%  { transform: translate(-50%, -50%) translate(8vw, -8vh) scale(1.1); }
+  72%  { transform: translate(-50%, -50%) translate(-20vw, -22vh) scale(0.96); }
+  82%  { transform: translate(-50%, -50%) translate(16vw, -18vh) scale(1.04); }
+  92%  { transform: translate(-50%, -50%) translate(-6vw, 10vh) scale(1); }
+  100% { transform: translate(-50%, -50%) translate(0, -28vh) scale(0.92); }
 }
 
 .login-logo-mark {
@@ -398,11 +372,8 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 
 @media (prefers-reduced-motion: reduce) {
   .login-star,
-  .login-beam-spark,
   .login-nebula-a,
   .login-nebula-b,
-  .login-beam-core,
-  .login-beam-glow,
   .login-planet-main,
   .login-planet-far,
   .login-planet-ring,
