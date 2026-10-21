@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Ticket, Building2, BookOpen, MessageSquare,
   BarChart3, UserCog, Zap, ClipboardList, ShieldCheck,
-  Megaphone, FileText, Rocket, Settings, LogOut, User,
+  Megaphone, FileText, Rocket, Settings, LogOut, User, Users,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -16,6 +16,7 @@ interface SidebarProps {
   agentStatus?: string;
   onSignOut?: () => void;
   onProfile?: () => void;
+  isAdmin?: boolean;
 }
 
 function BrandMark({ className = 'w-8 h-8' }: { className?: string }) {
@@ -41,6 +42,7 @@ export default function Sidebar({
   agentStatus = 'online',
   onSignOut,
   onProfile,
+  isAdmin = false,
 }: SidebarProps) {
   const initials = userName.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase() || 'AG';
 
@@ -55,6 +57,7 @@ export default function Sidebar({
   const managementItems = [
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'team', label: 'Team', icon: UserCog },
+    ...(isAdmin ? [{ id: 'users', label: 'Users', icon: Users }] : []),
     { id: 'automations', label: 'Automations', icon: Zap },
   ];
 
