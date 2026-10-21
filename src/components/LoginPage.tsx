@@ -46,40 +46,179 @@ function NexusLogoMark({ size = 56 }: { size?: number }) {
   );
 }
 
+/* —— Rocky asteroid SVG shapes —— */
+const ROCK_PATHS = [
+  'M20 4 L34 10 L42 22 L36 36 L22 42 L8 34 L4 18 L12 6 Z',
+  'M24 2 L38 8 L44 20 L40 34 L26 44 L10 38 L4 24 L8 10 Z',
+  'M16 6 L32 4 L44 16 L40 32 L28 42 L10 38 L4 22 L8 10 Z',
+  'M22 4 L36 12 L42 28 L30 42 L12 40 L4 26 L8 12 Z',
+];
+
+function AsteroidSvg({ variant, size }: { variant: number; size: number }) {
+  const path = ROCK_PATHS[variant % ROCK_PATHS.length];
+  const hue = 30 + (variant * 17) % 40;
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" className="login-asteroid-svg">
+      <defs>
+        <radialGradient id={`rock-g-${variant}`} cx="32%" cy="28%" r="70%">
+          <stop offset="0%" stopColor={`hsl(${hue} 18% 48%)`} />
+          <stop offset="55%" stopColor={`hsl(${hue} 22% 28%)`} />
+          <stop offset="100%" stopColor={`hsl(${hue} 25% 12%)`} />
+        </radialGradient>
+      </defs>
+      <path d={path} fill={`url(#rock-g-${variant})`} stroke={`hsl(${hue} 15% 35%)`} strokeWidth="1.2" />
+      {/* craters */}
+      <circle cx="18" cy="16" r="3.2" fill="rgba(0,0,0,0.28)" />
+      <circle cx="30" cy="26" r="2.2" fill="rgba(0,0,0,0.22)" />
+      <circle cx="22" cy="32" r="1.6" fill="rgba(0,0,0,0.2)" />
+      <ellipse cx="34" cy="14" rx="2" ry="1.4" fill="rgba(255,255,255,0.08)" />
+    </svg>
+  );
+}
+
 function useAsteroids(count: number) {
   return useMemo(() => {
-    const radii = [
-      '42% 58% 48% 52%',
-      '60% 40% 55% 45%',
-      '35% 65% 50% 50%',
-      '55% 45% 38% 62%',
-      '48% 52% 60% 40%',
-      '65% 35% 45% 55%',
-    ];
-    const starts = [18, 28, 38, 55, 68, 78];
-
+    const starts = [16, 26, 36, 52, 66, 78];
     return Array.from({ length: count }, (_, i) => {
       const seed = (i * 17 + 11) % 97;
-      const left = starts[i % starts.length] + (seed % 4);
-      const drift = (seed % 2 === 0 ? 1 : -1) * (10 + (seed % 30));
-
       return {
         id: i,
-        size: 10 + (seed % 14),
-        radius: radii[i % radii.length],
-        left,
-        delay: -((i * 2.6) % 18),
-        duration: 11 + (seed % 7),
-        drift,
-        rotate: 100 + (seed % 220),
-        hue: 235 + (seed % 45),
+        size: 22 + (seed % 20),
+        left: starts[i % starts.length] + (seed % 4),
+        delay: -((i * 2.8) % 18),
+        duration: 12 + (seed % 8),
+        drift: (seed % 2 === 0 ? 1 : -1) * (12 + (seed % 28)),
+        rotate: 140 + (seed % 200),
+        variant: i % ROCK_PATHS.length,
       };
     });
   }, [count]);
 }
 
-type TrailPoint = { x: number; y: number };
+/* —— Flyby UFOs / ships with optional chat bubbles —— */
+const CHAT_LINES = [
+  'WOAH COOL',
+  'NICE TRAIL!',
+  'Is that Nexus?',
+  'Sick logo 🔥',
+  'Beep boop',
+  'Over here!',
+  'Support desk?',
+  'Zoom!',
+  'Hello agents',
+  'To the branch!',
+];
 
+type Flyby = {
+  id: number;
+  kind: 'ufo' | 'ship';
+  top: number;
+  duration: number;
+  fromLeft: boolean;
+  chat: string | null;
+};
+
+function UfoIcon() {
+  return (
+    <svg width="56" height="28" viewBox="0 0 56 28" fill="none">
+      <ellipse cx="28" cy="18" rx="24" ry="7" fill="#94a3b8" opacity="0.9" />
+      <ellipse cx="28" cy="16" rx="18" ry="5" fill="#cbd5e1" />
+      <ellipse cx="28" cy="12" rx="10" ry="8" fill="#a5b4fc" />
+      <ellipse cx="28" cy="10" rx="7" ry="5" fill="#c7d2fe" opacity="0.7" />
+      <circle cx="20" cy="18" r="1.5" fill="#f0abfc" />
+      <circle cx="28" cy="19" r="1.5" fill="#67e8f9" />
+      <circle cx="36" cy="18" r="1.5" fill="#fde68a" />
+    </svg>
+  );
+}
+
+function ShipIcon() {
+  return (
+    <svg width="64" height="24" viewBox="0 0 64 24" fill="none">
+      <path d="M4 14 L48 8 L58 12 L48 16 L4 14 Z" fill="#94a3b8" />
+      <path d="M48 8 L58 12 L48 16 Z" fill="#64748b" />
+      <rect x="18" y="10" width="10" height="4" rx="1" fill="#67e8f9" opacity="0.8" />
+      <path d="M4 14 L0 12 L0 16 Z" fill="#f0abfc" opacity="0.7" />
+      <circle cx="52" cy="12" r="2" fill="#fde68a" />
+    </svg>
+  );
+}
+
+function SpaceFlybys() {
+  const [flybys, setFlybys] = useState<Flyby[]>([]);
+  const idRef = useRef(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const schedule = () => {
+      const wait = (20 + Math.random() * 30) * 1000; // 20–50s
+      timer = setTimeout(() => {
+        if (cancelled) return;
+        const id = ++idRef.current;
+        const kind: 'ufo' | 'ship' = Math.random() < 0.5 ? 'ufo' : 'ship';
+        const duration = 6 + Math.random() * 5;
+        const fromLeft = Math.random() < 0.5;
+        const chat = Math.random() < 0.55 ? CHAT_LINES[Math.floor(Math.random() * CHAT_LINES.length)] : null;
+        const top = 12 + Math.random() * 55;
+
+        setFlybys((prev) => [...prev, { id, kind, top, duration, fromLeft, chat }]);
+
+        setTimeout(() => {
+          setFlybys((prev) => prev.filter((f) => f.id !== id));
+        }, duration * 1000 + 200);
+
+        schedule();
+      }, wait);
+    };
+
+    // first one a bit sooner so user sees it
+    timer = setTimeout(() => {
+      if (cancelled) return;
+      const id = ++idRef.current;
+      setFlybys([
+        {
+          id,
+          kind: Math.random() < 0.5 ? 'ufo' : 'ship',
+          top: 20 + Math.random() * 40,
+          duration: 7,
+          fromLeft: true,
+          chat: 'WOAH COOL',
+        },
+      ]);
+      setTimeout(() => setFlybys((p) => p.filter((f) => f.id !== id)), 7200);
+      schedule();
+    }, 8000);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  return (
+    <div className="login-flybys absolute inset-0 pointer-events-none z-[7] overflow-hidden hidden lg:block">
+      {flybys.map((f) => (
+        <div
+          key={f.id}
+          className={`login-flyby ${f.fromLeft ? 'login-flyby-ltr' : 'login-flyby-rtl'}`}
+          style={{
+            top: `${f.top}%`,
+            animationDuration: `${f.duration}s`,
+          }}
+        >
+          {f.chat && (
+            <div className={`login-flyby-chat ${f.fromLeft ? '' : 'login-flyby-chat-rtl'}`}>{f.chat}</div>
+          )}
+          <div className="login-flyby-craft">{f.kind === 'ufo' ? <UfoIcon /> : <ShipIcon />}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+type TrailPoint = { x: number; y: number };
 const TRAIL_LEN = 32;
 
 function easeInOut(t: number) {
@@ -91,19 +230,16 @@ function randomIn(min: number, max: number) {
 }
 
 function LogoPilotStage() {
-  const asteroids = useAsteroids(5);
+  const asteroids = useAsteroids(6);
   const pilotRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const history = useRef<TrailPoint[]>([]);
   const [trail, setTrail] = useState<TrailPoint[]>([]);
   const [stageSize, setStageSize] = useState({ w: 1, h: 1 });
 
-  // Random waypoint flight — no fixed loop
   useEffect(() => {
     let raf = 0;
     let lastSample = 0;
-
-    // Position in stage pixels (center of logo)
     let x = 0;
     let y = 0;
     let fromX = 0;
@@ -118,13 +254,10 @@ function LogoPilotStage() {
     let ready = false;
 
     const pickTarget = (w: number, h: number) => {
-      // Stay in middle band so it doesn't cover the login card / left text too hard
       const marginX = w * 0.12;
       const marginY = h * 0.1;
-      // Prefer larger jumps for variety
       let nx = randomIn(marginX, w - marginX);
       let ny = randomIn(marginY, h - marginY);
-      // Occasionally dive low or climb high
       if (Math.random() < 0.25) ny = randomIn(h * 0.55, h * 0.88);
       if (Math.random() < 0.25) ny = randomIn(h * 0.08, h * 0.28);
       if (Math.random() < 0.2) nx = randomIn(marginX, w * 0.35);
@@ -137,14 +270,12 @@ function LogoPilotStage() {
       toY = ny;
       toScale = randomIn(0.88, 1.14);
       startT = performance.now();
-      // Longer for long distances, shorter for nearby hops
       const dist = Math.hypot(toX - fromX, toY - fromY);
       duration = Math.min(4200, Math.max(1400, dist * 2.2 + randomIn(200, 800)));
     };
 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
-
       const stage = stageRef.current;
       const pilot = pilotRef.current;
       if (!stage || !pilot) return;
@@ -164,7 +295,6 @@ function LogoPilotStage() {
         setStageSize({ w: sr.width, h: sr.height });
       }
 
-      // Update stage size occasionally
       if (Math.abs(sr.width - stageSize.w) > 8 || Math.abs(sr.height - stageSize.h) > 8) {
         setStageSize({ w: sr.width, h: sr.height });
       }
@@ -174,14 +304,10 @@ function LogoPilotStage() {
       x = fromX + (toX - fromX) * e;
       y = fromY + (toY - fromY) * e;
       scale = fromScale + (toScale - fromScale) * e;
-
       pilot.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%) scale(${scale})`;
 
-      if (t >= 1) {
-        pickTarget(sr.width, sr.height);
-      }
+      if (t >= 1) pickTarget(sr.width, sr.height);
 
-      // Trail sample
       if (now - lastSample >= 24) {
         lastSample = now;
         const prev = history.current[0];
@@ -219,6 +345,10 @@ function LogoPilotStage() {
       className="login-pilot-stage absolute inset-0 pointer-events-none z-[5] hidden lg:block"
       aria-hidden
     >
+      {/* Extra mid-field planets */}
+      <div className="login-planet-mid login-planet-mid-a" />
+      <div className="login-planet-mid login-planet-mid-b" />
+
       {asteroids.map((a) => (
         <span
           key={a.id}
@@ -227,14 +357,14 @@ function LogoPilotStage() {
             width: a.size,
             height: a.size,
             left: `${a.left}%`,
-            borderRadius: a.radius,
             animationDelay: `${a.delay}s`,
             animationDuration: `${a.duration}s`,
             ['--rock-drift' as string]: `${a.drift}px`,
             ['--rock-spin' as string]: `${a.rotate}deg`,
-            background: `radial-gradient(circle at 32% 28%, hsl(${a.hue} 28% 52%), hsl(${a.hue} 32% 16%) 72%)`,
           }}
-        />
+        >
+          <AsteroidSvg variant={a.variant} size={a.size} />
+        </span>
       ))}
 
       {pathD && (
@@ -269,8 +399,6 @@ function LogoPilotStage() {
               <feGaussianBlur stdDeviation="16" />
             </filter>
           </defs>
-
-          {/* Soft bloom only — no hard white core line */}
           <path
             d={pathD}
             fill="none"
@@ -311,7 +439,6 @@ function LogoPilotStage() {
         );
       })}
 
-      {/* JS-positioned pilot (no CSS keyframe loop) */}
       <div
         ref={pilotRef}
         className="login-pilot login-pilot-js"
@@ -357,6 +484,7 @@ function CosmicFallBackground() {
       </div>
 
       <LogoPilotStage />
+      <SpaceFlybys />
 
       <div className="login-cosmos-vignette absolute inset-0 pointer-events-none" />
     </div>
