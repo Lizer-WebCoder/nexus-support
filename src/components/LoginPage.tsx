@@ -21,7 +21,6 @@ function useFallingStars(count: number) {
   );
 }
 
-/** Nexus mark — arcs slowly orbit the center dot. */
 function NexusLogoMark({ size = 56 }: { size?: number }) {
   return (
     <div className="login-logo-mark" style={{ width: size, height: size }}>
@@ -47,36 +46,69 @@ function NexusLogoMark({ size = 56 }: { size?: number }) {
   );
 }
 
-/** Center-stage pilot: logo drifts L/R & depth, dodging a few rocks. */
+/** Deterministic-but-varied rock params (stable across renders). */
+function useAsteroids(count: number) {
+  return useMemo(() => {
+    const radii = [
+      '42% 58% 48% 52%',
+      '60% 40% 55% 45%',
+      '35% 65% 50% 50%',
+      '55% 45% 38% 62%',
+      '48% 52% 60% 40%',
+      '65% 35% 45% 55%',
+      '40% 60% 42% 58%',
+      '50% 50% 35% 65%',
+    ];
+    return Array.from({ length: count }, (_, i) => {
+      const seed = (i * 17 + 11) % 97;
+      return {
+        id: i,
+        size: 10 + (seed % 18),
+        radius: radii[i % radii.length],
+        // horizontal start across lower zone (toward center lane)
+        left: 38 + ((seed * 3) % 28),
+        delay: -((i * 2.1) % 14),
+        duration: 9 + (seed % 7),
+        // slight horizontal drift while rising
+        drift: (seed % 2 === 0 ? 1 : -1) * (20 + (seed % 40)),
+        rotate: 120 + (seed % 200),
+        hue: 240 + (seed % 40),
+      };
+    });
+  }, [count]);
+}
+
 function LogoPilotStage() {
-  const asteroids = useMemo(
-    () => [
-      { id: 1, size: 18, delay: 0, duration: 11, path: 'a' as const },
-      { id: 2, size: 12, delay: -4, duration: 14, path: 'b' as const },
-      { id: 3, size: 15, delay: -7, duration: 12.5, path: 'c' as const },
-      { id: 4, size: 10, delay: -2, duration: 16, path: 'd' as const },
-    ],
-    []
-  );
+  const asteroids = useAsteroids(6);
 
   return (
     <div className="login-pilot-stage absolute inset-0 pointer-events-none z-[5] hidden lg:block" aria-hidden>
-      {/* Asteroids (sparse) */}
+      {/* Rocks rise from bottom toward the logo lane */}
       {asteroids.map((a) => (
         <span
           key={a.id}
-          className={`login-asteroid login-asteroid-${a.path}`}
+          className="login-asteroid"
           style={{
             width: a.size,
             height: a.size,
+            left: `${a.left}%`,
+            borderRadius: a.radius,
             animationDelay: `${a.delay}s`,
             animationDuration: `${a.duration}s`,
+            // CSS vars for path drift
+            ['--rock-drift' as string]: `${a.drift}px`,
+            ['--rock-spin' as string]: `${a.rotate}deg`,
+            background: `radial-gradient(circle at 32% 28%, hsl(${a.hue} 25% 55%), hsl(${a.hue} 30% 18%) 72%)`,
           }}
         />
       ))}
 
-      {/* Logo craft */}
+      {/* Logo + motion trail */}
       <div className="login-pilot">
+        <span className="login-pilot-trail login-pilot-trail-1" />
+        <span className="login-pilot-trail login-pilot-trail-2" />
+        <span className="login-pilot-trail login-pilot-trail-3" />
+        <span className="login-pilot-trail login-pilot-trail-4" />
         <div className="login-pilot-glow" />
         <NexusLogoMark size={64} />
       </div>
@@ -93,8 +125,7 @@ function CosmicFallBackground() {
       <div className="login-nebula login-nebula-a absolute inset-0" />
       <div className="login-nebula login-nebula-b absolute inset-0" />
 
-      {/* Soft beam — no stick figure */}
-      <div className="login-beam absolute left-1/2 top-0 -translate-x-1/2 opacity-70">
+      <div className="login-beam absolute left-1/2 top-0 -translate-x-1/2 opacity-60">
         <div className="login-beam-core" />
         <div className="login-beam-glow" />
         <div className="login-beam-particles">
