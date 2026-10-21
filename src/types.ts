@@ -90,6 +90,7 @@ export interface Ticket {
   customer_name: string;
   customer_email?: string;
   branch?: string;
+  tags?: string[];
   created_at: string;
   updated_at?: string;
   sla_due_at?: string | null;
