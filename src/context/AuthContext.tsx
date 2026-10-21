@@ -60,6 +60,54 @@ function roleFromUser(user: User | null): AccountRole {
   return r === 'customer' ? 'customer' : 'agent';
 }
 
+/** Returns true if this customer may use the portal. Agents always pass. */
+async function assertCustomerAllowed(user: User): Promise<void> {
+  if (!supabase) return;
+  if (roleFromUser(user) !== 'customer') return;
+
+  const email = (user.email || '').trim().toLowerCase();
+  if (!email) {
+    await supabase.auth.signOut();
+    throw new Error('Customer account has no email.');
+  }
+
+  // Prefer lookup by auth user id, then email
+  let status: string | null = null;
+  const { data: byId } = await supabase
+    .from('customers')
+    .select('status')
+    .eq('id', user.id)
+    .maybeSingle();
+  if (byId?.status) status = byId.status;
+
+  if (!status) {
+    const { data: byEmail } = await supabase
+      .from('customers')
+      .select('status')
+      .ilike('email', email)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (byEmail?.status) status = byEmail.status;
+  }
+
+  // No row yet → treat as pending (safety)
+  if (!status) status = 'pending';
+
+  if (status === 'approved') return;
+
+  await supabase.auth.signOut();
+
+  if (status === 'rejected') {
+    throw new Error(
+      'This customer account was rejected by an administrator. Contact support if you need access.'
+    );
+  }
+  throw new Error(
+    'Your account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
@@ -71,27 +119,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        setSession(data.session);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (data.session?.user && roleFromUser(data.session.user) === 'customer') {
+          try {
+            await assertCustomerAllowed(data.session.user);
+            if (!cancelled) setSession(data.session);
+          } catch {
+            // Pending/rejected — stay signed out
+            if (!cancelled) setSession(null);
+          }
+        } else if (!cancelled) {
+          setSession(data.session);
+        }
+      } catch {
+        if (!cancelled) setSession(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
-      setSession(next);
+      // Defer approval check for customer sessions
+      if (next?.user && roleFromUser(next.user) === 'customer') {
+        void (async () => {
+          try {
+            await assertCustomerAllowed(next.user!);
+            setSession(next);
+          } catch {
+            setSession(null);
+          }
+        })();
+      } else {
+        setSession(next);
+      }
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw friendlyAuthError(error);
+    if (data.user) await assertCustomerAllowed(data.user);
   };
 
   const signUp = async (
@@ -101,38 +179,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: AccountRole = 'agent'
   ) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
+    const normalizedEmail = email.trim().toLowerCase();
+    const displayName = fullName?.trim() || normalizedEmail.split('@')[0];
+
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
         data: {
-          full_name: fullName || email.split('@')[0],
+          full_name: displayName,
           role,
+          // Hint for UI; real gate is customers.status
+          approval_status: role === 'customer' ? 'pending' : 'approved',
         },
       },
     });
     if (error) throw friendlyAuthError(error);
 
-    // Queue customer for admin approval in the Users page
+    // Queue customer for admin approval — Users → Pending
     if (role === 'customer') {
-      const displayName = fullName || email.split('@')[0];
       const row = {
         id: data.user?.id || crypto.randomUUID(),
         name: displayName,
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         role: 'Customer',
         status: 'pending',
         created_at: new Date().toISOString(),
       };
+
       const { error: cErr } = await supabase.from('customers').upsert(row, { onConflict: 'id' });
       if (cErr) {
-        const { error: cErr2 } = await supabase.from('customers').insert({
-          name: displayName,
-          email: email.trim().toLowerCase(),
-          role: 'Customer',
-        });
-        if (cErr2) console.warn('Could not queue customer for approval', cErr2.message);
+        // Fallback if id conflict strategy differs
+        const { data: existing } = await supabase
+          .from('customers')
+          .select('id, status')
+          .ilike('email', normalizedEmail)
+          .maybeSingle();
+        if (existing?.id) {
+          await supabase
+            .from('customers')
+            .update({ status: 'pending', name: displayName })
+            .eq('id', existing.id);
+        } else {
+          const { error: cErr2 } = await supabase.from('customers').insert({
+            name: displayName,
+            email: normalizedEmail,
+            role: 'Customer',
+            status: 'pending',
+          });
+          if (cErr2) console.warn('Could not queue customer for approval', cErr2.message);
+        }
       }
+
+      // Never leave a customer session active before approval
+      await supabase.auth.signOut();
+
+      throw new Error(
+        'Account created. An administrator must approve it under Users → Pending before you can sign in.'
+      );
     }
   };
 
