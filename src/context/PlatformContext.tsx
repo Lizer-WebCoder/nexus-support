@@ -41,8 +41,9 @@ const DEFAULT_KB: KnowledgeArticle[] = [
   { id: 'kb-2', title: 'API rate limits', category: 'API', body: 'Free 60/min. Pro 600/min.', published: true },
 ];
 const DEFAULT_CANNED: CannedResponse[] = [
-  { id: 'cr-1', title: 'Greeting', body: 'Hi! Thanks for contacting support.', shortcut: '/hi' },
-  { id: 'cr-2', title: 'Need more info', body: 'Could you share screenshots and the exact error?', shortcut: '/info' },
+  { id: 'cr-1', title: 'Greeting', body: 'Hi! Thanks for contacting support. How can we help today?', shortcut: '/hi' },
+  { id: 'cr-2', title: 'Need more info', body: 'Could you share screenshots and the exact error message?', shortcut: '/info' },
+  { id: 'cr-3', title: 'Resolved', body: 'Glad we could help! Please rate this ticket on the portal if you have a moment.', shortcut: '/done' },
 ];
 const DEFAULT_AUTO: Automation[] = [
   { id: 'a1', name: 'Critical keyword', enabled: true, trigger: 'ticket_created', condition_field: 'title', condition_op: 'contains', condition_value: 'down', action: 'set_priority', action_value: 'critical' },
@@ -51,7 +52,7 @@ const DEFAULT_FORMS: FormDef[] = [
   { id: 'f1', name: 'General support', description: 'Default', fields: [{ id: 'subject', label: 'Subject', type: 'text', required: true }], active: true },
 ];
 const DEFAULT_RELEASES: Release[] = [
-  { id: 'r1', version: '1.2.0', title: 'Platform modules', notes: 'Chat, profile, QA.', released_at: new Date().toISOString() },
+  { id: 'r1', version: '1.3.0', title: 'P1 macros & portal KB', notes: 'Macros, published KB, CSAT.', released_at: new Date().toISOString() },
 ];
 const DEFAULT_ANNOUNCE: Announcement[] = [
   { id: 'an1', title: 'Welcome', body: 'Share #/portal with customers.', severity: 'info', active: true, created_at: new Date().toISOString() },
@@ -72,7 +73,7 @@ interface PlatformContextValue {
   releases: Release[];
   unreadCount: number;
   refreshPlatform: () => Promise<void>;
-  saveArticle: (a: { id?: string; title: string; category: string; body: string }) => Promise<void>;
+  saveArticle: (a: { id?: string; title: string; category: string; body: string; published?: boolean }) => Promise<void>;
   deleteArticle: (id: string) => Promise<void>;
   createChat: (customer_name: string, customer_email?: string, meta?: CreateChatMeta) => Promise<ChatConversation>;
   sendChatMessage: (conversationId: string, text: string, sender: 'agent' | 'customer') => Promise<void>;
@@ -171,12 +172,19 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     save(LS.quality, reviews); save(LS.announce, announcements); save(LS.forms, forms); save(LS.releases, releases);
   }, [articles, conversations, notifications, automations, canned, surveys, reviews, announcements, forms, releases]);
 
-  const saveArticle = async (a: { id?: string; title: string; category: string; body: string }) => {
+  const saveArticle = async (a: { id?: string; title: string; category: string; body: string; published?: boolean }) => {
+    const published = a.published !== false;
     if (supabase) {
-      if (a.id) await supabase.from('knowledge_articles').update(a).eq('id', a.id);
-      else await supabase.from('knowledge_articles').insert({ title: a.title, category: a.category, body: a.body, published: true });
+      if (a.id) await supabase.from('knowledge_articles').update({ title: a.title, category: a.category, body: a.body, published }).eq('id', a.id);
+      else await supabase.from('knowledge_articles').insert({ title: a.title, category: a.category, body: a.body, published });
       await refreshPlatform();
-    } else setArticles((prev) => a.id ? prev.map((x) => (x.id === a.id ? { ...x, ...a } : x)) : [{ id: `kb-${Date.now()}`, published: true, ...a }, ...prev]);
+    } else {
+      setArticles((prev) =>
+        a.id
+          ? prev.map((x) => (x.id === a.id ? { ...x, title: a.title, category: a.category, body: a.body, published } : x))
+          : [{ id: `kb-${Date.now()}`, title: a.title, category: a.category, body: a.body, published }, ...prev]
+      );
+    }
   };
   const deleteArticle = async (id: string) => {
     if (supabase) { await supabase.from('knowledge_articles').delete().eq('id', id); await refreshPlatform(); }
@@ -246,7 +254,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
   const deleteNotification = async (id: string) => {
     setNotifications((p) => p.filter((n) => n.id !== id));
     if (supabase) await supabase.from('notifications').delete().eq('id', id);
-    else save(LS.notif, load<AppNotification[]>(LS.notif, []).filter((n) => n.id !== id));
   };
   const deleteAllNotifications = async () => {
     setNotifications([]);
