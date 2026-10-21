@@ -1,70 +1,97 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 interface Props {
   onOpenPortal?: () => void;
 }
 
-/** Stylized platformer sky (original art — not Nintendo assets). */
-function PlatformerBackground() {
+function useFallingStars(count: number) {
+  return useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => ({
+        id: i,
+        left: `${(i * 41 + 13) % 100}%`,
+        size: i % 5 === 0 ? 3 : i % 3 === 0 ? 2 : 1,
+        delay: -((i * 0.37) % 20),
+        duration: 8 + (i % 11) * 1.4,
+        color: i % 4 === 0 ? '#ff66cc' : i % 3 === 0 ? '#66f0ff' : '#c4b5fd',
+        opacity: 0.35 + (i % 6) * 0.1,
+      })),
+    [count]
+  );
+}
+
+/** Cosmic void — continuous fall (stars rush upward = you fall forever). */
+function CosmicFallBackground() {
+  const stars = useFallingStars(56);
+
   return (
-    <div className="login-platform absolute inset-0 overflow-hidden" aria-hidden>
-      {/* Sky gradient */}
-      <div className="login-sky absolute inset-0" />
+    <div className="login-cosmos absolute inset-0 overflow-hidden" aria-hidden>
+      <div className="login-cosmos-sky absolute inset-0" />
 
-      {/* Animated clouds */}
-      <div className="login-clouds absolute inset-0">
-        <span className="login-cloud login-cloud-a" />
-        <span className="login-cloud login-cloud-b" />
-        <span className="login-cloud login-cloud-c" />
-        <span className="login-cloud login-cloud-d" />
-        <span className="login-cloud login-cloud-e" />
+      {/* Nebula layers drifting slowly */}
+      <div className="login-nebula login-nebula-a absolute inset-0" />
+      <div className="login-nebula login-nebula-b absolute inset-0" />
+
+      {/* Energy beam from above */}
+      <div className="login-beam absolute left-1/2 top-0 -translate-x-1/2">
+        <div className="login-beam-core" />
+        <div className="login-beam-glow" />
+        <div className="login-beam-particles">
+          {Array.from({ length: 12 }, (_, i) => (
+            <span
+              key={i}
+              className="login-beam-spark"
+              style={{
+                left: `${20 + (i % 5) * 15}%`,
+                animationDelay: `${i * 0.35}s`,
+                animationDuration: `${2.2 + (i % 4) * 0.4}s`,
+              }}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Far hills */}
-      <svg className="login-hills-far absolute bottom-0 left-0 w-[140%] h-[42%]" viewBox="0 0 1400 280" preserveAspectRatio="none">
-        <path
-          fill="#3d8b3d"
-          d="M0 280 V160 C80 120 160 180 240 140 C320 100 400 160 480 130 C560 100 640 150 720 120 C800 90 880 140 960 110 C1040 80 1120 130 1200 100 C1280 70 1340 120 1400 90 V280 Z"
-        />
-      </svg>
+      {/* Planet arcs */}
+      <div className="login-planet login-planet-left" />
+      <div className="login-planet login-planet-right" />
+      <div className="login-ring" />
 
-      {/* Near hills */}
-      <svg className="login-hills-near absolute bottom-0 left-0 w-[120%] h-[36%]" viewBox="0 0 1200 240" preserveAspectRatio="none">
-        <path
-          fill="#2d7a2d"
-          d="M0 240 V100 C100 60 180 120 260 80 C340 40 420 100 500 70 C580 40 660 90 740 60 C820 30 900 80 980 50 C1060 20 1140 70 1200 40 V240 Z"
-        />
-        {/* Simple bush blobs */}
-        <ellipse cx="180" cy="175" rx="55" ry="40" fill="#3cb043" />
-        <ellipse cx="220" cy="165" rx="40" ry="35" fill="#34a03a" />
-        <ellipse cx="150" cy="170" rx="35" ry="30" fill="#2e9a36" />
-        <ellipse cx="520" cy="185" rx="45" ry="32" fill="#3cb043" />
-        <ellipse cx="555" cy="178" rx="32" ry="28" fill="#34a03a" />
-      </svg>
-
-      {/* Ground strip */}
-      <div className="login-ground absolute bottom-0 left-0 right-0 h-[14%]" />
-
-      {/* Floating question blocks */}
-      <div className="login-blocks absolute inset-0 pointer-events-none">
-        <span className="login-qblock" style={{ left: '12%', top: '28%' }}>?</span>
-        <span className="login-qblock login-qblock-delay" style={{ left: '78%', top: '22%' }}>?</span>
-        <span className="login-qblock" style={{ left: '62%', top: '38%' }}>?</span>
+      {/* Stars rushing upward = falling sensation */}
+      <div className="login-starfield absolute inset-0">
+        {stars.map((s) => (
+          <span
+            key={s.id}
+            className="login-star absolute rounded-full"
+            style={{
+              left: s.left,
+              width: s.size,
+              height: s.size,
+              background: s.color,
+              opacity: s.opacity,
+              boxShadow: `0 0 ${s.size * 3}px ${s.color}`,
+              animationDelay: `${s.delay}s`,
+              animationDuration: `${s.duration}s`,
+            }}
+          />
+        ))}
       </div>
 
-      {/* Pipes */}
-      <div className="login-pipe login-pipe-sm" style={{ left: '8%' }}>
-        <div className="login-pipe-lip" />
-        <div className="login-pipe-body" />
-      </div>
-      <div className="login-pipe login-pipe-lg" style={{ right: '14%', left: 'auto' }}>
-        <div className="login-pipe-lip" />
-        <div className="login-pipe-body" />
+      {/* Falling silhouette */}
+      <div className="login-faller absolute left-1/2 top-[28%]">
+        <svg width="48" height="56" viewBox="0 0 48 56" fill="none" className="login-faller-svg">
+          {/* Simple original figure — not a game asset */}
+          <ellipse cx="24" cy="14" rx="8" ry="9" fill="#e8e0ff" />
+          <path
+            d="M16 22 C14 32 12 42 14 50 C18 48 22 44 24 40 C26 44 30 48 34 50 C36 42 34 32 32 22 Z"
+            fill="#c4b5fd"
+          />
+          <path d="M10 28 C6 34 4 40 8 44" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round" />
+          <path d="M38 28 C42 34 44 40 40 44" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round" />
+        </svg>
       </div>
 
-      {/* Soft vignette so the card stays readable */}
-      <div className="login-platform-vignette absolute inset-0 pointer-events-none" />
+      <div className="login-cosmos-vignette absolute inset-0 pointer-events-none" />
     </div>
   );
 }
@@ -103,12 +130,12 @@ export default function LoginPage({ onOpenPortal }: Props) {
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
-      <PlatformerBackground />
+      <CosmicFallBackground />
 
       <div className="relative z-10 flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center mx-auto shadow-lg shadow-black/20 ring-2 ring-white/40">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center mx-auto shadow-lg shadow-fuchsia-500/40 ring-2 ring-white/20">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <circle cx="12" cy="12" r="3" fill="white" />
                 <path d="M12 3a9 9 0 0 1 9 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
@@ -121,16 +148,16 @@ export default function LoginPage({ onOpenPortal }: Props) {
                 />
               </svg>
             </div>
-            <h1 className="mt-4 text-2xl font-bold text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]">
+            <h1 className="mt-4 text-2xl font-bold text-white tracking-tight drop-shadow-[0_2px_8px_rgba(192,38,211,0.5)]">
               Nexus Ops
             </h1>
-            <p className="text-sm text-white/90 mt-1 drop-shadow-sm">Agent support desk</p>
+            <p className="text-sm text-fuchsia-200/90 mt-1">Agent support desk</p>
           </div>
 
           {configError && (
-            <div className="mb-4 text-sm text-amber-900 bg-amber-100/95 border border-amber-300 px-3 py-3 rounded-xl shadow-sm">
+            <div className="mb-4 text-sm text-amber-100 bg-amber-500/20 border border-amber-400/40 px-3 py-3 rounded-xl backdrop-blur-sm">
               <p className="font-medium mb-1">Supabase configuration problem</p>
-              <p>{configError}</p>
+              <p className="text-amber-100/90">{configError}</p>
             </div>
           )}
 
@@ -216,19 +243,19 @@ export default function LoginPage({ onOpenPortal }: Props) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors"
+                className="w-full py-2.5 bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white text-sm font-semibold rounded-lg hover:from-fuchsia-500 hover:to-violet-500 disabled:opacity-50 transition-colors shadow-md shadow-fuchsia-500/25"
               >
                 {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create agent account'}
               </button>
             </form>
           </div>
 
-          <p className="text-center text-xs text-white/85 mt-6 drop-shadow-sm">
+          <p className="text-center text-xs text-fuchsia-200/70 mt-6">
             Customers use the{' '}
             <button
               type="button"
               onClick={onOpenPortal}
-              className="text-white font-semibold underline underline-offset-2 hover:text-amber-100"
+              className="text-fuchsia-100 font-semibold underline underline-offset-2 hover:text-white"
             >
               customer portal
             </button>
