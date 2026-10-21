@@ -7,7 +7,9 @@ import {
   KeyRound,
   Save,
   RefreshCw,
-  Mail,
+  Check,
+  X,
+  Clock,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTickets } from '../context/TicketContext';
@@ -40,6 +42,7 @@ interface UnifiedUser {
   role: string;
   is_admin: boolean;
   branch: string;
+  status?: string | null;
   agent?: Agent;
   customer?: Customer;
 }
@@ -47,7 +50,7 @@ interface UnifiedUser {
 export default function UsersAdminPage() {
   const { agents, customers, currentAgent, setAgentAdmin, refresh, usingSupabase } = useTickets();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'agent' | 'customer' | 'admin'>('all');
+  const [filter, setFilter] = useState<'all' | 'agent' | 'customer' | 'admin' | 'pending'>('all');
   const [branchNames, setBranchNames] = useState<string[]>(loadBranchNames);
   const [editing, setEditing] = useState<UnifiedUser | null>(null);
   const [editName, setEditName] = useState('');
@@ -58,6 +61,7 @@ export default function UsersAdminPage() {
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
   const [resetBusy, setResetBusy] = useState(false);
+  const [actionBusy, setActionBusy] = useState<string | null>(null);
 
   useEffect(() => {
     setBranchNames(loadBranchNames());
@@ -66,7 +70,7 @@ export default function UsersAdminPage() {
   const rows: UnifiedUser[] = useMemo(() => {
     const agentRows: UnifiedUser[] = agents.map((a) => ({
       key: `agent-${a.id}`,
-      kind: 'agent',
+      kind: 'agent' as const,
       id: a.id,
       name: a.name,
       email: a.email || '',
@@ -92,16 +96,25 @@ export default function UsersAdminPage() {
         role: c.role || 'Customer',
         is_admin: false,
         branch: c.branch || '',
+        status: c.status || 'approved',
         customer: c,
       }));
-    return [...agentRows, ...customerRows].sort((a, b) => a.name.localeCompare(b.name));
+    return [...agentRows, ...customerRows].sort((a, b) => {
+      const ap = a.status === 'pending' ? 0 : 1;
+      const bp = b.status === 'pending' ? 0 : 1;
+      if (ap !== bp) return ap - bp;
+      return a.name.localeCompare(b.name);
+    });
   }, [agents, customers, branchNames]);
+
+  const pendingCount = rows.filter((r) => r.status === 'pending').length;
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
       if (filter === 'agent' && r.kind !== 'agent') return false;
       if (filter === 'customer' && r.kind !== 'customer') return false;
       if (filter === 'admin' && !r.is_admin) return false;
+      if (filter === 'pending' && r.status !== 'pending') return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         if (
@@ -115,6 +128,36 @@ export default function UsersAdminPage() {
       return true;
     });
   }, [rows, filter, search]);
+
+  const setCustomerStatus = async (id: string, status: 'approved' | 'rejected' | 'pending') => {
+    setActionBusy(id);
+    setMsg('');
+    setErr('');
+    try {
+      if (!supabase) throw new Error('Supabase required');
+      const { error } = await supabase.from('customers').update({ status }).eq('id', id);
+      if (error) {
+        if (String(error.message).toLowerCase().includes('status')) {
+          throw new Error(
+            "Add column: alter table public.customers add column if not exists status text default 'approved';"
+          );
+        }
+        throw error;
+      }
+      setMsg(
+        status === 'approved'
+          ? 'Customer approved — they can use the portal.'
+          : status === 'rejected'
+            ? 'Customer rejected.'
+            : 'Set back to pending.'
+      );
+      await refresh();
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Could not update status');
+    } finally {
+      setActionBusy(null);
+    }
+  };
 
   const openEdit = (u: UnifiedUser) => {
     setEditing(u);
@@ -149,7 +192,6 @@ export default function UsersAdminPage() {
                 .update({ name: editName.trim(), role: roleLabel, is_admin: editAdmin })
                 .eq('id', editing.id);
               if (e2) throw e2;
-              setErr('Saved without branch. Run SQL: alter table agents add column if not exists branch text;');
             } else throw error;
           }
         }
@@ -211,9 +253,7 @@ export default function UsersAdminPage() {
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center max-w-lg mx-auto">
         <Shield className="mx-auto text-slate-300 mb-3" size={36} />
         <h2 className="text-lg font-semibold text-slate-800 mb-1">Admin only</h2>
-        <p className="text-sm text-slate-500">
-          User management is restricted to admin accounts. Ask an existing admin to promote you from Team.
-        </p>
+        <p className="text-sm text-slate-500">User management is restricted to admin accounts.</p>
       </div>
     );
   }
@@ -224,7 +264,7 @@ export default function UsersAdminPage() {
         <div>
           <h2 className="text-sm font-semibold text-slate-800">All users</h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            People only (not workplaces). Assign each person to a branch workplace.
+            Approve new customer accounts here — no need to open Supabase for approval.
           </p>
         </div>
         <button
@@ -236,8 +276,33 @@ export default function UsersAdminPage() {
         </button>
       </div>
 
-      {msg && <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">{msg}</div>}
-      {err && <div className="text-sm text-rose-700 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">{err}</div>}
+      {pendingCount > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <Clock size={18} className="text-amber-600 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-amber-900">
+              {pendingCount} customer account{pendingCount !== 1 ? 's' : ''} waiting for approval
+            </div>
+            <div className="text-xs text-amber-800 mt-0.5">
+              New portal signups appear here. Approve to grant full customer access.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFilter('pending')}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-600 text-white hover:bg-amber-700"
+          >
+            Review pending
+          </button>
+        </div>
+      )}
+
+      {msg && (
+        <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">{msg}</div>
+      )}
+      {err && (
+        <div className="text-sm text-rose-700 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">{err}</div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[180px] max-w-sm">
@@ -249,17 +314,20 @@ export default function UsersAdminPage() {
             className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30"
           />
         </div>
-        {(['all', 'admin', 'agent', 'customer'] as const).map((f) => (
+        {(['all', 'pending', 'admin', 'agent', 'customer'] as const).map((f) => (
           <button
             key={f}
             type="button"
             onClick={() => setFilter(f)}
             className={clsx(
               'text-xs font-medium px-3 py-1.5 rounded-lg border capitalize',
-              filter === f ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              filter === f
+                ? 'bg-brand-50 border-brand-200 text-brand-700'
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
             )}
           >
             {f}
+            {f === 'pending' && pendingCount > 0 ? ` (${pendingCount})` : ''}
           </button>
         ))}
       </div>
@@ -270,7 +338,7 @@ export default function UsersAdminPage() {
             <tr className="text-left text-slate-500">
               <th className="px-4 py-3 font-medium">User</th>
               <th className="px-4 py-3 font-medium">Type</th>
-              <th className="px-4 py-3 font-medium">Role</th>
+              <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Branch workplace</th>
               <th className="px-4 py-3 font-medium">Actions</th>
             </tr>
@@ -278,11 +346,19 @@ export default function UsersAdminPage() {
           <tbody>
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-slate-400">No users match.</td>
+                <td colSpan={5} className="px-4 py-10 text-center text-slate-400">
+                  No users match.
+                </td>
               </tr>
             )}
             {filtered.map((u) => (
-              <tr key={u.key} className="border-b border-slate-100 hover:bg-slate-50/60">
+              <tr
+                key={u.key}
+                className={clsx(
+                  'border-b border-slate-100 hover:bg-slate-50/60',
+                  u.status === 'pending' && 'bg-amber-50/40'
+                )}
+              >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     {u.agent ? (
@@ -296,7 +372,9 @@ export default function UsersAdminPage() {
                       <div className="font-medium text-slate-800 truncate">
                         {u.name}
                         {u.id === currentAgent.id && (
-                          <span className="ml-1.5 text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded-full">You</span>
+                          <span className="ml-1.5 text-[10px] font-semibold text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded-full">
+                            You
+                          </span>
                         )}
                       </div>
                       <div className="text-xs text-slate-400 truncate">{u.email || 'No email'}</div>
@@ -304,19 +382,88 @@ export default function UsersAdminPage() {
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={clsx('text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded', u.kind === 'agent' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700')}>
+                  <span
+                    className={clsx(
+                      'text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded',
+                      u.kind === 'agent' ? 'bg-violet-50 text-violet-700' : 'bg-sky-50 text-sky-700'
+                    )}
+                  >
                     {u.kind}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="text-slate-700">{u.role}</span>
-                  {u.is_admin && <span className="ml-1.5 text-[10px] font-semibold text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded-full">Admin</span>}
+                  {u.kind === 'customer' ? (
+                    <span
+                      className={clsx(
+                        'text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded',
+                        u.status === 'pending' && 'bg-amber-100 text-amber-800',
+                        u.status === 'approved' && 'bg-emerald-50 text-emerald-700',
+                        u.status === 'rejected' && 'bg-rose-50 text-rose-700',
+                        !u.status && 'bg-slate-100 text-slate-600'
+                      )}
+                    >
+                      {u.status || 'approved'}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-slate-400">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-slate-600">{u.branch || '—'}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1.5">
-                    <button type="button" onClick={() => openEdit(u)} className="text-xs font-medium px-2 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">Edit</button>
-                    <button type="button" disabled={!u.email || resetBusy} onClick={() => void sendPasswordReset(u.email)} className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg border border-brand-100 text-brand-700 bg-brand-50 hover:bg-brand-100 disabled:opacity-40">
+                    {u.kind === 'customer' && u.status === 'pending' && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={actionBusy === u.id}
+                          onClick={() => void setCustomerStatus(u.id, 'approved')}
+                          className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                          <Check size={12} /> Approve
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actionBusy === u.id}
+                          onClick={() => void setCustomerStatus(u.id, 'rejected')}
+                          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100 disabled:opacity-50"
+                        >
+                          <X size={12} /> Reject
+                        </button>
+                      </>
+                    )}
+                    {u.kind === 'customer' && u.status === 'rejected' && (
+                      <button
+                        type="button"
+                        disabled={actionBusy === u.id}
+                        onClick={() => void setCustomerStatus(u.id, 'approved')}
+                        className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg border border-emerald-200 text-emerald-700 bg-emerald-50"
+                      >
+                        <Check size={12} /> Approve
+                      </button>
+                    )}
+                    {u.kind === 'customer' && u.status === 'approved' && (
+                      <button
+                        type="button"
+                        disabled={actionBusy === u.id}
+                        onClick={() => void setCustomerStatus(u.id, 'pending')}
+                        className="text-xs font-medium px-2 py-1 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"
+                      >
+                        Unapprove
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => openEdit(u)}
+                      className="text-xs font-medium px-2 py-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!u.email || resetBusy}
+                      onClick={() => void sendPasswordReset(u.email)}
+                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg border border-brand-100 text-brand-700 bg-brand-50 hover:bg-brand-100 disabled:opacity-40"
+                    >
                       <KeyRound size={12} /> Reset
                     </button>
                   </div>
@@ -328,7 +475,8 @@ export default function UsersAdminPage() {
       </div>
 
       <div className="text-xs text-slate-500">
-        People only. Workplaces live under Branches — open a branch to see who belongs there.
+        {pendingCount > 0 ? `${pendingCount} pending · ` : ''}
+        Showing {filtered.length} of {rows.length} people
       </div>
 
       {editing && (
@@ -337,9 +485,13 @@ export default function UsersAdminPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-base font-semibold text-slate-900">Edit user</h3>
-                <p className="text-xs text-slate-500 mt-0.5 capitalize">{editing.kind} · {editing.email || 'no email'}</p>
+                <p className="text-xs text-slate-500 mt-0.5 capitalize">
+                  {editing.kind} · {editing.email || 'no email'}
+                </p>
               </div>
-              <button type="button" onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">x</button>
+              <button type="button" onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">
+                x
+              </button>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Display name</label>
@@ -363,18 +515,19 @@ export default function UsersAdminPage() {
               </div>
             )}
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1"><Building2 size={12} /> Branch workplace</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
+                <Building2 size={12} /> Branch workplace
+              </label>
               <select value={editBranch} onChange={(e) => setEditBranch(e.target.value)} className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
                 <option value="">None</option>
-                {branchNames.map((b) => <option key={b} value={b}>{b}</option>)}
+                {branchNames.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
               </select>
             </div>
             <div className="flex flex-wrap gap-2 pt-2">
               <button type="button" disabled={saving || !editName.trim()} onClick={() => void saveEdit()} className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50">
                 <Save size={14} /> {saving ? 'Saving...' : 'Save'}
-              </button>
-              <button type="button" disabled={!editing.email || resetBusy} onClick={() => void sendPasswordReset(editing.email)} className="inline-flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-200 rounded-lg">
-                <Mail size={14} /> Reset email
               </button>
               <button type="button" onClick={() => setEditing(null)} className="px-3 py-2 text-sm text-slate-500">Cancel</button>
             </div>
@@ -382,10 +535,22 @@ export default function UsersAdminPage() {
         </div>
       )}
 
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 space-y-1">
-        <div className="font-semibold text-slate-700 flex items-center gap-1"><UserRound size={12} /> Model</div>
-        <p>Branch = workplace (CIRIAN, ORMOC, …). User = person who belongs to a branch. Open Branches and click one to see its people and tickets.</p>
-        <p className="text-slate-500">SQL: alter table agents add column if not exists branch text; alter table customers add column if not exists branch text;</p>
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 space-y-2">
+        <div className="font-semibold text-slate-700 flex items-center gap-1">
+          <UserRound size={12} /> Account approval
+        </div>
+        <p>
+          When a customer creates an account on the portal, they appear here as <strong>pending</strong>.
+          Click <strong>Approve</strong> — you do not need the Supabase dashboard for approval.
+        </p>
+        <p>
+          <strong>Also once in Supabase:</strong> Authentication → Providers → Email → turn{' '}
+          <strong>off</strong> &quot;Confirm email&quot; so they can sign in without an inbox link.
+          App approval is separate from that setting.
+        </p>
+        <p className="text-slate-500 font-mono text-[10px] break-all">
+          alter table public.customers add column if not exists status text default &apos;approved&apos;;
+        </p>
       </div>
     </div>
   );
