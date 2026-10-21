@@ -307,7 +307,6 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   z-index: 4;
 }
 
-/* ===== Center pilot: logo trail + side-lane asteroids ===== */
 .login-pilot {
   position: absolute;
   left: 52%;
@@ -326,40 +325,20 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   z-index: 0;
 }
 
-.login-pilot-trail {
+/* Real trail dots (positions set in JS from logo history) */
+.login-trail-dot {
   position: absolute;
-  left: 52%;
-  top: 40%;
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(232, 121, 249, 0.7), transparent 68%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 200, 255, 1) 0%,
+    rgba(232, 121, 249, 0.65) 40%,
+    transparent 72%
+  );
+  filter: blur(1.5px);
   pointer-events: none;
   z-index: 5;
-  animation: login-pilot-dodge 16s ease-in-out infinite;
-}
-.login-pilot-trail-1 { opacity: 0.55; filter: blur(1.5px); }
-.login-pilot-trail-2 {
-  opacity: 0.38;
-  width: 30px;
-  height: 30px;
-  margin: -15px 0 0 -15px;
-  filter: blur(3px);
-}
-.login-pilot-trail-3 {
-  opacity: 0.24;
-  width: 38px;
-  height: 38px;
-  margin: -19px 0 0 -19px;
-  filter: blur(5px);
-}
-.login-pilot-trail-4 {
-  opacity: 0.14;
-  width: 48px;
-  height: 48px;
-  margin: -24px 0 0 -24px;
-  filter: blur(7px);
+  will-change: left, top, opacity;
 }
 
 @keyframes login-pilot-dodge {
@@ -428,7 +407,6 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   .login-planet-far,
   .login-planet-ring,
   .login-pilot,
-  .login-pilot-trail,
   .login-logo-arcs,
   .login-asteroid {
     animation: none !important;
