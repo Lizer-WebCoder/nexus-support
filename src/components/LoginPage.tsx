@@ -21,24 +21,20 @@ function useFallingStars(count: number) {
   );
 }
 
-/** Cosmic void — continuous fall (stars rush upward = you fall forever). */
 function CosmicFallBackground() {
-  const stars = useFallingStars(56);
+  const stars = useFallingStars(48);
 
   return (
     <div className="login-cosmos absolute inset-0 overflow-hidden" aria-hidden>
       <div className="login-cosmos-sky absolute inset-0" />
-
-      {/* Nebula layers drifting slowly */}
       <div className="login-nebula login-nebula-a absolute inset-0" />
       <div className="login-nebula login-nebula-b absolute inset-0" />
 
-      {/* Energy beam from above */}
       <div className="login-beam absolute left-1/2 top-0 -translate-x-1/2">
         <div className="login-beam-core" />
         <div className="login-beam-glow" />
         <div className="login-beam-particles">
-          {Array.from({ length: 12 }, (_, i) => (
+          {Array.from({ length: 10 }, (_, i) => (
             <span
               key={i}
               className="login-beam-spark"
@@ -52,12 +48,10 @@ function CosmicFallBackground() {
         </div>
       </div>
 
-      {/* Planet arcs */}
       <div className="login-planet login-planet-left" />
       <div className="login-planet login-planet-right" />
       <div className="login-ring" />
 
-      {/* Stars rushing upward = falling sensation */}
       <div className="login-starfield absolute inset-0">
         {stars.map((s) => (
           <span
@@ -77,10 +71,8 @@ function CosmicFallBackground() {
         ))}
       </div>
 
-      {/* Falling silhouette */}
-      <div className="login-faller absolute left-1/2 top-[28%]">
-        <svg width="48" height="56" viewBox="0 0 48 56" fill="none" className="login-faller-svg">
-          {/* Simple original figure — not a game asset */}
+      <div className="login-faller absolute left-1/2 top-[22%]">
+        <svg width="44" height="52" viewBox="0 0 48 56" fill="none" className="login-faller-svg">
           <ellipse cx="24" cy="14" rx="8" ry="9" fill="#e8e0ff" />
           <path
             d="M16 22 C14 32 12 42 14 50 C18 48 22 44 24 40 C26 44 30 48 34 50 C36 42 34 32 32 22 Z"
@@ -96,6 +88,15 @@ function CosmicFallBackground() {
   );
 }
 
+const FEATURES = [
+  'Live chat & tickets',
+  'Branch routing',
+  'SLA & automations',
+  'Customer portal',
+  'Macros & KB',
+  'CSAT surveys',
+];
+
 export default function LoginPage({ onOpenPortal }: Props) {
   const { signIn, signUp, configError } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -105,6 +106,7 @@ export default function LoginPage({ onOpenPortal }: Props) {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,14 +131,54 @@ export default function LoginPage({ onOpenPortal }: Props) {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden">
-      <CosmicFallBackground />
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* ===== Left: animation + product story ===== */}
+      <aside className="relative lg:w-[48%] xl:w-[52%] min-h-[280px] lg:min-h-screen flex flex-col overflow-hidden">
+        <CosmicFallBackground />
 
-      <div className="relative z-10 flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
+        <div className="relative z-10 flex flex-col flex-1 p-8 sm:p-10 lg:p-12 xl:p-14">
+          <div className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.18em] uppercase text-fuchsia-200/90">
+            <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 animate-pulse" />
+            Tech support system
+          </div>
+
+          <div className="mt-auto mb-auto py-10 lg:py-0">
+            <h1 className="text-3xl sm:text-4xl xl:text-[2.75rem] font-bold text-white leading-[1.15] tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">
+              One desk for
+              <br />
+              every ticket.
+            </h1>
+            <p className="mt-4 text-sm sm:text-base text-fuchsia-100/85 max-w-md leading-relaxed">
+              Nexus Ops is a multi-branch support platform for agents and customers. Open tickets from
+              the portal or live chat, route by branch, hit SLAs with automations, and keep every
+              conversation in one place.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-2">
+              {FEATURES.map((label) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium text-fuchsia-50 bg-white/10 border border-white/15 backdrop-blur-sm"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-[11px] text-fuchsia-200/50 mt-8 lg:mt-0">
+            Nexus Ops · Agent workspace · {new Date().getFullYear()}
+          </p>
+        </div>
+      </aside>
+
+      {/* ===== Right: auth form ===== */}
+      <main className="flex-1 flex items-center justify-center bg-[#f7f8fb] px-6 py-10 sm:px-10">
+        <div className="w-full max-w-[380px]">
           <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center mx-auto shadow-lg shadow-fuchsia-500/40 ring-2 ring-white/20">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center mx-auto shadow-lg shadow-violet-500/25">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <circle cx="12" cy="12" r="3" fill="white" />
                 <path d="M12 3a9 9 0 0 1 9 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
                 <path
@@ -148,121 +190,147 @@ export default function LoginPage({ onOpenPortal }: Props) {
                 />
               </svg>
             </div>
-            <h1 className="mt-4 text-2xl font-bold text-white tracking-tight drop-shadow-[0_2px_8px_rgba(192,38,211,0.5)]">
-              Nexus Ops
-            </h1>
-            <p className="text-sm text-fuchsia-200/90 mt-1">Agent support desk</p>
+            <p className="mt-4 text-[11px] font-semibold tracking-[0.16em] uppercase text-zinc-400">
+              Agent portal
+            </p>
+            <h2 className="mt-1 text-2xl font-bold text-zinc-900 tracking-tight">
+              {mode === 'signin' ? 'Sign in' : 'Create account'}
+            </h2>
+            <p className="mt-1.5 text-sm text-zinc-500">
+              {mode === 'signin'
+                ? 'Enter your credentials to open the support desk.'
+                : 'Register an agent account for your workspace.'}
+            </p>
           </div>
 
           {configError && (
-            <div className="mb-4 text-sm text-amber-100 bg-amber-500/20 border border-amber-400/40 px-3 py-3 rounded-xl backdrop-blur-sm">
+            <div className="mb-4 text-sm text-amber-800 bg-amber-50 border border-amber-200 px-3 py-3 rounded-xl">
               <p className="font-medium mb-1">Supabase configuration problem</p>
-              <p className="text-amber-100/90">{configError}</p>
+              <p className="text-amber-700/90">{configError}</p>
             </div>
           )}
 
-          <div className="login-card-glow bg-white rounded-2xl border border-zinc-200/80 p-6">
-            <div className="flex rounded-lg bg-zinc-100 p-1 mb-5">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('signin');
-                  setError('');
-                  setInfo('');
-                }}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                  mode === 'signin' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500'
-                }`}
-              >
-                Sign in
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('signup');
-                  setError('');
-                  setInfo('');
-                }}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                  mode === 'signup' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500'
-                }`}
-              >
-                Create account
-              </button>
-            </div>
+          <div className="flex rounded-lg bg-zinc-100 p-1 mb-5">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('signin');
+                setError('');
+                setInfo('');
+              }}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                mode === 'signin' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500'
+              }`}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMode('signup');
+                setError('');
+                setInfo('');
+              }}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                mode === 'signup' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500'
+              }`}
+            >
+              Create account
+            </button>
+          </div>
 
-            <form onSubmit={submit} className="space-y-4">
-              {error && (
-                <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg whitespace-pre-wrap">
-                  {error}
-                </div>
-              )}
-              {info && (
-                <div className="text-sm text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg">{info}</div>
-              )}
+          <form onSubmit={submit} className="space-y-4">
+            {error && (
+              <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg whitespace-pre-wrap">
+                {error}
+              </div>
+            )}
+            {info && (
+              <div className="text-sm text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg">{info}</div>
+            )}
 
-              {mode === 'signup' && (
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">Full name</label>
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400"
-                    placeholder="Sarah Chen"
-                  />
-                </div>
-              )}
-
+            {mode === 'signup' && (
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Work email</label>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">Full name</label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/25 focus:border-violet-400"
+                  placeholder="Sarah Chen"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Work email</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm" aria-hidden>
+                  ✉
+                </span>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400"
+                  className="w-full pl-9 pr-3.5 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/25 focus:border-violet-400"
                   placeholder="you@company.com"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Password</label>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Password</label>
+              <div className="relative flex">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm" aria-hidden>
+                  🔒
+                </span>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
                   autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                  className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400"
+                  className="w-full pl-9 pr-16 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/25 focus:border-violet-400"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-[11px] font-semibold tracking-wide text-zinc-500 hover:text-zinc-800"
+                >
+                  {showPassword ? 'HIDE' : 'SHOW'}
+                </button>
               </div>
+            </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-2.5 bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white text-sm font-semibold rounded-lg hover:from-fuchsia-500 hover:to-violet-500 disabled:opacity-50 transition-colors shadow-md shadow-fuchsia-500/25"
-              >
-                {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create agent account'}
-              </button>
-            </form>
-          </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 mt-1 bg-zinc-900 text-white text-sm font-semibold rounded-xl hover:bg-zinc-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+            >
+              {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create agent account'}
+              {!loading && <span aria-hidden>→</span>}
+            </button>
+          </form>
 
-          <p className="text-center text-xs text-fuchsia-200/70 mt-6">
+          <p className="text-center text-xs text-zinc-500 mt-8">
             Customers use the{' '}
             <button
               type="button"
               onClick={onOpenPortal}
-              className="text-fuchsia-100 font-semibold underline underline-offset-2 hover:text-white"
+              className="text-violet-600 font-medium hover:underline"
             >
               customer portal
             </button>
             {' '}(account + admin approval required).
           </p>
+          <p className="text-center text-xs text-zinc-400 mt-2">
+            Trouble signing in? Contact your administrator.
+          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
