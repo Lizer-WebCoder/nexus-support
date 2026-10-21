@@ -46,7 +46,10 @@ function NexusLogoMark({ size = 56 }: { size?: number }) {
   );
 }
 
-/** Deterministic-but-varied rock params (stable across renders). */
+/**
+ * Asteroids only in left/right corridors so they never cross the logo's center lane.
+ * Logo stays ~52% and only weaves ±55px (~5%) — rocks stay outside that band.
+ */
 function useAsteroids(count: number) {
   return useMemo(() => {
     const radii = [
@@ -56,23 +59,31 @@ function useAsteroids(count: number) {
       '55% 45% 38% 62%',
       '48% 52% 60% 40%',
       '65% 35% 45% 55%',
-      '40% 60% 42% 58%',
-      '50% 50% 35% 65%',
     ];
+    // Side lanes only — avoid 44%–60% (logo zone)
+    const leftLane = [28, 31, 34, 36];
+    const rightLane = [66, 69, 72, 75];
+
     return Array.from({ length: count }, (_, i) => {
       const seed = (i * 17 + 11) % 97;
+      const onLeft = i % 2 === 0;
+      const lane = onLeft ? leftLane : rightLane;
+      const left = lane[i % lane.length] + (seed % 3);
+      // Drift keeps rock in its side corridor (never toward center hard)
+      const drift = onLeft
+        ? -(15 + (seed % 25))
+        : 15 + (seed % 25);
+
       return {
         id: i,
-        size: 10 + (seed % 18),
+        size: 11 + (seed % 16),
         radius: radii[i % radii.length],
-        // horizontal start across lower zone (toward center lane)
-        left: 38 + ((seed * 3) % 28),
-        delay: -((i * 2.1) % 14),
-        duration: 9 + (seed % 7),
-        // slight horizontal drift while rising
-        drift: (seed % 2 === 0 ? 1 : -1) * (20 + (seed % 40)),
-        rotate: 120 + (seed % 200),
-        hue: 240 + (seed % 40),
+        left,
+        delay: -((i * 2.4) % 16),
+        duration: 10 + (seed % 6),
+        drift,
+        rotate: 100 + (seed % 220),
+        hue: 235 + (seed % 45),
       };
     });
   }, [count]);
@@ -80,10 +91,11 @@ function useAsteroids(count: number) {
 
 function LogoPilotStage() {
   const asteroids = useAsteroids(6);
+  // Trail ghosts = siblings on same path, lagged (not nested inside pilot)
+  const trails = [0.2, 0.4, 0.6, 0.85];
 
   return (
     <div className="login-pilot-stage absolute inset-0 pointer-events-none z-[5] hidden lg:block" aria-hidden>
-      {/* Rocks rise from bottom toward the logo lane */}
       {asteroids.map((a) => (
         <span
           key={a.id}
@@ -95,20 +107,23 @@ function LogoPilotStage() {
             borderRadius: a.radius,
             animationDelay: `${a.delay}s`,
             animationDuration: `${a.duration}s`,
-            // CSS vars for path drift
             ['--rock-drift' as string]: `${a.drift}px`,
             ['--rock-spin' as string]: `${a.rotate}deg`,
-            background: `radial-gradient(circle at 32% 28%, hsl(${a.hue} 25% 55%), hsl(${a.hue} 30% 18%) 72%)`,
+            background: `radial-gradient(circle at 32% 28%, hsl(${a.hue} 28% 52%), hsl(${a.hue} 32% 16%) 72%)`,
           }}
         />
       ))}
 
-      {/* Logo + motion trail */}
+      {/* Trail segments — same keyframes as logo, delayed so they lag behind */}
+      {trails.map((delay, i) => (
+        <div
+          key={delay}
+          className={`login-pilot-trail login-pilot-trail-${i + 1}`}
+          style={{ animationDelay: `-${delay}s` }}
+        />
+      ))}
+
       <div className="login-pilot">
-        <span className="login-pilot-trail login-pilot-trail-1" />
-        <span className="login-pilot-trail login-pilot-trail-2" />
-        <span className="login-pilot-trail login-pilot-trail-3" />
-        <span className="login-pilot-trail login-pilot-trail-4" />
         <div className="login-pilot-glow" />
         <NexusLogoMark size={64} />
       </div>
@@ -125,7 +140,7 @@ function CosmicFallBackground() {
       <div className="login-nebula login-nebula-a absolute inset-0" />
       <div className="login-nebula login-nebula-b absolute inset-0" />
 
-      <div className="login-beam absolute left-1/2 top-0 -translate-x-1/2 opacity-60">
+      <div className="login-beam absolute left-1/2 top-0 -translate-x-1/2 opacity-55">
         <div className="login-beam-core" />
         <div className="login-beam-glow" />
         <div className="login-beam-particles">
