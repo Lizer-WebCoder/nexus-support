@@ -21,6 +21,69 @@ function useFallingStars(count: number) {
   );
 }
 
+/** Nexus mark — arcs slowly orbit the center dot. */
+function NexusLogoMark({ size = 56 }: { size?: number }) {
+  return (
+    <div className="login-logo-mark" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 48 48" width={size} height={size} fill="none" aria-hidden>
+        <circle cx="24" cy="24" r="5.5" fill="white" className="login-logo-core" />
+        <g className="login-logo-arcs">
+          <path
+            d="M24 6a18 18 0 0 1 18 18"
+            stroke="white"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M24 42a18 18 0 0 1-18-18"
+            stroke="white"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+            opacity="0.55"
+          />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+/** Center-stage pilot: logo drifts L/R & depth, dodging a few rocks. */
+function LogoPilotStage() {
+  const asteroids = useMemo(
+    () => [
+      { id: 1, size: 18, delay: 0, duration: 11, path: 'a' as const },
+      { id: 2, size: 12, delay: -4, duration: 14, path: 'b' as const },
+      { id: 3, size: 15, delay: -7, duration: 12.5, path: 'c' as const },
+      { id: 4, size: 10, delay: -2, duration: 16, path: 'd' as const },
+    ],
+    []
+  );
+
+  return (
+    <div className="login-pilot-stage absolute inset-0 pointer-events-none z-[5] hidden lg:block" aria-hidden>
+      {/* Asteroids (sparse) */}
+      {asteroids.map((a) => (
+        <span
+          key={a.id}
+          className={`login-asteroid login-asteroid-${a.path}`}
+          style={{
+            width: a.size,
+            height: a.size,
+            animationDelay: `${a.delay}s`,
+            animationDuration: `${a.duration}s`,
+          }}
+        />
+      ))}
+
+      {/* Logo craft */}
+      <div className="login-pilot">
+        <div className="login-pilot-glow" />
+        <NexusLogoMark size={64} />
+      </div>
+    </div>
+  );
+}
+
 function CosmicFallBackground() {
   const stars = useFallingStars(64);
 
@@ -30,29 +93,27 @@ function CosmicFallBackground() {
       <div className="login-nebula login-nebula-a absolute inset-0" />
       <div className="login-nebula login-nebula-b absolute inset-0" />
 
-      <div className="login-beam absolute left-[28%] lg:left-[32%] top-0 -translate-x-1/2">
+      {/* Soft beam — no stick figure */}
+      <div className="login-beam absolute left-1/2 top-0 -translate-x-1/2 opacity-70">
         <div className="login-beam-core" />
         <div className="login-beam-glow" />
         <div className="login-beam-particles">
-          {Array.from({ length: 12 }, (_, i) => (
+          {Array.from({ length: 8 }, (_, i) => (
             <span
               key={i}
               className="login-beam-spark"
               style={{
                 left: `${20 + (i % 5) * 15}%`,
-                animationDelay: `${i * 0.35}s`,
-                animationDuration: `${2.2 + (i % 4) * 0.4}s`,
+                animationDelay: `${i * 0.4}s`,
+                animationDuration: `${2.4 + (i % 4) * 0.4}s`,
               }}
             />
           ))}
         </div>
       </div>
 
-      {/* Large planet — lower left, slow orbit-ish drift */}
       <div className="login-planet login-planet-main" />
       <div className="login-planet-ring" />
-
-      {/* Smaller distant body — lower right */}
       <div className="login-planet login-planet-far" />
 
       <div className="login-starfield absolute inset-0">
@@ -74,17 +135,7 @@ function CosmicFallBackground() {
         ))}
       </div>
 
-      <div className="login-faller absolute left-[28%] lg:left-[32%] top-[20%]">
-        <svg width="44" height="52" viewBox="0 0 48 56" fill="none" className="login-faller-svg">
-          <ellipse cx="24" cy="14" rx="8" ry="9" fill="#e8e0ff" />
-          <path
-            d="M16 22 C14 32 12 42 14 50 C18 48 22 44 24 40 C26 44 30 48 34 50 C36 42 34 32 32 22 Z"
-            fill="#c4b5fd"
-          />
-          <path d="M10 28 C6 34 4 40 8 44" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round" />
-          <path d="M38 28 C42 34 44 40 40 44" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round" />
-        </svg>
-      </div>
+      <LogoPilotStage />
 
       <div className="login-cosmos-vignette absolute inset-0 pointer-events-none" />
     </div>
@@ -132,19 +183,13 @@ export default function LoginPage({ onOpenPortal }: Props) {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Full-bleed cosmos */}
       <CosmicFallBackground />
 
       <div className="relative z-10 min-h-screen grid lg:grid-cols-[1fr_minmax(340px,420px)] gap-6 lg:gap-10 px-5 sm:px-8 lg:px-12 py-8 lg:py-10">
-        {/* Story column */}
-        <div className="flex flex-col min-h-[280px] lg:min-h-0">
+        <div className="flex flex-col min-h-[280px] lg:min-h-0 relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 backdrop-blur flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <circle cx="12" cy="12" r="3" fill="white" />
-                <path d="M12 3a9 9 0 0 1 9 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-                <path d="M12 21a9 9 0 0 1-9-9" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity="0.55" />
-              </svg>
+            <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 backdrop-blur flex items-center justify-center overflow-hidden">
+              <NexusLogoMark size={22} />
             </div>
             <div>
               <div className="text-sm font-semibold text-white tracking-tight">Nexus Ops</div>
@@ -152,7 +197,7 @@ export default function LoginPage({ onOpenPortal }: Props) {
             </div>
           </div>
 
-          <div className="mt-10 lg:mt-14 max-w-lg">
+          <div className="mt-10 lg:mt-14 max-w-md">
             <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-fuchsia-300/80 mb-3">
               Built for agent teams
             </p>
@@ -162,7 +207,7 @@ export default function LoginPage({ onOpenPortal }: Props) {
                 Stay organized across every branch.
               </span>
             </h1>
-            <p className="mt-5 text-sm text-fuchsia-100/75 leading-relaxed max-w-md">
+            <p className="mt-5 text-sm text-fuchsia-100/75 leading-relaxed">
               Nexus Ops connects your customer portal, live chat, and agent desk. Route by branch,
               enforce SLAs, run macros, and give customers a clear path from request to resolution.
             </p>
@@ -185,8 +230,7 @@ export default function LoginPage({ onOpenPortal }: Props) {
           </div>
         </div>
 
-        {/* Glass login card */}
-        <div className="flex items-center justify-center lg:justify-end">
+        <div className="flex items-center justify-center lg:justify-end relative z-20">
           <div className="w-full max-w-[380px] rounded-2xl border border-white/15 bg-white/[0.08] backdrop-blur-xl shadow-[0_8px_40px_rgba(0,0,0,0.35)] p-6 sm:p-8">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-white tracking-tight">
