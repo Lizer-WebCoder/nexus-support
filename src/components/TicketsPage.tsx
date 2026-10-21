@@ -23,10 +23,11 @@ const statusStyles: Record<string, string> = {
 };
 
 export default function TicketsPage() {
-  const { tickets, loading, updateTicket, deleteTicket } = useTickets();
+  const { tickets, loading, updateTicket, softDeleteTicket } = useTickets();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
+  const [slaFilter, setSlaFilter] = useState<'all' | 'breach' | 'warn'>('all');
   const [showTrash, setShowTrash] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -43,31 +44,42 @@ export default function TicketsPage() {
       if (showTrash ? !isDeleted : isDeleted) return false;
       if (statusFilter !== 'all' && t.status !== statusFilter) return false;
       if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
+      if (slaFilter !== 'all') {
+        const sla = formatSlaCountdown(t.sla_due_at, t.status);
+        if (slaFilter === 'breach' && sla.tone !== 'breach') return false;
+        if (slaFilter === 'warn' && sla.tone !== 'warn' && sla.tone !== 'breach') return false;
+      }
       if (search) {
         const q = search.toLowerCase();
+        const tagHit = (t.tags || []).some((tag) => tag.toLowerCase().includes(q));
         if (
           !t.title.toLowerCase().includes(q) &&
           !t.id.toLowerCase().includes(q) &&
           !t.customer_name.toLowerCase().includes(q) &&
           !(t.branch || '').toLowerCase().includes(q) &&
-          !(t.customer_email || '').toLowerCase().includes(q)
+          !(t.customer_email || '').toLowerCase().includes(q) &&
+          !tagHit
         )
           return false;
       }
       return true;
     });
-  }, [tickets, search, statusFilter, priorityFilter, showTrash]);
+  }, [tickets, search, statusFilter, priorityFilter, slaFilter, showTrash]);
 
   const selected = selectedId ? tickets.find((t) => t.id === selectedId) : null;
+  const breachCount = tickets.filter(
+    (t) => !t.deleted_at && t.status !== 'resolved' && formatSlaCountdown(t.sla_due_at, t.status).tone === 'breach'
+  ).length;
 
   const exportCsv = () => {
-    const headers = ['ID', 'Title', 'Customer', 'Email', 'Branch', 'Priority', 'Status', 'Channel', 'Assignee', 'SLA due', 'Created'];
+    const headers = ['ID', 'Title', 'Customer', 'Email', 'Branch', 'Tags', 'Priority', 'Status', 'Channel', 'Assignee', 'SLA due', 'Created'];
     const rows = filtered.map((t) => [
       t.id,
       `"${t.title.replace(/"/g, '""')}"`,
       `"${t.customer_name.replace(/"/g, '""')}"`,
       t.customer_email || '',
       t.branch || '',
+      `"${(t.tags || []).join('; ')}"`,
       t.priority,
       t.status,
       t.channel,
@@ -88,23 +100,33 @@ export default function TicketsPage() {
   const softDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm('Move this ticket to trash?')) return;
-    await deleteTicket(id);
+    await softDeleteTicket(id);
   };
 
   const restore = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await updateTicket(id, { deleted_at: null } as never);
+    await updateTicket(id, { deleted_at: null });
   };
 
   return (
     <div className="space-y-4">
+      {breachCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setSlaFilter('breach')}
+          className="w-full text-left rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+        >
+          <strong>{breachCount} ticket{breachCount !== 1 ? 's' : ''}</strong> past SLA — click to filter breached.
+        </button>
+      )}
+
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search tickets, customers, branches..."
+            placeholder="Search tickets, tags, customers..."
             className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30"
           />
         </div>
@@ -130,6 +152,15 @@ export default function TicketsPage() {
           <option value="high">High</option>
           <option value="medium">Medium</option>
           <option value="low">Low</option>
+        </select>
+        <select
+          value={slaFilter}
+          onChange={(e) => setSlaFilter(e.target.value as 'all' | 'breach' | 'warn')}
+          className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"
+        >
+          <option value="all">All SLA</option>
+          <option value="warn">At risk</option>
+          <option value="breach">Breached</option>
         </select>
         <button
           type="button"
@@ -187,7 +218,18 @@ export default function TicketsPage() {
                     className="border-b border-slate-100 hover:bg-brand-50/50 cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 font-mono text-xs text-slate-500">{t.id}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800 max-w-xs truncate">{t.title}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800 max-w-xs">
+                      <div className="truncate">{t.title}</div>
+                      {(t.tags || []).length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(t.tags || []).slice(0, 3).map((tag) => (
+                            <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="text-slate-800 font-medium">{t.customer_name}</div>
                       {t.customer_email && (
@@ -245,7 +287,9 @@ export default function TicketsPage() {
         )}
       </div>
 
-      <div className="text-xs text-slate-500">Showing {filtered.length} of {tickets.filter((t) => !!t.deleted_at === showTrash).length} tickets</div>
+      <div className="text-xs text-slate-500">
+        Showing {filtered.length} of {tickets.filter((t) => !!t.deleted_at === showTrash).length} tickets
+      </div>
 
       {showCreate && <CreateTicketModal onClose={() => setShowCreate(false)} />}
       {selected && <TicketDetail ticket={selected} onClose={() => setSelectedId(null)} />}
