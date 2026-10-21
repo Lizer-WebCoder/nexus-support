@@ -84,7 +84,7 @@ export default function UsersAdminPage() {
       email: a.email || '',
       role: a.is_admin ? 'Admin' : a.role || 'Agent',
       is_admin: !!a.is_admin,
-      branch: (a as Agent & { branch?: string }).branch || '',
+      branch: a.branch || '',
       agent: a,
     }));
     const customerRows: UnifiedUser[] = customers.map((c) => ({
@@ -93,9 +93,9 @@ export default function UsersAdminPage() {
       id: c.id,
       name: c.name,
       email: c.email || '',
-      role: (c as Customer & { role?: string }).role || 'Customer',
+      role: c.role || 'Customer',
       is_admin: false,
-      branch: (c as Customer & { branch?: string }).branch || c.company || '',
+      branch: c.branch || c.company || '',
       customer: c,
     }));
     return [...agentRows, ...customerRows].sort((a, b) => a.name.localeCompare(b.name));
@@ -147,14 +147,13 @@ export default function UsersAdminPage() {
           };
           const { error } = await supabase.from('agents').update(payload).eq('id', editing.id);
           if (error) {
-            // Retry without branch if column missing
             if (String(error.message).toLowerCase().includes('branch')) {
               const { error: e2 } = await supabase
                 .from('agents')
                 .update({ name: editName.trim(), role: roleLabel, is_admin: editAdmin })
                 .eq('id', editing.id);
               if (e2) throw e2;
-              setErr('Saved without branch — run SQL: alter table agents add column if not exists branch text;');
+              setErr('Saved without branch. Run SQL: alter table agents add column if not exists branch text;');
             } else throw error;
           }
         }
@@ -172,7 +171,6 @@ export default function UsersAdminPage() {
           };
           const { error } = await supabase.from('customers').update(payload).eq('id', editing.id);
           if (error) {
-            // minimal columns
             const { error: e2 } = await supabase
               .from('customers')
               .update({ name: editName.trim(), company: editBranch.trim() || null })
@@ -193,21 +191,21 @@ export default function UsersAdminPage() {
 
   const sendPasswordReset = async (email: string) => {
     if (!email.trim()) {
-      setErr('This user has no email on file — cannot send a reset link.');
+      setErr('This user has no email on file.');
       return;
     }
     if (!supabase) {
-      setErr('Password reset requires Supabase to be connected.');
+      setErr('Password reset requires Supabase.');
       return;
     }
     setResetBusy(true);
     setMsg('');
     setErr('');
     try {
-      const redirectTo = `${window.location.origin}${window.location.pathname}`;
+      const redirectTo = window.location.origin + window.location.pathname;
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
       if (error) throw error;
-      setMsg(`Password reset email sent to ${email}. They can set a new password from the link.`);
+      setMsg('Password reset email sent to ' + email);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Could not send reset email');
     } finally {
@@ -221,7 +219,7 @@ export default function UsersAdminPage() {
         <div>
           <h2 className="text-sm font-semibold text-slate-800">All users</h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Admins, agents, and customers — edit roles, branch assignment, and send password resets.
+            Admins, agents, and customers. Edit roles, branch, send password resets.
           </p>
         </div>
         <button
@@ -235,7 +233,7 @@ export default function UsersAdminPage() {
 
       {!usingSupabase && (
         <div className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-          Local mode: changes apply in this browser only. Connect Supabase for cloud user management.
+          Local mode: changes apply in this browser only.
         </div>
       )}
 
@@ -252,7 +250,7 @@ export default function UsersAdminPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name, email, role, branch…"
+            placeholder="Search name, email, role, branch"
             className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/30"
           />
         </div>
@@ -334,7 +332,7 @@ export default function UsersAdminPage() {
                     </span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-slate-600">{u.branch || <span className="text-slate-300">—</span>}</td>
+                <td className="px-4 py-3 text-slate-600">{u.branch || '—'}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1.5">
                     <button
@@ -376,7 +374,7 @@ export default function UsersAdminPage() {
                 </p>
               </div>
               <button type="button" onClick={() => setEditing(null)} className="text-slate-400 hover:text-slate-600 text-lg leading-none">
-                ×
+                x
               </button>
             </div>
 
@@ -397,7 +395,7 @@ export default function UsersAdminPage() {
                     value={editRole}
                     onChange={(e) => setEditRole(e.target.value)}
                     disabled={editAdmin}
-                    placeholder="Agent, Lead, Support…"
+                    placeholder="Agent, Lead, Support"
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
                   />
                 </div>
@@ -425,7 +423,7 @@ export default function UsersAdminPage() {
                 <input
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value)}
-                  placeholder="Customer, VIP…"
+                  placeholder="Customer, VIP"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
@@ -440,7 +438,7 @@ export default function UsersAdminPage() {
                 onChange={(e) => setEditBranch(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
               >
-                <option value="">— None —</option>
+                <option value="">None</option>
                 {branchNames.map((b) => (
                   <option key={b} value={b}>
                     {b}
@@ -457,7 +455,7 @@ export default function UsersAdminPage() {
                 onClick={() => void saveEdit()}
                 className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50"
               >
-                <Save size={14} /> {saving ? 'Saving…' : 'Save changes'}
+                <Save size={14} /> {saving ? 'Saving...' : 'Save changes'}
               </button>
               <button
                 type="button"
@@ -484,12 +482,11 @@ export default function UsersAdminPage() {
           <UserRound size={12} /> Password reset
         </div>
         <p>
-          <strong>Reset</strong> sends Supabase’s official recovery email. The user opens the link and chooses a new
-          password. Admins cannot set a raw password from the browser (Supabase security).
+          Reset sends Supabase recovery email. The user opens the link and chooses a new password.
+          Admins cannot set a raw password from the browser (Supabase security).
         </p>
         <p className="text-slate-500">
-          Optional SQL for branch assignment:{\' \'}
-          <code className="text-[10px] bg-white px-1 rounded border">alter table agents add column if not exists branch text;</code>
+          Optional SQL for branch assignment: alter table agents add column if not exists branch text;
         </p>
       </div>
     </div>
