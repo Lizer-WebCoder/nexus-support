@@ -170,7 +170,7 @@ html.nexus-dark .portal-atmosphere {
 html.nexus-compact .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
 html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 
-/* ========== Login: cosmic fall (forever) ========== */
+/* ========== Login: cosmic fall ========== */
 .login-cosmos-sky {
   background:
     radial-gradient(ellipse 50% 35% at 50% 0%, rgba(255, 0, 200, 0.55), transparent 55%),
@@ -197,18 +197,13 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 }
 
 @keyframes login-nebula-drift {
-  from {
-    transform: translate(0, 0) scale(1);
-  }
-  to {
-    transform: translate(-3%, 4%) scale(1.06);
-  }
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(-3%, 4%) scale(1.06); }
 }
 
-/* Beam from the void above */
 .login-beam {
-  width: min(28vw, 160px);
-  height: 45%;
+  width: min(22vw, 120px);
+  height: 40%;
   pointer-events: none;
   z-index: 2;
 }
@@ -217,40 +212,27 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(255, 120, 255, 0.95) 0%,
-    rgba(200, 0, 255, 0.55) 25%,
-    rgba(140, 0, 220, 0.25) 55%,
+    rgba(255, 120, 255, 0.7) 0%,
+    rgba(200, 0, 255, 0.35) 30%,
     transparent 100%
   );
   filter: blur(2px);
-  clip-path: polygon(35% 0%, 65% 0%, 55% 100%, 45% 100%);
+  clip-path: polygon(38% 0%, 62% 0%, 54% 100%, 46% 100%);
   animation: login-beam-pulse 3s ease-in-out infinite;
 }
 .login-beam-glow {
   position: absolute;
   inset: -20% -40% 0;
-  background: radial-gradient(
-    ellipse 50% 40% at 50% 0%,
-    rgba(255, 0, 220, 0.5),
-    transparent 70%
-  );
+  background: radial-gradient(ellipse 50% 40% at 50% 0%, rgba(255, 0, 220, 0.35), transparent 70%);
   animation: login-beam-pulse 3s ease-in-out infinite 0.4s;
 }
 
 @keyframes login-beam-pulse {
-  0%,
-  100% {
-    opacity: 0.75;
-  }
-  50% {
-    opacity: 1;
-  }
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
-.login-beam-particles {
-  position: absolute;
-  inset: 0;
-}
+.login-beam-particles { position: absolute; inset: 0; }
 .login-beam-spark {
   position: absolute;
   top: -5%;
@@ -263,40 +245,26 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 }
 
 @keyframes login-spark-fall {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(120vh);
-    opacity: 0;
-  }
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(120vh); opacity: 0; }
 }
 
-/* Planets — low horizon, slow orbital drift */
 .login-planet {
   position: absolute;
   border-radius: 50%;
   pointer-events: none;
   z-index: 1;
 }
-
-/* Main gas giant — bottom-left, partially off-screen */
 .login-planet-main {
   width: min(48vw, 380px);
   height: min(48vw, 380px);
   left: -12%;
   bottom: -22%;
-  background:
-    radial-gradient(circle at 32% 28%, #3d5a9e 0%, #1a2a5c 45%, #060a18 75%);
+  background: radial-gradient(circle at 32% 28%, #3d5a9e 0%, #1a2a5c 45%, #060a18 75%);
   border: 2px solid rgba(100, 140, 255, 0.25);
-  box-shadow:
-    inset -30px -18px 50px rgba(0, 0, 0, 0.65),
-    0 0 60px rgba(40, 80, 180, 0.2);
+  box-shadow: inset -30px -18px 50px rgba(0, 0, 0, 0.65), 0 0 60px rgba(40, 80, 180, 0.2);
   animation: login-planet-orbit 50s ease-in-out infinite alternate;
 }
-
-/* Thin ring around main planet */
 .login-planet-ring {
   position: absolute;
   left: -8%;
@@ -307,12 +275,9 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
   border-radius: 50%;
   pointer-events: none;
   z-index: 1;
-  transform: rotate(-18deg);
   box-shadow: 0 0 20px rgba(100, 140, 255, 0.12);
   animation: login-ring-orbit 50s ease-in-out infinite alternate;
 }
-
-/* Distant smaller body — lower right */
 .login-planet-far {
   width: min(18vw, 140px);
   height: min(18vw, 140px);
@@ -326,33 +291,18 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 }
 
 @keyframes login-planet-orbit {
-  from {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  to {
-    transform: translate(4%, -3%) rotate(8deg);
-  }
+  from { transform: translate(0, 0) rotate(0deg); }
+  to { transform: translate(4%, -3%) rotate(8deg); }
 }
-
 @keyframes login-ring-orbit {
-  from {
-    transform: rotate(-18deg) translate(0, 0);
-  }
-  to {
-    transform: rotate(-12deg) translate(3%, -2%);
-  }
+  from { transform: rotate(-18deg) translate(0, 0); }
+  to { transform: rotate(-12deg) translate(3%, -2%); }
 }
-
 @keyframes login-planet-far-drift {
-  from {
-    transform: translate(0, 0);
-  }
-  to {
-    transform: translate(-6%, -4%);
-  }
+  from { transform: translate(0, 0); }
+  to { transform: translate(-6%, -4%); }
 }
 
-/* Stars race upward → infinite fall */
 .login-star {
   top: 110%;
   animation-name: login-star-rise;
@@ -361,63 +311,142 @@ html.nexus-compact .py-3 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
 }
 
 @keyframes login-star-rise {
-  from {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  8% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 0.8;
-  }
-  to {
-    transform: translateY(-130vh);
-    opacity: 0;
-  }
-}
-
-/* Falling figure */
-.login-faller {
-  transform: translateX(-50%);
-  z-index: 3;
-  animation: login-faller-bob 4s ease-in-out infinite;
-  filter: drop-shadow(0 0 12px rgba(200, 150, 255, 0.7));
-}
-.login-faller-svg {
-  display: block;
-}
-
-@keyframes login-faller-bob {
-  0%,
-  100% {
-    transform: translateX(-50%) translateY(0) rotate(-8deg);
-  }
-  50% {
-    transform: translateX(-50%) translateY(14px) rotate(6deg);
-  }
+  from { transform: translateY(0); opacity: 0; }
+  8% { opacity: 1; }
+  90% { opacity: 0.8; }
+  to { transform: translateY(-130vh); opacity: 0; }
 }
 
 .login-cosmos-vignette {
-  background: radial-gradient(
-    ellipse 80% 70% at 50% 40%,
-    transparent 25%,
-    rgba(0, 0, 15, 0.4) 100%
-  );
+  background: radial-gradient(ellipse 80% 70% at 50% 40%, transparent 25%, rgba(0, 0, 15, 0.35) 100%);
   z-index: 4;
+}
+
+/* ===== Center pilot: logo + asteroids ===== */
+.login-pilot-stage {
+  /* stage sits in the open middle of the viewport */
+}
+
+.login-pilot {
+  position: absolute;
+  left: 52%;
+  top: 42%;
+  z-index: 6;
+  animation: login-pilot-dodge 18s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px rgba(232, 121, 249, 0.55));
+}
+
+.login-pilot-glow {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(192, 38, 211, 0.35), transparent 70%);
+  animation: login-beam-pulse 2.5s ease-in-out infinite;
+}
+
+/* Irregular path: left/right + scale = depth (forward/back) */
+@keyframes login-pilot-dodge {
+  0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+  12%  { transform: translate(-50%, -50%) translate(-70px, 18px) scale(0.92); }
+  25%  { transform: translate(-50%, -50%) translate(55px, -28px) scale(1.08); }
+  38%  { transform: translate(-50%, -50%) translate(-40px, 40px) scale(0.95); }
+  50%  { transform: translate(-50%, -50%) translate(80px, 8px) scale(1.12); }
+  62%  { transform: translate(-50%, -50%) translate(-90px, -22px) scale(0.9); }
+  75%  { transform: translate(-50%, -50%) translate(30px, 32px) scale(1.05); }
+  88%  { transform: translate(-50%, -50%) translate(-25px, -35px) scale(0.98); }
+  100% { transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+}
+
+/* Logo: arcs spin slowly around the core */
+.login-logo-mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-logo-core {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+}
+.login-logo-arcs {
+  transform-origin: 24px 24px;
+  animation: login-logo-spin 9s linear infinite;
+}
+
+@keyframes login-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Sparse asteroids on different paths */
+.login-asteroid {
+  position: absolute;
+  border-radius: 40% 55% 45% 60%;
+  background:
+    radial-gradient(circle at 30% 30%, #7a6a9a, #2a2038 70%);
+  border: 1px solid rgba(180, 160, 220, 0.35);
+  box-shadow: inset -3px -2px 6px rgba(0, 0, 0, 0.5);
+  opacity: 0.75;
+  z-index: 5;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.login-asteroid-a {
+  left: 40%;
+  top: 20%;
+  animation-name: login-rock-a;
+}
+.login-asteroid-b {
+  left: 58%;
+  top: 55%;
+  animation-name: login-rock-b;
+}
+.login-asteroid-c {
+  left: 48%;
+  top: 35%;
+  animation-name: login-rock-c;
+}
+.login-asteroid-d {
+  left: 62%;
+  top: 28%;
+  animation-name: login-rock-d;
+}
+
+@keyframes login-rock-a {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 0.8; }
+  50%  { transform: translate(40px, 120px) rotate(160deg); opacity: 0.7; }
+  100% { transform: translate(-30px, 240px) rotate(320deg); opacity: 0; }
+}
+@keyframes login-rock-b {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.75; }
+  100% { transform: translate(-90px, -180px) rotate(-240deg); opacity: 0; }
+}
+@keyframes login-rock-c {
+  0%   { transform: translate(0, 0) rotate(20deg); opacity: 0; }
+  12%  { opacity: 0.7; }
+  100% { transform: translate(110px, 90px) rotate(280deg); opacity: 0; }
+}
+@keyframes login-rock-d {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  15%  { opacity: 0.65; }
+  100% { transform: translate(-50px, 160px) rotate(200deg); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .login-star,
   .login-beam-spark,
-  .login-faller,
   .login-nebula-a,
   .login-nebula-b,
   .login-beam-core,
   .login-beam-glow,
   .login-planet-main,
   .login-planet-far,
-  .login-planet-ring {
+  .login-planet-ring,
+  .login-pilot,
+  .login-logo-arcs,
+  .login-asteroid {
     animation: none !important;
   }
 }
