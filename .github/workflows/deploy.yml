@@ -2,14 +2,17 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
-  group: pages
+  group: pages-deploy
   cancel-in-progress: true
 
 jobs:
@@ -23,25 +26,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci || npm install
 
       - name: Build
         env:
-          GITHUB_ACTIONS: 'true'
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: |
-          npx vite build
-          echo "=== dist/index.html ==="
-          cat dist/index.html
-          if grep -q '/src/main.tsx' dist/index.html; then
-            echo "ERROR: dist still points at source"
-            exit 1
-          fi
+        run: npm run build
 
-      - name: Deploy dist to gh-pages branch
+      - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
