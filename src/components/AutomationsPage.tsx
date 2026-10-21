@@ -26,40 +26,108 @@ export default function AutomationsPage() {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-3 text-sm text-brand-900">
+        Rules run <strong>when a ticket is created</strong>. Matched rules can raise priority or add tags automatically.
+      </div>
       <div className="flex justify-between items-center">
-        <p className="text-sm text-slate-500">Rules that run when tickets are created (priority boost, routing helpers).</p>
-        <button type="button" onClick={() => setForm({ name: '', enabled: true, trigger: 'ticket_created', condition_field: 'title', condition_op: 'contains', action: 'set_priority', action_value: 'high' })}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg"><Plus size={16} /> New rule</button>
+        <p className="text-sm text-slate-500">Example: title contains “outage” → set critical + tag “incident”.</p>
+        <button
+          type="button"
+          onClick={() =>
+            setForm({
+              name: '',
+              enabled: true,
+              trigger: 'ticket_created',
+              condition_field: 'title',
+              condition_op: 'contains',
+              action: 'set_priority',
+              action_value: 'high',
+            })
+          }
+          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg"
+        >
+          <Plus size={16} /> New rule
+        </button>
       </div>
 
       {form && (
         <form onSubmit={submit} className="bg-white rounded-xl border border-slate-200 p-5 space-y-3 shadow-sm">
-          <input value={form.name || ''} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Rule name" required
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg" />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <select value={form.condition_field || 'title'} onChange={(e) => setForm({ ...form, condition_field: e.target.value })}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
+          <input
+            value={form.name || ''}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="Rule name"
+            required
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+          />
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <select
+              value={form.condition_field || 'title'}
+              onChange={(e) => setForm({ ...form, condition_field: e.target.value })}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
+            >
               <option value="title">Title</option>
+              <option value="description">Description</option>
               <option value="priority">Priority</option>
+              <option value="branch">Branch</option>
+              <option value="customer">Customer name</option>
             </select>
-            <select value={form.condition_op || 'contains'} onChange={(e) => setForm({ ...form, condition_op: e.target.value })}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
+            <select
+              value={form.condition_op || 'contains'}
+              onChange={(e) => setForm({ ...form, condition_op: e.target.value })}
+              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
+            >
               <option value="contains">contains</option>
               <option value="equals">equals</option>
             </select>
-            <input value={form.condition_value || ''} onChange={(e) => setForm({ ...form, condition_value: e.target.value })} placeholder="Value"
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg" />
-            <select value={form.action_value || 'high'} onChange={(e) => setForm({ ...form, action: 'set_priority', action_value: e.target.value })}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white">
-              <option value="critical">Set critical</option>
-              <option value="high">Set high</option>
-              <option value="medium">Set medium</option>
-              <option value="low">Set low</option>
+            <input
+              value={form.condition_value || ''}
+              onChange={(e) => setForm({ ...form, condition_value: e.target.value })}
+              placeholder="Match value"
+              className="px-3 py-2 text-sm border border-slate-200 rounded-lg"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={form.action || 'set_priority'}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  action: e.target.value,
+                  action_value: e.target.value === 'set_priority' ? 'high' : form.action_value || '',
+                })
+              }
+              className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
+            >
+              <option value="set_priority">Set priority</option>
+              <option value="add_tag">Add tag</option>
             </select>
+            {form.action === 'add_tag' ? (
+              <input
+                value={form.action_value || ''}
+                onChange={(e) => setForm({ ...form, action_value: e.target.value })}
+                placeholder="Tag name"
+                className="px-3 py-2 text-sm border border-slate-200 rounded-lg"
+              />
+            ) : (
+              <select
+                value={form.action_value || 'high'}
+                onChange={(e) => setForm({ ...form, action: 'set_priority', action_value: e.target.value })}
+                className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
+              >
+                <option value="critical">critical</option>
+                <option value="high">high</option>
+                <option value="medium">medium</option>
+                <option value="low">low</option>
+              </select>
+            )}
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg">Save</button>
-            <button type="button" onClick={() => setForm(null)} className="px-4 py-2 text-sm text-slate-600">Cancel</button>
+            <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-lg">
+              Save
+            </button>
+            <button type="button" onClick={() => setForm(null)} className="px-4 py-2 text-sm text-slate-600">
+              Cancel
+            </button>
           </div>
         </form>
       )}
@@ -67,8 +135,11 @@ export default function AutomationsPage() {
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm divide-y">
         {automations.map((a) => (
           <div key={a.id || a.name} className="px-5 py-4 flex items-center gap-3">
-            <button type="button" onClick={() => saveAutomation({ ...a, enabled: !a.enabled })}
-              className={`w-10 h-6 rounded-full relative transition-colors ${a.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+            <button
+              type="button"
+              onClick={() => saveAutomation({ ...a, enabled: !a.enabled })}
+              className={`w-10 h-6 rounded-full relative transition-colors ${a.enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+            >
               <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${a.enabled ? 'left-4' : 'left-0.5'}`} />
             </button>
             <div className="flex-1 min-w-0">
@@ -77,7 +148,9 @@ export default function AutomationsPage() {
                 If {a.condition_field} {a.condition_op} “{a.condition_value}” → {a.action} {a.action_value}
               </div>
             </div>
-            <button type="button" onClick={() => a.id && deleteAutomation(a.id)} className="p-2 text-slate-400 hover:text-rose-600"><Trash2 size={16} /></button>
+            <button type="button" onClick={() => a.id && deleteAutomation(a.id)} className="p-2 text-slate-400 hover:text-rose-600">
+              <Trash2 size={16} />
+            </button>
           </div>
         ))}
         {automations.length === 0 && <div className="p-8 text-center text-slate-500 text-sm">No automations yet</div>}
