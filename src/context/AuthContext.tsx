@@ -16,7 +16,6 @@ interface AuthContextValue {
   loading: boolean;
   requiresAuth: boolean;
   configError: string | null;
-  /** From user_metadata.role — defaults to agent for legacy accounts */
   accountRole: AccountRole;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName?: string, role?: AccountRole) => Promise<void>;
@@ -49,7 +48,9 @@ function friendlyAuthError(err: unknown): Error {
     return new Error('An account with this email already exists. Sign in instead.');
   }
   if (lower.includes('email not confirmed')) {
-    return new Error('Confirm your email in the inbox before signing in (or disable Confirm email in Supabase Auth settings).');
+    return new Error(
+      'Confirm your email in the inbox before signing in (or disable Confirm email in Supabase Auth settings).'
+    );
   }
   return err;
 }
@@ -70,12 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    }).catch(() => {
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        setSession(data.session);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next);
@@ -90,9 +94,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw friendlyAuthError(error);
   };
 
-  const signUp = async (email: string, password: string, fullName?: string, role: AccountRole = 'agent') => {
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName?: string,
+    role: AccountRole = 'agent'
+  ) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -103,6 +112,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (error) throw friendlyAuthError(error);
+
+    // Queue customer for admin approval in the Users page
+    if (role === 'customer') {
+      const displayName = fullName || email.split('@')[0];
+      const row = {
+        id: data.user?.id || crypto.randomUUID(),
+        name: displayName,
+        email: email.trim().toLowerCase(),
+        role: 'Customer',
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      };
+      const { error: cErr } = await supabase.from('customers').upsert(row, { onConflict: 'id' });
+      if (cErr) {
+        const { error: cErr2 } = await supabase.from('customers').insert({
+          name: displayName,
+          email: email.trim().toLowerCase(),
+          role: 'Customer',
+        });
+        if (cErr2) console.warn('Could not queue customer for approval', cErr2.message);
+      }
+    }
   };
 
   const signOut = async () => {
