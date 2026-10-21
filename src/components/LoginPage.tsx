@@ -22,7 +22,7 @@ function useFallingStars(count: number) {
 }
 
 function CosmicFallBackground() {
-  const stars = useFallingStars(48);
+  const stars = useFallingStars(64);
 
   return (
     <div className="login-cosmos absolute inset-0 overflow-hidden" aria-hidden>
@@ -30,11 +30,11 @@ function CosmicFallBackground() {
       <div className="login-nebula login-nebula-a absolute inset-0" />
       <div className="login-nebula login-nebula-b absolute inset-0" />
 
-      <div className="login-beam absolute left-1/2 top-0 -translate-x-1/2">
+      <div className="login-beam absolute left-[28%] lg:left-[32%] top-0 -translate-x-1/2">
         <div className="login-beam-core" />
         <div className="login-beam-glow" />
         <div className="login-beam-particles">
-          {Array.from({ length: 10 }, (_, i) => (
+          {Array.from({ length: 12 }, (_, i) => (
             <span
               key={i}
               className="login-beam-spark"
@@ -48,9 +48,12 @@ function CosmicFallBackground() {
         </div>
       </div>
 
-      <div className="login-planet login-planet-left" />
-      <div className="login-planet login-planet-right" />
-      <div className="login-ring" />
+      {/* Large planet — lower left, slow orbit-ish drift */}
+      <div className="login-planet login-planet-main" />
+      <div className="login-planet-ring" />
+
+      {/* Smaller distant body — lower right */}
+      <div className="login-planet login-planet-far" />
 
       <div className="login-starfield absolute inset-0">
         {stars.map((s) => (
@@ -71,7 +74,7 @@ function CosmicFallBackground() {
         ))}
       </div>
 
-      <div className="login-faller absolute left-1/2 top-[18%]">
+      <div className="login-faller absolute left-[28%] lg:left-[32%] top-[20%]">
         <svg width="44" height="52" viewBox="0 0 48 56" fill="none" className="login-faller-svg">
           <ellipse cx="24" cy="14" rx="8" ry="9" fill="#e8e0ff" />
           <path
@@ -128,14 +131,15 @@ export default function LoginPage({ onOpenPortal }: Props) {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-      {/* Left — story + motion */}
-      <aside className="relative min-h-[320px] lg:min-h-screen overflow-hidden">
-        <CosmicFallBackground />
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Full-bleed cosmos */}
+      <CosmicFallBackground />
 
-        <div className="relative z-10 h-full flex flex-col p-7 sm:p-10 lg:p-12">
+      <div className="relative z-10 min-h-screen grid lg:grid-cols-[1fr_minmax(340px,420px)] gap-6 lg:gap-10 px-5 sm:px-8 lg:px-12 py-8 lg:py-10">
+        {/* Story column */}
+        <div className="flex flex-col min-h-[280px] lg:min-h-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-white/15 border border-white/25 backdrop-blur flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 backdrop-blur flex items-center justify-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
                 <circle cx="12" cy="12" r="3" fill="white" />
                 <path d="M12 3a9 9 0 0 1 9 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
@@ -148,13 +152,15 @@ export default function LoginPage({ onOpenPortal }: Props) {
             </div>
           </div>
 
-          <div className="mt-12 lg:mt-16 max-w-lg">
+          <div className="mt-10 lg:mt-14 max-w-lg">
             <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-fuchsia-300/80 mb-3">
               Built for agent teams
             </p>
             <h1 className="text-[1.85rem] sm:text-4xl font-semibold text-white leading-tight tracking-tight">
               Resolve faster.
-              <span className="block text-fuchsia-200/90 font-normal mt-1">Stay organized across every branch.</span>
+              <span className="block text-fuchsia-200/90 font-normal mt-1">
+                Stay organized across every branch.
+              </span>
             </h1>
             <p className="mt-5 text-sm text-fuchsia-100/75 leading-relaxed max-w-md">
               Nexus Ops connects your customer portal, live chat, and agent desk. Route by branch,
@@ -162,11 +168,11 @@ export default function LoginPage({ onOpenPortal }: Props) {
             </p>
           </div>
 
-          <div className="mt-10 space-y-3 max-w-md">
+          <div className="mt-8 space-y-3 max-w-md">
             {CAPABILITIES.map((c) => (
               <div
                 key={c.title}
-                className="rounded-xl border border-white/10 bg-black/25 backdrop-blur-md px-4 py-3"
+                className="rounded-xl border border-white/10 bg-white/[0.06] backdrop-blur-md px-4 py-3"
               >
                 <div className="text-sm font-medium text-white">{c.title}</div>
                 <div className="text-xs text-fuchsia-100/60 mt-0.5">{c.blurb}</div>
@@ -174,150 +180,152 @@ export default function LoginPage({ onOpenPortal }: Props) {
             ))}
           </div>
 
-          <div className="mt-auto pt-10 text-[11px] text-fuchsia-200/40">
+          <div className="mt-auto pt-8 text-[11px] text-fuchsia-200/40">
             Agents only · Customers use the portal
           </div>
         </div>
-      </aside>
 
-      {/* Right — auth */}
-      <main className="flex items-center justify-center bg-zinc-950 px-6 py-12 sm:px-10">
-        <div className="w-full max-w-[360px]">
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-white tracking-tight">
-              {mode === 'signin' ? 'Welcome back' : 'Join the desk'}
-            </h2>
-            <p className="mt-1.5 text-sm text-zinc-400">
-              {mode === 'signin'
-                ? 'Sign in with your agent credentials.'
-                : 'Create an agent account for this workspace.'}
-            </p>
-          </div>
-
-          {configError && (
-            <div className="mb-4 text-sm text-amber-200 bg-amber-500/10 border border-amber-500/30 px-3 py-3 rounded-xl">
-              <p className="font-medium mb-1">Supabase configuration problem</p>
-              <p className="text-amber-100/80">{configError}</p>
+        {/* Glass login card */}
+        <div className="flex items-center justify-center lg:justify-end">
+          <div className="w-full max-w-[380px] rounded-2xl border border-white/15 bg-white/[0.08] backdrop-blur-xl shadow-[0_8px_40px_rgba(0,0,0,0.35)] p-6 sm:p-8">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-white tracking-tight">
+                {mode === 'signin' ? 'Welcome back' : 'Join the desk'}
+              </h2>
+              <p className="mt-1.5 text-sm text-fuchsia-100/60">
+                {mode === 'signin'
+                  ? 'Sign in with your agent credentials.'
+                  : 'Create an agent account for this workspace.'}
+              </p>
             </div>
-          )}
 
-          <div className="flex gap-1 p-1 rounded-xl bg-zinc-900 border border-zinc-800 mb-6">
-            <button
-              type="button"
-              onClick={() => {
-                setMode('signin');
-                setError('');
-                setInfo('');
-              }}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
-                mode === 'signin'
-                  ? 'bg-zinc-100 text-zinc-900'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode('signup');
-                setError('');
-                setInfo('');
-              }}
-              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
-                mode === 'signup'
-                  ? 'bg-zinc-100 text-zinc-900'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              Create account
-            </button>
-          </div>
-
-          <form onSubmit={submit} className="space-y-4">
-            {error && (
-              <div className="text-sm text-rose-300 bg-rose-500/10 border border-rose-500/25 px-3 py-2 rounded-lg whitespace-pre-wrap">
-                {error}
-              </div>
-            )}
-            {info && (
-              <div className="text-sm text-emerald-300 bg-emerald-500/10 border border-emerald-500/25 px-3 py-2 rounded-lg">
-                {info}
+            {configError && (
+              <div className="mb-4 text-sm text-amber-100 bg-amber-500/15 border border-amber-400/30 px-3 py-3 rounded-xl">
+                <p className="font-medium mb-1">Supabase configuration problem</p>
+                <p className="text-amber-100/80">{configError}</p>
               </div>
             )}
 
-            {mode === 'signup' && (
-              <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1.5">Full name</label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/40 focus:border-fuchsia-500/50"
-                  placeholder="Alex Rivera"
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5">Work email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/40 focus:border-fuchsia-500/50"
-                placeholder="you@company.com"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-medium text-zinc-400">Password</label>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="text-[11px] font-medium text-zinc-500 hover:text-zinc-300"
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/40 focus:border-fuchsia-500/50"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 mt-1 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 disabled:opacity-50 transition-all shadow-lg shadow-fuchsia-900/40"
-            >
-              {loading ? 'Please wait…' : mode === 'signin' ? 'Enter workspace' : 'Create agent account'}
-            </button>
-          </form>
-
-          <div className="mt-8 pt-6 border-t border-zinc-800 space-y-2 text-center">
-            <p className="text-xs text-zinc-500">
-              Not an agent?{' '}
+            <div className="flex gap-1 p-1 rounded-xl bg-black/25 border border-white/10 mb-5">
               <button
                 type="button"
-                onClick={onOpenPortal}
-                className="text-fuchsia-400 hover:text-fuchsia-300 font-medium"
+                onClick={() => {
+                  setMode('signin');
+                  setError('');
+                  setInfo('');
+                }}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  mode === 'signin'
+                    ? 'bg-white text-zinc-900 shadow-sm'
+                    : 'text-fuchsia-100/70 hover:text-white'
+                }`}
               >
-                Open customer portal
+                Sign in
               </button>
-            </p>
-            <p className="text-[11px] text-zinc-600">Need access? Ask your admin to approve your account.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signup');
+                  setError('');
+                  setInfo('');
+                }}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  mode === 'signup'
+                    ? 'bg-white text-zinc-900 shadow-sm'
+                    : 'text-fuchsia-100/70 hover:text-white'
+                }`}
+              >
+                Create account
+              </button>
+            </div>
+
+            <form onSubmit={submit} className="space-y-4">
+              {error && (
+                <div className="text-sm text-rose-200 bg-rose-500/15 border border-rose-400/30 px-3 py-2 rounded-lg whitespace-pre-wrap">
+                  {error}
+                </div>
+              )}
+              {info && (
+                <div className="text-sm text-emerald-200 bg-emerald-500/15 border border-emerald-400/30 px-3 py-2 rounded-lg">
+                  {info}
+                </div>
+              )}
+
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-xs font-medium text-fuchsia-100/70 mb-1.5">Full name</label>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-black/30 border border-white/15 text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40 focus:border-fuchsia-400/50"
+                    placeholder="Alex Rivera"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-medium text-fuchsia-100/70 mb-1.5">Work email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-black/30 border border-white/15 text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40 focus:border-fuchsia-400/50"
+                  placeholder="you@company.com"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-medium text-fuchsia-100/70">Password</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="text-[11px] font-medium text-fuchsia-200/50 hover:text-fuchsia-100"
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-black/30 border border-white/15 text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40 focus:border-fuchsia-400/50"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 mt-1 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-500 hover:to-violet-500 disabled:opacity-50 transition-all shadow-lg shadow-fuchsia-900/40"
+              >
+                {loading ? 'Please wait…' : mode === 'signin' ? 'Enter workspace' : 'Create agent account'}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-5 border-t border-white/10 space-y-2 text-center">
+              <p className="text-xs text-fuchsia-100/50">
+                Not an agent?{' '}
+                <button
+                  type="button"
+                  onClick={onOpenPortal}
+                  className="text-fuchsia-300 hover:text-white font-medium"
+                >
+                  Open customer portal
+                </button>
+              </p>
+              <p className="text-[11px] text-fuchsia-100/35">
+                Need access? Ask your admin to approve your account.
+              </p>
+            </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
