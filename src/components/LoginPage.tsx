@@ -410,7 +410,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
     <div className="relative min-h-screen overflow-hidden">
       <CosmicFallBackground />
       <div className="relative z-10 min-h-screen flex items-center justify-center">
-        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 px-5 sm:px-8 lg:px-10 xl:px-12 py-8 lg:py-12 items-center">
+        <div className="w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] gap-10 lg:gap-14 xl:gap-20 2xl:gap-28 px-5 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8 lg:py-12 items-center">
           <div className="flex flex-col relative z-10 order-2 lg:order-1">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 backdrop-blur flex items-center justify-center overflow-hidden">
@@ -442,9 +442,9 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
             <div className="mt-10 lg:mt-14 text-[11px] text-fuchsia-200/35 hidden lg:block tracking-wide">{footerCredit}</div>
           </div>
 
-          <div className="flex items-center justify-center lg:justify-end order-1 lg:order-2">
+          <div className="flex items-center justify-center lg:justify-end order-1 lg:order-2 w-full lg:w-auto">
             {mode === 'signin' ? (
-            <div className="login-glass-card w-full max-w-[400px] sm:max-w-[420px] lg:max-w-none rounded-2xl p-6 sm:p-8">
+            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-2xl p-5 sm:p-7">
               <div className="flex flex-col items-center mb-5">
                 <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center mb-3">
                   <NexusLogoMark size={28} />
@@ -492,7 +492,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
               </form>
             </div>
             ) : (
-            <div className="login-glass-card w-full max-w-[400px] sm:max-w-[440px] lg:max-w-none rounded-2xl p-6 sm:p-8 border border-fuchsia-300/20 shadow-[0_0_40px_rgba(139,92,246,0.15)]">
+            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-2xl p-5 sm:p-7 border border-fuchsia-300/15">
               <div className="flex flex-col items-center mb-5">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 border border-white/20 flex items-center justify-center mb-3">
                   <NexusLogoMark size={28} />
