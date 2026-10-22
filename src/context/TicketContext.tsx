@@ -109,8 +109,22 @@ function initialsFromName(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+/** Keep only real agents for team UI (hide customer-role rows + duplicates). */
+function filterAgents(list: Agent[]): Agent[] {
+  const seen = new Set<string>();
+  return list.filter((a) => {
+    const role = (a.role || '').toLowerCase();
+    if (role.includes('customer')) return false;
+    if (a.approval_status === 'rejected') return false;
+    const key = (a.email || a.name || a.id).toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function TicketProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, accountRole } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>(() => (isSupabaseConfigured ? [] : loadLocal()));
   const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
   const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
@@ -130,7 +144,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
         supabase.from('agents').select('*'),
         supabase.from('customers').select('*'),
       ]);
-      const agentList = ((aRes.data as Agent[]) || []).map(hydrateAvatar);
+      const agentList = filterAgents(((aRes.data as Agent[]) || []).map(hydrateAvatar));
       if (aRes.data) setAgents(agentList);
       if (cRes.data) setCustomers(cRes.data as Customer[]);
       if (tRes.data) {
@@ -154,8 +168,10 @@ export function TicketProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   useEffect(() => {
-    if (!user || !supabase) {
-      setCurrentAgent(null);
+    // Customers must never be auto-inserted into agents table
+    if (!user || !supabase || accountRole === 'customer') {
+      if (accountRole === 'customer') setCurrentAgent(null);
+      if (!user) setCurrentAgent(null);
       return;
     }
     let cancelled = false;
@@ -172,7 +188,7 @@ export function TicketProvider({ children }: { children: ReactNode }) {
           await supabase.from('agents').update({ user_id: user.id }).eq('id', byEmail.id);
           const linked = hydrateAvatar({ ...byEmail, user_id: user.id } as Agent);
           setCurrentAgent(linked);
-          setAgents((prev) => prev.map((a) => (a.id === linked.id ? linked : a)));
+          setAgents((prev) => filterAgents(prev.map((a) => (a.id === linked.id ? linked : a))));
           return;
         }
       }
@@ -193,13 +209,13 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       if (created && !cancelled) {
         const agent = hydrateAvatar(created as Agent);
         setCurrentAgent(agent);
-        setAgents((prev) => [...prev, agent]);
+        setAgents((prev) => filterAgents([...prev, agent]));
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, accountRole]);
 
   useEffect(() => {
     if (!supabase) return;
