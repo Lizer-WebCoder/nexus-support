@@ -1,0 +1,22 @@
+name: Apply registration LoginPage on kirzhian
+on:
+  workflow_dispatch:
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: kirzhian
+      - name: Rebuild LoginPage from payload
+        run: python3 scripts/rebuild_login_page.py
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/LoginPage.tsx
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Apply separate registration card + Show + Forgot Password"
+          git push origin kirzhian
