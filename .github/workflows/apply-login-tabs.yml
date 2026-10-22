@@ -1,1 +1,33 @@
-PLACEHOLDER_WF
+name: Apply Login Tabs Patch
+on:
+  workflow_dispatch:
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Write patched sources
+        run: |
+          python3 << 'EOF'
+          import base64, gzip
+          from pathlib import Path
+          blobs = {
+            "src/context/AuthContext.tsx": Path("scripts/patch-data/auth.b64gz").read_text().strip(),
+            "src/components/LoginPage.tsx": Path("scripts/patch-data/login.b64gz").read_text().strip(),
+            "src/components/UsersAdminPage.tsx": Path("scripts/patch-data/users.b64gz").read_text().strip(),
+          }
+          for path, b64 in blobs.items():
+              data = gzip.decompress(base64.b64decode(b64))
+              Path(path).write_bytes(data)
+              print("wrote", path, len(data))
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/context/AuthContext.tsx src/components/LoginPage.tsx src/components/UsersAdminPage.tsx
+          git commit -m "Login: Agent/Customer tabs, Create account for both, dual approval" || echo "no changes"
+          git push origin HEAD:main
