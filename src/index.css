@@ -195,15 +195,22 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   to { transform: translateY(-130vh) scale(1); opacity: 0; }
 }
 
-/* Golden shooting star — soft glow + glittering trail */
+/* Golden shooting star — GPU-composited, fluid arc */
+.login-shooting-layer {
+  contain: strict;
+  transform: translateZ(0);
+}
 .login-shooting-star {
   position: absolute;
-  width: 22px;
-  height: 22px;
-  animation-name: login-star-arc;
-  animation-timing-function: cubic-bezier(0.22, 0.15, 0.28, 1);
+  left: -5%;
+  width: 18px;
+  height: 18px;
+  animation-name: login-star-fly;
+  animation-timing-function: linear;
   animation-fill-mode: forwards;
   will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
   pointer-events: none;
 }
 .login-star-glyph {
@@ -211,68 +218,67 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   left: 0;
   top: 0;
   display: block;
-  filter:
-    drop-shadow(0 0 4px rgba(255, 214, 120, 0.55))
-    drop-shadow(0 0 10px rgba(232, 184, 74, 0.35));
+  filter: drop-shadow(0 0 5px rgba(255, 214, 120, 0.5));
   z-index: 3;
 }
 .login-star-trail {
   position: absolute;
-  left: -170px;
-  top: 9px;
-  width: 170px;
-  height: 3px;
-  border-radius: 999px;
+  right: 14px;
+  top: 50%;
+  width: 150px;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 2px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(232, 184, 74, 0.08) 20%,
-    rgba(255, 214, 120, 0.28) 55%,
-    rgba(255, 236, 180, 0.45) 85%,
-    rgba(255, 248, 220, 0.55) 100%
+    rgba(232, 184, 74, 0.12) 25%,
+    rgba(255, 214, 120, 0.35) 60%,
+    rgba(255, 236, 180, 0.55) 100%
   );
-  box-shadow: 0 0 8px 1px rgba(232, 184, 74, 0.2);
   z-index: 1;
-  filter: blur(0.4px);
-  transform-origin: right center;
+  transform: translateZ(0);
 }
-.login-star-glitter {
+.login-star-sparkles {
   position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff8e0 0%, #ffd978 45%, transparent 70%);
-  box-shadow: 0 0 3px 0.5px rgba(255, 214, 120, 0.45);
+  right: 20px;
+  top: 50%;
+  width: 130px;
+  height: 10px;
+  margin-top: -5px;
   z-index: 2;
   pointer-events: none;
-  animation: login-glitter-twinkle 0.7s ease-in-out infinite alternate;
+  background-image:
+    radial-gradient(circle, rgba(255, 236, 180, 0.7) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(255, 214, 120, 0.55) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(255, 248, 220, 0.5) 0 0.8px, transparent 1.2px),
+    radial-gradient(circle, rgba(232, 184, 74, 0.45) 0 1px, transparent 1.5px);
+  background-size: 28px 8px, 36px 10px, 22px 6px, 40px 8px;
+  background-position: 0% 40%, 15% 70%, 35% 25%, 55% 60%;
+  background-repeat: repeat-x;
+  opacity: 0.85;
+  mask-image: linear-gradient(90deg, transparent, #000 30%, #000);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 30%, #000);
+  transform: translateZ(0);
 }
-@keyframes login-glitter-twinkle {
-  from { transform: scale(0.7); opacity: 0.35; }
-  to { transform: scale(1.15); opacity: 0.85; }
-}
-@keyframes login-star-arc {
+@keyframes login-star-fly {
   0% {
     opacity: 0;
-    transform: translate(0vw, 0vh) rotate(-8deg) scale(0.65);
+    transform: translate3d(0, 0, 0) rotate(-6deg);
   }
-  10% {
-    opacity: 0.95;
-    transform: translate(10vw, 2vh) rotate(-6deg) scale(1);
-  }
-  35% {
+  8% {
     opacity: 1;
-    transform: translate(35vw, -5vh) rotate(-2deg) scale(1);
   }
-  55% {
+  50% {
     opacity: 1;
-    transform: translate(55vw, -7vh) rotate(2deg) scale(1);
+    transform: translate3d(55vw, -6vh, 0) rotate(0deg);
   }
-  80% {
-    opacity: 0.85;
-    transform: translate(82vw, 4vh) rotate(8deg) scale(0.95);
+  92% {
+    opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: translate(108vw, 18vh) rotate(12deg) scale(0.75);
+    transform: translate3d(110vw, 14vh, 0) rotate(10deg);
   }
 }
 
@@ -410,8 +416,7 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   .login-logo-arcs,
   .login-flyby-ltr,
   .login-flyby-rtl,
-  .login-shooting-star,
-  .login-star-glitter {
+  .login-shooting-star {
     animation: none !important;
   }
 }
