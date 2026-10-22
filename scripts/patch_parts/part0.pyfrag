@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+"""Apply Agent/Customer login tabs + dual approval. Run from repo root."""
+from pathlib import Path
+import sys
+
+def patch_auth():
+    p = Path("src/context/AuthContext.tsx")
+    auth = p.read_text()
+    if "assertAgentAllowed" in auth:
+        print("AuthContext already patched")
+        return True
+    agent_fn = """
+/** Returns true if this agent may use the workspace. */
+async function assertAgentAllowed(user: User): Promise<void> {
+  if (!supabase) return;
+  if (roleFromUser(user) !== 'agent') return;
+
+  const meta = (user.user_metadata?.approval_status as string | undefined) || '';
+  const email = (user.email || '').trim().toLowerCase();
+
+  let approval: string | null | undefined = undefined;
+  try {
+    const { data: byId } = await supabase
+      .from('agents')
+      .select('approval_status')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (byId && byId.approval_status !== undefined) {
+      approval = byId.approval_status as string | null;
+    }
+  } catch {
+    /* column may not exist */
+  }
+  if (approval === undefined && email) {
+    try {
+      const { data: byEmail } = await supabase
+        .from('agents')
+        .select('approval_status')
+        .ilike('email', email)
+        .limit(1)
+        .maybeSingle();
+      if (byEmail && byEmail.approval_status !== undefined) {
+        approval = byEmail.approval_status as string | null;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (approval === undefined || approval === null || approval === '') {
+    if (meta === 'pending') {
+      await supabase.auth.signOut();
+      throw new Error(
+        'Your agent account is pending admin approval. An administrator must approve it under Users -> Pending before you can sign in.'
+      );
+    }
+    if (meta === 'rejected') {
+      await supabase.auth.signOut();
+      throw new Error('This agent account was rejected by an administrator. Contact support if you need access.');
+    }
+    return;
+  }
+
+  if (approval === 'approved') return;
+
+  await supabase.auth.signOut();
+  if (approval === 'rejected') {
+    throw new Error('This agent account was rejected by an administrator. Contact support if you need access.');
+  }
+  throw new Error(
+    'Your agent account is pending admin approval. An administrator must approve it under Users -> Pending before you can sign in.'
+  );
+}
+
+"""
+    needle = "/** Returns true if this customer may use the portal. Agents always pass. */\nasync function assertCustomerAllowed"
+    if needle not in auth:
+        needle = "/** Returns true if this customer may use the portal. */\nasync function assertCustomerAllowed"
+    if needle not in auth:
+        print("FAIL: assertCustomerAllowed not found", file=sys.stderr)
+        return False
+    auth = auth.replace(
+        needle,
+        agent_fn + "/** Returns true if this customer may use the portal. */\nasync function assertCustomerAllowed",
+    )
+    auth = auth.replace(
+        "if (data.user) await assertCustomerAllowed(data.user);",
+        "if (data.user) {\n      if (roleFromUser(data.user) === 'customer') await assertCustomerAllowed(data.user);\n      else await assertAgentAllowed(data.user);\n    }",
+    )
+    auth = auth.replace(
+        "approval_status: role === 'customer' ? 'pending' : 'approved',",
+        "approval_status: 'pending',",
+    )
+    if "assertAgentAllowed(data.session.user)" not in auth:
+        auth = auth.replace(
+            """        } else if (!cancelled) {
+          setSession(data.session);
+        }""",
+            """        } else if (data.session?.user && roleFromUser(data.session.user) === 'agent') {
+          try {
+            await assertAgentAllowed(data.session.user);
+            if (!cancelled) setSession(data.session);
+          } catch {
+            if (!cancelled) setSession(null);
+          }
+        } else if (!cancelled) {
+          setSession(data.session);
+        }""",
+            1,
+        )
+    if "assertAgentAllowed(next.user" not in auth:
+        auth = auth.replace(
+            """      } else {
+        setSession(next);
+      }""",
+            """      } else if (next?.user && roleFromUser(next.user) === 'agent') {
+        void (async () => {
+          try {
+            await assertAgentAllowed(next.user!);
+            setSession(next);
+          } catch {
+            setSession(null);
+          }
+        })();
+      } else {
+        setSession(next);
+      }""",
+            1,
+        )
