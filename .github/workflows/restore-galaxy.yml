@@ -1,0 +1,29 @@
+name: Restore galaxy LoginPage
+on:
+  workflow_dispatch:
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and write LoginPage
+        run: |
+          python3 << 'EOF'
+          import base64, gzip
+          from pathlib import Path
+          parts = [
+            "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",
+          ]
+          raw = gzip.decompress(base64.b64decode("".join(parts)))
+          Path("src/components/LoginPage.tsx").write_bytes(raw)
+          print("wrote", len(raw), "bytes")
+          EOF
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/components/LoginPage.tsx
+          git diff --staged --quiet || git commit -m "Login: denser galaxy starfield (180 particles, 4 depth layers) + full restore"
+          git push
