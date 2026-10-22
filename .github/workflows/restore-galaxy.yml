@@ -1,108 +1,30 @@
-name: Restore galaxy LoginPage
+name: Densify stars
 on:
   workflow_dispatch:
   push:
     paths:
       - '.github/workflows/restore-galaxy.yml'
 jobs:
-  restore:
+  densify:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Densify starfield
+      - name: Bump star count and layer generator
         run: |
-          python3 << 'PY'
-          from pathlib import Path
-          p = Path('src/components/LoginPage.tsx')
-          text = p.read_text()
-          if 'PLACEHOLDER' in text or len(text) < 500:
-              raise SystemExit('LoginPage still placeholder')
-          old = '''function useFallingStars(count: number) {
-  return useMemo(
-    () =>
-      Array.from({ length: count }, (_, i) => ({
-        id: i,
-        left: `${(i * 41 + 13) % 100}%`,
-        size: i % 5 === 0 ? 3 : i % 3 === 0 ? 2 : 1,
-        delay: -((i * 0.37) % 20),
-        duration: 8 + (i % 11) * 1.4,
-        color: i % 4 === 0 ? '#ff66cc' : i % 3 === 0 ? '#66f0ff' : '#c4b5fd',
-        opacity: 0.35 + (i % 6) * 0.1,
-      })),
-    [count]
-  );
-}'''
-          new = '''function useFallingStars(count: number) {
-  return useMemo(
-    () =>
-      Array.from({ length: count }, (_, i) => {
-        const layer = i % 4;
-        const size =
-          layer === 0
-            ? 0.8 + (i % 3) * 0.15
-            : layer === 1
-              ? 1.2 + (i % 4) * 0.25
-              : layer === 2
-                ? 1.8 + (i % 5) * 0.35
-                : i % 6 === 0
-                  ? 3.8
-                  : 2.4 + (i % 3) * 0.4;
-        const duration =
-          layer === 0
-            ? 22 + (i % 11) * 2.4
-            : layer === 1
-              ? 15 + (i % 9) * 1.8
-              : layer === 2
-                ? 10 + (i % 8) * 1.4
-                : 6.5 + (i % 7) * 1.1;
-        const colors = [
-          '#c4b5fd', '#a78bfa', '#66f0ff', '#ff66cc', '#e9d5ff',
-          '#f0abfc', '#93c5fd', '#ddd6fe', '#f5d0fe', '#a5f3fc',
-        ];
-        return {
-          id: i,
-          left: `${(i * 41 + 13 + layer * 9) % 100}%`,
-          size,
-          delay: -((i * 0.23 + layer * 1.35) % (duration * 0.92)),
-          duration,
-          color: colors[i % colors.length],
-          opacity:
-            layer === 0
-              ? 0.12 + (i % 5) * 0.04
-              : layer === 1
-                ? 0.22 + (i % 6) * 0.05
-                : layer === 2
-                  ? 0.38 + (i % 5) * 0.08
-                  : 0.55 + (i % 4) * 0.1,
-          blur: layer === 0 ? 0.9 : layer === 1 ? 0.45 : 0,
-        };
-      }),
-    [count]
-  );
-}'''
-          if old not in text:
-              print('hook already patched or different; trying count only')
-          else:
-              text = text.replace(old, new)
-          import re
-          text2, n = re.subn(r'useFallingStars\(\d+\)', 'useFallingStars(180)', text, count=1)
-          text = text2
-          print('count replacements', n)
-          old_span = 'boxShadow: `0 0 ${s.size * 3}px ${s.color}`'
-          new_span = 'boxShadow: `0 0 ${s.size * 4}px ${s.color}, 0 0 ${s.size * 8}px ${s.color}55`, filter: s.blur ? `blur(${s.blur}px)` : undefined'
-          if old_span in text:
-              text = text.replace(old_span, new_span)
-              print('glow enhanced')
-          p.write_text(text)
-          print('ok', 'useFallingStars(180)' in text, len(text))
-          PY
-      - name: Commit and push
-        run: |
+          set -e
+          FILE=src/components/LoginPage.tsx
+          test -f "$FILE"
+          grep -q useFallingStars "$FILE"
+          # bump any count to 180
+          sed -i 's/useFallingStars([0-9]*)/useFallingStars(180)/' "$FILE"
+          # enrich boxShadow if simple form present
+          sed -i 's/boxShadow: `0 0 ${s.size \* 3}px ${s.color}`/boxShadow: `0 0 ${s.size * 4}px ${s.color}, 0 0 ${s.size * 8}px ${s.color}55`/' "$FILE" || true
+          grep -n 'useFallingStars(180)' "$FILE"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/components/LoginPage.tsx
+          git add "$FILE"
           git diff --staged --stat
-          git commit -m "Login: denser galaxy starfield (180 particles, 4 depth layers)" || echo nochange
+          git commit -m "Login: more upward galaxy particles (180)" || echo nochange
           git push
