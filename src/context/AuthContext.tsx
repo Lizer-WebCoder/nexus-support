@@ -61,27 +61,73 @@ function roleFromUser(user: User | null): AccountRole {
   return r === 'customer' ? 'customer' : 'agent';
 }
 
+async function enforceAgentApproval(user: User): Promise<void> {
+  if (!supabase) return;
+  const meta = (user.user_metadata?.approval_status as string | undefined) || '';
+  if (meta === 'approved') return;
+
+  let row: { approval_status?: string | null; is_admin?: boolean } | null = null;
+  try {
+    const { data } = await supabase
+      .from('agents')
+      .select('approval_status, is_admin')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    row = data;
+    if (!row && user.email) {
+      const { data: byEmail } = await supabase
+        .from('agents')
+        .select('approval_status, is_admin')
+        .eq('email', user.email)
+        .maybeSingle();
+      row = byEmail;
+    }
+  } catch {
+    /* column may not exist yet */
+  }
+
+  const approval = (row?.approval_status ?? meta) || '';
+  if (!approval || approval === 'approved') return;
+  if (row?.is_admin) return;
+
+  if (approval === 'rejected') {
+    await supabase.auth.signOut();
+    throw new Error('Your agent account was rejected. Contact an administrator.');
+  }
+  await supabase.auth.signOut();
+  throw new Error(
+    'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
   const configError = getSupabaseConfigError();
-  const requiresAuth = isSupabaseConfigured();
 
   useEffect(() => {
     if (!supabase) {
       setLoading(false);
       return;
     }
+    let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
       setSession(data.session);
+      setUser(data.session?.user ?? null);
       setLoading(false);
     });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next);
+      setUser(next?.user ?? null);
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string, expectedRole?: AccountRole) => {
@@ -97,10 +143,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           : 'This account is registered as an agent. Use the Agent tab to sign in.'
       );
     }
-    // Optional: check approval_status in profiles if you add that column
+    if (role === 'agent' && data.user) {
+      await enforceAgentApproval(data.user);
+    }
   };
 
-  const signUp = async (email: string, password: string, fullName?: string, role: AccountRole = 'customer') => {
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName?: string,
+    role: AccountRole = 'customer'
+  ) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -114,7 +167,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (error) throw friendlyAuthError(error);
-    // Sign out so they must wait for approval / sign in after
     if (data.session) {
       await supabase.auth.signOut();
     }
@@ -141,20 +193,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const value: AuthContextValue = {
-    session,
-    user: session?.user ?? null,
-    loading,
-    requiresAuth,
-    configError,
-    accountRole: roleFromUser(session?.user ?? null),
-    signIn,
-    signUp,
-    signOut,
-    resetPassword,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        session,
+        user,
+        loading,
+        requiresAuth: isSupabaseConfigured,
+        configError,
+        accountRole: roleFromUser(user),
+        signIn,
+        signUp,
+        signOut,
+        resetPassword,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
