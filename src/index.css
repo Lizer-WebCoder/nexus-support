@@ -195,15 +195,14 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   to { transform: translateY(-130vh) scale(1); opacity: 0; }
 }
 
-/* Single comet — bright head + long particle trail (like a meteor) */
+/* Comet — slow rainbow arc across the sky */
 .login-comet {
   position: absolute;
   width: 8px;
   height: 8px;
-  animation-name: login-comet-fly;
-  animation-timing-function: linear;
+  animation-name: login-comet-arc;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
   animation-fill-mode: forwards;
-  transform: rotate(var(--comet-angle, 35deg));
   will-change: transform, opacity;
   pointer-events: none;
 }
@@ -211,61 +210,73 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   position: absolute;
   left: 0;
   top: 0;
-  width: 10px;
-  height: 10px;
-  margin: -5px 0 0 -5px;
+  width: 11px;
+  height: 11px;
+  margin: -5.5px 0 0 -5.5px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff 0%, #f5e6ff 30%, #c4b5fd 55%, #7c3aed 100%);
+  background: radial-gradient(circle at 35% 35%, #fff 0%, #ffe4f5 25%, #e0aaff 50%, #7c3aed 100%);
   box-shadow:
-    0 0 8px 3px rgba(255, 255, 255, 0.95),
-    0 0 20px 8px rgba(192, 132, 252, 0.85),
-    0 0 40px 16px rgba(139, 92, 246, 0.45);
+    0 0 10px 4px rgba(255, 255, 255, 0.95),
+    0 0 22px 10px rgba(232, 121, 249, 0.75),
+    0 0 48px 18px rgba(139, 92, 246, 0.4);
   z-index: 3;
 }
 .login-comet-trail {
   position: absolute;
-  left: -160px;
-  top: -4px;
-  width: 160px;
-  height: 8px;
-  border-radius: 4px;
+  left: -220px;
+  top: -5px;
+  width: 220px;
+  height: 10px;
+  border-radius: 999px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(139, 92, 246, 0.15) 15%,
-    rgba(167, 139, 250, 0.45) 45%,
-    rgba(233, 213, 255, 0.75) 75%,
+    rgba(59, 130, 246, 0.25) 12%,
+    rgba(34, 211, 238, 0.45) 28%,
+    rgba(167, 139, 250, 0.55) 48%,
+    rgba(244, 114, 182, 0.7) 68%,
+    rgba(253, 224, 71, 0.55) 85%,
     rgba(255, 255, 255, 0.95) 100%
   );
   box-shadow:
-    0 0 12px 2px rgba(167, 139, 250, 0.4),
-    0 0 28px 6px rgba(139, 92, 246, 0.25);
+    0 0 14px 3px rgba(192, 132, 252, 0.45),
+    0 0 32px 8px rgba(244, 114, 182, 0.25);
   z-index: 1;
-  filter: blur(0.5px);
+  filter: blur(0.6px);
+  transform-origin: right center;
 }
 .login-comet-dust {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, #faf5ff 0%, #c4b5fd 50%, transparent 70%);
-  box-shadow: 0 0 4px 1px rgba(196, 181, 253, 0.6);
+  background: radial-gradient(circle, #fff 0%, #e9d5ff 40%, transparent 70%);
+  box-shadow: 0 0 6px 1px rgba(216, 180, 254, 0.55);
   z-index: 2;
   pointer-events: none;
 }
-@keyframes login-comet-fly {
+@keyframes login-comet-arc {
   0% {
     opacity: 0;
-    transform: rotate(var(--comet-angle, 35deg)) translate(0, 0) scale(0.6);
+    transform: translate(0vw, 0vh) rotate(8deg) scale(0.7);
   }
-  6% {
+  8% {
     opacity: 1;
-    transform: rotate(var(--comet-angle, 35deg)) translate(4vw, 2vh) scale(1);
+    transform: translate(8vw, 3vh) rotate(6deg) scale(1);
   }
-  85% {
+  30% {
     opacity: 1;
+    transform: translate(32vw, -4vh) rotate(2deg) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(52vw, -8vh) rotate(-2deg) scale(1.02);
+  }
+  72% {
+    opacity: 1;
+    transform: translate(75vw, 2vh) rotate(10deg) scale(0.98);
   }
   100% {
     opacity: 0;
-    transform: rotate(var(--comet-angle, 35deg)) translate(95vw, 55vh) scale(0.85);
+    transform: translate(112vw, 22vh) rotate(18deg) scale(0.85);
   }
 }
 
