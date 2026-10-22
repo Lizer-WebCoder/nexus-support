@@ -158,7 +158,9 @@ function SpaceFlybys() {
       {flybys.map((f) => (
         <div key={f.id} className={`login-flyby ${f.fromLeft ? 'login-flyby-ltr' : 'login-flyby-rtl'}`} style={{ top: `${f.top}%`, animationDuration: `${f.duration}s` }}>
           {f.chat && <div className="login-flyby-chat">{f.chat}</div>}
-          <div className="login-flyby-craft">{f.kind === 'ufo' ? <UfoIcon /> : <ShipIcon />}</div>
+          <div className="login-flyby-craft" style={{ transform: f.fromLeft ? undefined : 'scaleX(-1)' }}>
+            {f.kind === 'ufo' ? <UfoIcon /> : <ShipIcon />}
+          </div>
         </div>
       ))}
     </div>
@@ -171,7 +173,7 @@ function easeInOut(t: number) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t
 function randomIn(min: number, max: number) { return min + Math.random() * (max - min); }
 
 function LogoPilotStage() {
-  const asteroids = useAsteroids(6);
+  const asteroids = useAsteroids(4);
   const pilotRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const history = useRef<TrailPoint[]>([]);
@@ -285,7 +287,7 @@ function LogoPilotStage() {
 }
 
 function CosmicFallBackground() {
-  const stars = useFallingStars(64);
+  const stars = useFallingStars(42);
   return (
     <div className="login-cosmos absolute inset-0 overflow-hidden" aria-hidden>
       <div className="login-cosmos-sky absolute inset-0" />
@@ -380,48 +382,48 @@ export default function LoginPage({ onOpenPortal }: Props) {
         </div>
 
         <div className="flex items-center justify-center lg:justify-end">
-          <div className="w-full max-w-md rounded-2xl bg-white/95 backdrop-blur shadow-2xl shadow-fuchsia-950/40 border border-white/60 p-6 sm:p-8">
-            <div className="flex gap-2 mb-6">
-              <button type="button" onClick={() => { setMode('signin'); setError(''); setInfo(''); }} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-                mode === 'signin' ? 'bg-indigo-100 text-indigo-700' : 'text-zinc-500 hover:text-zinc-800'
+          <div className="login-glass-card w-full max-w-md rounded-2xl p-6 sm:p-8">
+            <div className="flex gap-2 mb-6 p-1 rounded-xl bg-white/5 border border-white/10">
+              <button type="button" onClick={() => { setMode('signin'); setError(''); setInfo(''); }} className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
+                mode === 'signin' ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'
               }`}>Sign in</button>
-              <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); }} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-                mode === 'signup' ? 'bg-indigo-100 text-indigo-700' : 'text-zinc-500 hover:text-zinc-800'
+              <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); }} className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
+                mode === 'signup' ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'
               }`}>Create account</button>
             </div>
             {configError && (
-              <div className="mb-4 rounded-lg bg-amber-50 text-amber-800 text-sm px-3 py-2 border border-amber-100">{configError}</div>
+              <div className="mb-4 rounded-lg bg-amber-400/15 text-amber-100 text-sm px-3 py-2 border border-amber-300/30">{configError}</div>
             )}
             {error && (
-              <div className="mb-4 rounded-lg bg-rose-50 text-rose-700 text-sm px-3 py-2 border border-rose-100">{error}</div>
+              <div className="mb-4 rounded-lg bg-rose-500/15 text-rose-100 text-sm px-3 py-2 border border-rose-300/30">{error}</div>
             )}
             {info && (
-              <div className="mb-4 rounded-lg bg-emerald-50 text-emerald-800 text-sm px-3 py-2 border border-emerald-100">{info}</div>
+              <div className="mb-4 rounded-lg bg-emerald-500/15 text-emerald-100 text-sm px-3 py-2 border border-emerald-300/30">{info}</div>
             )}
             <form onSubmit={submit} className="space-y-4">
               {mode === 'signup' && (
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">Name</label>
-                  <input className="w-full rounded-xl border border-zinc-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoComplete="name" />
+                  <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Name</label>
+                  <input className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoComplete="name" />
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Email</label>
-                <input type="email" required className="w-full rounded-xl border border-zinc-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="email" />
+                <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Email</label>
+                <input type="email" required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="email" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Password</label>
                 <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} required minLength={6} className="w-full rounded-xl border border-zinc-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 pr-10" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} />
-                  <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400 hover:text-zinc-600 px-2" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
+                  <input type={showPassword ? 'text' : 'password'} required minLength={6} className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none pr-10" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} />
+                  <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-fuchsia-200/60 hover:text-white px-2" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
                 </div>
               </div>
-              <button type="submit" disabled={loading} className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 transition shadow-lg shadow-indigo-600/25">
+              <button type="submit" disabled={loading} className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 transition shadow-lg shadow-violet-600/40">
                 {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
               </button>
             </form>
             {onOpenPortal && (
-              <button type="button" onClick={onOpenPortal} className="mt-5 w-full text-center text-sm text-indigo-600 hover:text-indigo-500 font-medium">
+              <button type="button" onClick={onOpenPortal} className="mt-5 w-full text-center text-sm text-fuchsia-200/80 hover:text-white font-medium">
                 Customer portal →
               </button>
             )}
