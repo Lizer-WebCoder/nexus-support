@@ -31,27 +31,21 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
 
-      - name: Set Vite base to /nexus-support/preview/
+      - name: Force Vite base /nexus-support/preview/
         run: |
-          python3 << 'PY'
-          from pathlib import Path
-          p = Path('vite.config.ts')
-          t = p.read_text()
-          # Force base for this preview build only
-          t = t.replace(
-              "const base =\n  process.env.GITHUB_ACTIONS === 'true' || process.env.FORCE_GH_PAGES_BASE === 'true'\n    ? '/nexus-support/'\n    : '/'",
-              "const base = '/nexus-support/preview/'",
-          )
-          if "'/nexus-support/preview/'" not in t:
-              # Fallback: simple replace of the production base string
-              t = t.replace("'/nexus-support/'", "'/nexus-support/preview/'")
-          p.write_text(t)
-          print(p.read_text())
-          PY
+          cat > vite.config.ts << 'EOF'
+          import { defineConfig } from 'vite'
+          import react from '@vitejs/plugin-react'
+
+          export default defineConfig({
+            plugins: [react()],
+            base: '/nexus-support/preview/',
+          })
+          EOF
+          cat vite.config.ts
 
       - name: Build
         env:
-          GITHUB_ACTIONS: 'true'
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
@@ -59,6 +53,7 @@ jobs:
           touch dist/.nojekyll
           echo "--- dist/index.html ---"
           cat dist/index.html
+          grep -q '/nexus-support/preview/assets/' dist/index.html || (echo "BASE PATH WRONG" && exit 1)
 
       - name: Publish preview/ on gh-pages (production root untouched)
         env:
@@ -86,7 +81,6 @@ jobs:
           cat preview/index.html
 
           git add -A
-          git status
           git commit -m "preview kirzhian ${GITHUB_SHA}" || echo "No changes"
           git push -f origin HEAD:gh-pages
           echo "Preview: https://right-click-v4.github.io/nexus-support/preview/"
