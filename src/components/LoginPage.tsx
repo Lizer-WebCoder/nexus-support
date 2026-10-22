@@ -83,18 +83,12 @@ function useAsteroids(count: number) {
   }, [count]);
 }
 
-const CHAT_LINES = [
-  'WOAH COOL', 'NICE TRAIL!', 'Is that Nexus?', 'Sick logo', 'Beep boop',
-  'Over here!', 'Support desk?', 'Zoom!', 'Hello agents', 'To the branch!',
-];
-
 type Flyby = {
   id: number;
   kind: 'ufo' | 'ship';
   top: number;
   duration: number;
   fromLeft: boolean;
-  chat: string | null;
 };
 
 function UfoIcon() {
@@ -112,13 +106,24 @@ function UfoIcon() {
 }
 
 function ShipIcon() {
+  /* Drawn facing RIGHT: nose at right, engines + flame at left */
   return (
-    <svg width="64" height="24" viewBox="0 0 64 24" fill="none">
-      <path d="M4 14 L48 8 L58 12 L48 16 L4 14 Z" fill="#94a3b8" />
-      <path d="M48 8 L58 12 L48 16 Z" fill="#64748b" />
-      <rect x="18" y="10" width="10" height="4" rx="1" fill="#67e8f9" opacity="0.8" />
-      <path d="M4 14 L0 12 L0 16 Z" fill="#f0abfc" opacity="0.7" />
-      <circle cx="52" cy="12" r="2" fill="#fde68a" />
+    <svg width="72" height="28" viewBox="0 0 72 28" fill="none" aria-hidden>
+      <ellipse cx="10" cy="14" rx="10" ry="5" fill="url(#rocketFlame)" opacity="0.9" />
+      <path d="M14 10 L14 18 L8 20 L4 14 L8 8 Z" fill="#c4b5fd" opacity="0.85" />
+      <path d="M16 9 L52 6 L66 14 L52 22 L16 19 Z" fill="#e2e8f0" />
+      <path d="M52 6 L66 14 L52 22 Z" fill="#a5b4fc" />
+      <rect x="28" y="11" width="12" height="6" rx="1.5" fill="#67e8f9" opacity="0.9" />
+      <circle cx="58" cy="14" r="2.2" fill="#fde68a" />
+      <path d="M22 9 L18 4 L24 9 Z" fill="#94a3b8" />
+      <path d="M22 19 L18 24 L24 19 Z" fill="#94a3b8" />
+      <defs>
+        <radialGradient id="rocketFlame" cx="80%" cy="50%" r="70%">
+          <stop offset="0%" stopColor="#fde047" />
+          <stop offset="45%" stopColor="#f97316" />
+          <stop offset="100%" stopColor="transparent" />
+        </radialGradient>
+      </defs>
     </svg>
   );
 }
@@ -134,12 +139,11 @@ function SpaceFlybys() {
       timer = setTimeout(() => {
         if (cancelled) return;
         const id = ++idRef.current;
-        const kind: 'ufo' | 'ship' = Math.random() < 0.5 ? 'ufo' : 'ship';
+        const kind: 'ufo' | 'ship' = Math.random() < 0.35 ? 'ufo' : 'ship';
         const duration = 6 + Math.random() * 5;
         const fromLeft = Math.random() < 0.5;
-        const chat = Math.random() < 0.55 ? CHAT_LINES[Math.floor(Math.random() * CHAT_LINES.length)] : null;
         const top = 12 + Math.random() * 55;
-        setFlybys((prev) => [...prev, { id, kind, top, duration, fromLeft, chat }]);
+        setFlybys((prev) => [...prev, { id, kind, top, duration, fromLeft }]);
         setTimeout(() => setFlybys((prev) => prev.filter((f) => f.id !== id)), duration * 1000 + 200);
         schedule();
       }, wait);
@@ -147,7 +151,7 @@ function SpaceFlybys() {
     timer = setTimeout(() => {
       if (cancelled) return;
       const id = ++idRef.current;
-      setFlybys([{ id, kind: Math.random() < 0.5 ? 'ufo' : 'ship', top: 20 + Math.random() * 40, duration: 7, fromLeft: true, chat: 'WOAH COOL' }]);
+      setFlybys([{ id, kind: 'ship', top: 20 + Math.random() * 40, duration: 7, fromLeft: true }]);
       setTimeout(() => setFlybys((p) => p.filter((f) => f.id !== id)), 7200);
       schedule();
     }, 8000);
@@ -157,8 +161,7 @@ function SpaceFlybys() {
     <div className="login-flybys absolute inset-0 pointer-events-none z-[7] overflow-hidden hidden lg:block">
       {flybys.map((f) => (
         <div key={f.id} className={`login-flyby ${f.fromLeft ? 'login-flyby-ltr' : 'login-flyby-rtl'}`} style={{ top: `${f.top}%`, animationDuration: `${f.duration}s` }}>
-          {f.chat && <div className="login-flyby-chat">{f.chat}</div>}
-          <div className="login-flyby-craft" style={{ transform: f.fromLeft ? undefined : 'scaleX(-1)' }}>
+          <div className="login-flyby-craft">
             {f.kind === 'ufo' ? <UfoIcon /> : <ShipIcon />}
           </div>
         </div>
