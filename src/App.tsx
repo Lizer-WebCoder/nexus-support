@@ -113,21 +113,12 @@ function AgentShell() {
   }
 
   if (requiresAuth && user && accountRole === 'customer') {
+    if (!window.location.hash.toLowerCase().includes('portal')) {
+      window.location.hash = 'portal';
+    }
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-zinc-50 px-4">
-        <p className="text-sm text-zinc-600 text-center">This account is a customer account. Open the customer portal instead.</p>
-        <button
-          type="button"
-          className="text-sm font-medium text-violet-600 hover:text-violet-700"
-          onClick={() => {
-            window.location.hash = 'portal';
-          }}
-        >
-          Go to Customer Portal →
-        </button>
-        <button type="button" className="text-xs text-zinc-400" onClick={() => void signOut()}>
-          Sign out
-        </button>
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 text-zinc-500 text-sm">
+        Opening customer portal…
       </div>
     );
   }
