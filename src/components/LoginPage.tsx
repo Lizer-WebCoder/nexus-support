@@ -152,61 +152,112 @@ function SpaceFlybys() {
 }
 
 function ShootingStars() {
-  const [star, setStar] = useState<{
-    id: number;
-    top: number;
-    duration: number;
-  } | null>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
+  const starRef = useRef<HTMLDivElement>(null);
   const idRef = useRef(0);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    let raf = 0;
     let spawnTimer: ReturnType<typeof setTimeout>;
-    let clearTimer: ReturnType<typeof setTimeout>;
+    let running = false;
 
-    const schedule = (delay: number) => {
-      spawnTimer = setTimeout(() => {
+    const ease = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const flyOnce = () => {
+      if (cancelled || running) return;
+      const layer = layerRef.current;
+      const el = starRef.current;
+      if (!layer || !el) return;
+
+      const w = layer.clientWidth || window.innerWidth;
+      const h = layer.clientHeight || window.innerHeight;
+      if (w < 20 || h < 20) return;
+
+      running = true;
+      const id = ++idRef.current;
+      void id;
+
+      // Quadratic bezier: start → peak → end (gentle arc)
+      const startX = -40;
+      const startY = h * (0.08 + Math.random() * 0.18);
+      const endX = w + 40;
+      const endY = startY + h * (0.08 + Math.random() * 0.12);
+      const ctrlX = w * (0.42 + Math.random() * 0.16);
+      const ctrlY = startY - h * (0.06 + Math.random() * 0.08);
+
+      const duration = 4800 + Math.random() * 1600;
+      const t0 = performance.now();
+      setVisible(true);
+
+      const tick = (now: number) => {
         if (cancelled) return;
-        const id = ++idRef.current;
-        const top = 8 + Math.random() * 20;
-        const duration = 5.2 + Math.random() * 1.6;
-        setStar({ id, top, duration });
-        clearTimer = setTimeout(() => {
-          if (!cancelled) setStar((s) => (s?.id === id ? null : s));
-          if (!cancelled) schedule(26000 + Math.random() * 14000);
-        }, duration * 1000 + 80);
-      }, delay);
+        const raw = Math.min(1, (now - t0) / duration);
+        const t = ease(raw);
+        // Quadratic Bezier
+        const inv = 1 - t;
+        const x = inv * inv * startX + 2 * inv * t * ctrlX + t * t * endX;
+        const y = inv * inv * startY + 2 * inv * t * ctrlY + t * t * endY;
+        // Tangent for slight rotation
+        const dx = 2 * inv * (ctrlX - startX) + 2 * t * (endX - ctrlX);
+        const dy = 2 * inv * (ctrlY - startY) + 2 * t * (endY - ctrlY);
+        const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+
+        let opacity = 1;
+        if (raw < 0.08) opacity = raw / 0.08;
+        else if (raw > 0.88) opacity = (1 - raw) / 0.12;
+
+        el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${angle}deg)`;
+        el.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+
+        if (raw < 1) {
+          raf = requestAnimationFrame(tick);
+        } else {
+          el.style.opacity = '0';
+          setVisible(false);
+          running = false;
+          if (!cancelled) {
+            spawnTimer = setTimeout(flyOnce, 26000 + Math.random() * 14000);
+          }
+        }
+      };
+
+      el.style.opacity = '0';
+      el.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
+      raf = requestAnimationFrame(tick);
     };
 
-    schedule(8000 + Math.random() * 4000);
+    spawnTimer = setTimeout(flyOnce, 7000 + Math.random() * 3000);
+
     return () => {
       cancelled = true;
+      cancelAnimationFrame(raf);
       clearTimeout(spawnTimer);
-      clearTimeout(clearTimer);
     };
   }, []);
 
   return (
-    <div className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden>
-      {star && (
-        <div
-          key={star.id}
-          className="login-shooting-star"
-          style={{
-            top: `${star.top}%`,
-            animationDuration: `${star.duration}s`,
-          }}
-        >
-          <span className="login-star-trail" />
-          <span className="login-star-sparkles" />
-          <svg className="login-star-glyph" width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-            <path
-              fill="#ffe9a8"
-              d="M12 1.5 L13.8 9.2 L21.5 9.5 L15.4 14 L17.5 21.5 L12 17.2 L6.5 21.5 L8.6 14 L2.5 9.5 L10.2 9.2 Z"
-            />
-          </svg>
-        </div>
-      )}
+    <div
+      ref={layerRef}
+      className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden"
+      aria-hidden
+    >
+      <div
+        ref={starRef}
+        className="login-shooting-star"
+        style={{ opacity: visible ? undefined : 0, visibility: visible ? 'visible' : 'hidden' }}
+      >
+        <span className="login-star-trail" />
+        <span className="login-star-sparkles" />
+        <svg className="login-star-glyph" width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+          <path
+            fill="#ffe9a8"
+            d="M12 1.5 L13.8 9.2 L21.5 9.5 L15.4 14 L17.5 21.5 L12 17.2 L6.5 21.5 L8.6 14 L2.5 9.5 L10.2 9.2 Z"
+          />
+        </svg>
+      </div>
     </div>
   );
 }
