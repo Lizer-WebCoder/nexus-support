@@ -49,7 +49,7 @@ function friendlyAuthError(err: unknown): Error {
   }
   if (lower.includes('email not confirmed')) {
     return new Error(
-      'Confirm your email in the inbox before signing in (or disable Confirm email in Supabase Auth settings).'
+      'Email not confirmed. In Supabase → Authentication → Providers → Email, turn OFF "Confirm email", then try again.'
     );
   }
   return err;
@@ -60,123 +60,86 @@ function roleFromUser(user: User | null): AccountRole {
   return r === 'customer' ? 'customer' : 'agent';
 }
 
+/** Only hard-block rejected agents. Pending/missing must not lock admins out. */
 async function assertAgentAllowed(user: User): Promise<void> {
   if (!supabase) return;
   if (roleFromUser(user) !== 'agent') return;
 
-  const meta = (user.user_metadata?.approval_status as string | undefined) || '';
   const email = (user.email || '').trim().toLowerCase();
+  const meta = (user.user_metadata?.approval_status as string | undefined) || '';
 
-  let approval: string | null | undefined = undefined;
   try {
+    let row: { approval_status?: string | null; is_admin?: boolean } | null = null;
+
     const { data: byId } = await supabase
       .from('agents')
-      .select('approval_status')
+      .select('approval_status, is_admin')
       .eq('user_id', user.id)
       .maybeSingle();
-    if (byId && byId.approval_status !== undefined) {
-      approval = byId.approval_status as string | null;
-    }
-  } catch {
-    /* column may not exist */
-  }
-  if (approval === undefined && email) {
-    try {
+    if (byId) row = byId;
+
+    if (!row && email) {
       const { data: byEmail } = await supabase
         .from('agents')
-        .select('approval_status')
+        .select('approval_status, is_admin')
         .ilike('email', email)
         .limit(1)
         .maybeSingle();
-      if (byEmail && byEmail.approval_status !== undefined) {
-        approval = byEmail.approval_status as string | null;
-      }
-    } catch {
-      /* ignore */
+      if (byEmail) row = byEmail;
     }
-  }
 
-  if (approval === undefined || approval === null || approval === '') {
-    if (meta === 'pending') {
+    if (row?.is_admin) return;
+
+    const approval = row?.approval_status ?? meta;
+    if (approval === 'rejected') {
       await supabase.auth.signOut();
       throw new Error(
-        'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
+        'This agent account was rejected by an administrator. Contact support if you need access.'
       );
     }
-    if (meta === 'rejected') {
-      await supabase.auth.signOut();
-      throw new Error('This agent account was rejected by an administrator. Contact support if you need access.');
-    }
-    return;
+  } catch (e) {
+    if (e instanceof Error && /rejected/i.test(e.message)) throw e;
   }
-
-  if (approval === 'approved') return;
-
-  await supabase.auth.signOut();
-  if (approval === 'rejected') {
-    throw new Error('This agent account was rejected by an administrator. Contact support if you need access.');
-  }
-  throw new Error(
-    'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
-  );
 }
 
+/** Only hard-block rejected customers. Pending does not block portal sign-in. */
 async function assertCustomerAllowed(user: User): Promise<void> {
   if (!supabase) return;
   if (roleFromUser(user) !== 'customer') return;
 
   const email = (user.email || '').trim().toLowerCase();
-  if (!email) {
-    await supabase.auth.signOut();
-    throw new Error('Customer account has no email.');
-  }
+  if (!email) return;
 
-  let status: string | null = null;
-  const { data: byId } = await supabase
-    .from('customers')
-    .select('status')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (byId?.status) status = byId.status;
+  try {
+    let status: string | null = null;
 
-  if (!status) {
-    const { data: byEmail } = await supabase
+    const { data: byId } = await supabase
       .from('customers')
       .select('status')
-      .ilike('email', email)
-      .order('created_at', { ascending: false })
-      .limit(1)
+      .eq('id', user.id)
       .maybeSingle();
-    if (byEmail?.status) status = byEmail.status;
-  }
+    if (byId?.status) status = byId.status;
 
-  if (!status) {
-    try {
-      await supabase.from('customers').upsert({
-        id: user.id,
-        name: (user.user_metadata?.full_name as string) || email.split('@')[0],
-        email,
-        role: 'Customer',
-        status: 'approved',
-      }, { onConflict: 'id' });
-    } catch {
-      /* ignore */
+    if (!status) {
+      const { data: byEmail } = await supabase
+        .from('customers')
+        .select('status')
+        .ilike('email', email)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (byEmail?.status) status = byEmail.status;
     }
-    return;
+
+    if (status === 'rejected') {
+      await supabase.auth.signOut();
+      throw new Error(
+        'This customer account was rejected by an administrator. Contact support if you need access.'
+      );
+    }
+  } catch (e) {
+    if (e instanceof Error && /rejected/i.test(e.message)) throw e;
   }
-
-  if (status === 'approved') return;
-
-  await supabase.auth.signOut();
-
-  if (status === 'rejected') {
-    throw new Error(
-      'This customer account was rejected by an administrator. Contact support if you need access.'
-    );
-  }
-  throw new Error(
-    'Your account is pending admin approval. Open Users → Pending as an admin and Approve this account, then try again.'
-  );
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -196,16 +159,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data } = await supabase.auth.getSession();
         if (cancelled) return;
-        if (data.session?.user && roleFromUser(data.session.user) === 'customer') {
+        const u = data.session?.user;
+        if (u && roleFromUser(u) === 'customer') {
           try {
-            await assertCustomerAllowed(data.session.user);
+            await assertCustomerAllowed(u);
             if (!cancelled) setSession(data.session);
           } catch {
             if (!cancelled) setSession(null);
           }
-        } else if (data.session?.user && roleFromUser(data.session.user) === 'agent') {
+        } else if (u && roleFromUser(u) === 'agent') {
           try {
-            await assertAgentAllowed(data.session.user);
+            await assertAgentAllowed(u);
             if (!cancelled) setSession(data.session);
           } catch {
             if (!cancelled) setSession(null);
@@ -252,12 +216,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
     if (error) throw friendlyAuthError(error);
     if (data.user) {
       if (roleFromUser(data.user) === 'customer') await assertCustomerAllowed(data.user);
       else await assertAgentAllowed(data.user);
     }
+    if (data.session) setSession(data.session);
   };
 
   const signUp = async (
@@ -277,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           full_name: displayName,
           role,
-          approval_status: role === 'agent' ? 'pending' : 'approved',
+          approval_status: 'pending',
         },
       },
     });
@@ -289,32 +257,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: displayName,
         email: normalizedEmail,
         role: 'Customer',
-        status: 'approved',
+        status: 'pending',
         created_at: new Date().toISOString(),
       };
-
       const { error: cErr } = await supabase.from('customers').upsert(row, { onConflict: 'id' });
       if (cErr) {
         const { data: existing } = await supabase
           .from('customers')
-          .select('id, status')
+          .select('id')
           .ilike('email', normalizedEmail)
           .maybeSingle();
         if (existing?.id) {
           await supabase
             .from('customers')
-            .update({ status: 'approved', name: displayName })
+            .update({ status: 'pending', name: displayName })
             .eq('id', existing.id);
         } else {
-          const { error: cErr2 } = await supabase.from('customers').insert({
+          await supabase.from('customers').insert({
             name: displayName,
             email: normalizedEmail,
             role: 'Customer',
-            status: 'approved',
+            status: 'pending',
           });
-          if (cErr2) console.warn('Could not create customer profile', cErr2.message);
         }
       }
+      if (data.session) setSession(data.session);
       return;
     }
 
@@ -329,22 +296,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         color: '#6366f1',
         is_admin: false,
       };
-      const { error: aErr } = await supabase.from('agents').insert({ ...base, approval_status: 'pending' });
+      const { error: aErr } = await supabase
+        .from('agents')
+        .insert({ ...base, approval_status: 'pending' });
       if (aErr) {
-        console.warn('Agent queue with approval_status failed', aErr.message);
         const { error: aErr2 } = await supabase.from('agents').insert(base);
-        if (aErr2) console.warn('Agent insert fallback failed', aErr2.message);
+        if (aErr2) console.warn('Agent insert failed', aErr2.message);
       }
-      await supabase.auth.signOut();
-      throw new Error(
-        'Account created. An administrator must approve it under Users → Pending before you can sign in to the Agent Workspace.'
-      );
+      if (data.session) setSession(data.session);
+      return;
     }
   };
 
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
+    setSession(null);
   };
 
   const user = session?.user ?? null;
