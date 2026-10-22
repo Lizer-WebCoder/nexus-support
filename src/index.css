@@ -91,7 +91,6 @@ html.nexus-dark textarea::placeholder { color: #71717a !important; }
 html.nexus-dark main { background-color: #09090b; }
 html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 
-/* Glass login card — soft transparent purple, cosmos shows through */
 .login-glass-card {
   background: linear-gradient(
     160deg,
@@ -161,24 +160,12 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   animation-fill-mode: forwards;
   opacity: 0;
 }
-.login-planet-rise-body {
-  border-radius: 50%;
+.login-planet-svg {
   display: block;
-  position: relative;
-  z-index: 1;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  filter: drop-shadow(0 0 14px rgba(167, 139, 250, 0.3));
 }
-.login-planet-rise-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) rotate(-22deg);
-  border-radius: 50%;
-  border-style: solid;
-  border-width: 2px;
-  box-shadow: 0 0 12px rgba(253, 230, 138, 0.15);
-  z-index: 0;
-  pointer-events: none;
+.login-planet-bands {
+  mix-blend-mode: multiply;
 }
 
 @keyframes login-planet-rise {
@@ -206,6 +193,42 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   10% { opacity: 0.9; }
   85% { opacity: 0.55; }
   to { transform: translateY(-130vh) scale(1); opacity: 0; }
+}
+
+.login-shooting-star {
+  position: absolute;
+  width: 120px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(196, 181, 253, 0.7) 40%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 6px 2px rgba(255, 255, 255, 0.5),
+    0 0 16px 4px rgba(167, 139, 250, 0.35);
+  animation-name: login-shoot-streak;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+  opacity: 0;
+  transform-origin: left center;
+  pointer-events: none;
+}
+@keyframes login-shoot-streak {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scaleX(0.2);
+  }
+  8% {
+    opacity: 1;
+    transform: translate(8px, 4px) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(180px, 90px) scaleX(0.4);
+  }
 }
 
 .login-cosmos-vignette {
@@ -266,36 +289,6 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   to { transform: rotate(360deg); }
 }
 
-.login-asteroid {
-  position: absolute;
-  bottom: -12%;
-  z-index: 5;
-  background: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  animation-name: login-rock-rise;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  opacity: 0;
-}
-.login-asteroid-svg {
-  display: block;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-}
-
-@keyframes login-rock-rise {
-  0% {
-    transform: translate(0, 0) rotate(0deg) scale(0.65);
-    opacity: 0;
-  }
-  5% { opacity: 0.7; }
-  70% { opacity: 0.55; }
-  100% {
-    transform: translate(var(--rock-drift, 20px), -78vh) rotate(var(--rock-spin, 180deg)) scale(1.1);
-    opacity: 0;
-  }
-}
-
 .login-flyby {
   position: absolute;
   display: flex;
@@ -335,6 +328,34 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 .login-flyby-rtl .login-flyby-craft {
   transform: scaleX(-1);
 }
+.login-flyby-chat {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #faf5ff;
+  background: rgba(76, 29, 149, 0.88);
+  border: 1px solid rgba(196, 181, 253, 0.4);
+  border-radius: 10px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  position: relative;
+  animation: login-chat-pop 0.35s ease-out;
+  margin-bottom: 2px;
+}
+.login-flyby-chat::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  margin-left: -4px;
+  border: 5px solid transparent;
+  border-top-color: rgba(76, 29, 149, 0.88);
+}
+@keyframes login-chat-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .login-star,
@@ -342,9 +363,9 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   .login-nebula-b,
   .login-planet-rise,
   .login-logo-arcs,
-  .login-asteroid,
   .login-flyby-ltr,
-  .login-flyby-rtl {
+  .login-flyby-rtl,
+  .login-shooting-star {
     animation: none !important;
   }
 }
