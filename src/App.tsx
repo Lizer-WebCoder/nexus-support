@@ -104,7 +104,7 @@ function AgentShell() {
   if (requiresAuth && !user) {
     return (
       <LoginPage
-        audience="agent"
+        audience="customer"
         onOpenPortal={() => {
           window.location.hash = 'portal';
         }}

@@ -328,7 +328,7 @@ const CAPABILITIES = [
 export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenAgent }: Props) {
   const { signIn, signUp, resetPassword, configError } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [audienceTab, setAudienceTab] = useState<'agent' | 'customer'>(audience === 'agent' ? 'agent' : 'customer');
+  const [audienceTab, setAudienceTab] = useState<'agent' | 'customer'>('customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -453,10 +453,10 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
                 <p className="mt-1.5 text-xs text-fuchsia-200/80 text-center">{cardSub}</p>
               </div>
               <div className="flex gap-2 mb-5 p-1 rounded-xl bg-white/5 border border-white/10">
-                <button type="button" onClick={() => { setAudienceTab('agent'); setError(''); setInfo(''); }}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${isAgent ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'}`}>Agent</button>
                 <button type="button" onClick={() => { setAudienceTab('customer'); setError(''); setInfo(''); }}
                   className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${!isAgent ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'}`}>Customer</button>
+                <button type="button" onClick={() => { setAudienceTab('agent'); setError(''); setInfo(''); }}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${isAgent ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'}`}>Agent</button>
               </div>
               {configError && <div className="mb-4 rounded-lg bg-amber-400/15 text-amber-100 text-sm px-3 py-2 border border-amber-300/30">{configError}</div>}
               {error && <div className="mb-4 rounded-lg bg-rose-500/15 text-rose-100 text-sm px-3 py-2 border border-rose-300/30">{error}</div>}
