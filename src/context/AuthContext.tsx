@@ -17,7 +17,7 @@ interface AuthContextValue {
   requiresAuth: boolean;
   configError: string | null;
   accountRole: AccountRole;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, expectedRole?: AccountRole) => Promise<void>;
   signUp: (email: string, password: string, fullName?: string, role?: AccountRole) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -60,7 +60,6 @@ function roleFromUser(user: User | null): AccountRole {
   return r === 'customer' ? 'customer' : 'agent';
 }
 
-/** Admins always pass. Pending/rejected agents are blocked. Legacy (no status) pass. */
 async function assertAgentAllowed(user: User): Promise<void> {
   if (!supabase) return;
   if (roleFromUser(user) !== 'agent') return;
@@ -107,7 +106,6 @@ async function assertAgentAllowed(user: User): Promise<void> {
   }
 }
 
-/** Block pending + rejected customers until an admin approves in Users → Pending. */
 async function assertCustomerAllowed(user: User): Promise<void> {
   if (!supabase) return;
   if (roleFromUser(user) !== 'customer') return;
@@ -227,17 +225,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, expectedRole?: AccountRole) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     });
     if (error) throw friendlyAuthError(error);
-    if (data.user) {
-      if (roleFromUser(data.user) === 'customer') await assertCustomerAllowed(data.user);
-      else await assertAgentAllowed(data.user);
+    if (!data.user) return;
+
+    const actual = roleFromUser(data.user);
+
+    if (expectedRole === 'agent' && actual === 'customer') {
+      await supabase.auth.signOut();
+      setSession(null);
+      throw new Error(
+        'This is a customer account. Switch to the Customer tab (or open the Customer Portal) to sign in.'
+      );
     }
+    if (expectedRole === 'customer' && actual === 'agent') {
+      await supabase.auth.signOut();
+      setSession(null);
+      throw new Error(
+        'This is an agent account. Switch to the Agent tab to sign in to the Agent Workspace.'
+      );
+    }
+
+    if (actual === 'customer') await assertCustomerAllowed(data.user);
+    else await assertAgentAllowed(data.user);
+
     if (data.session) setSession(data.session);
   };
 
