@@ -91,29 +91,34 @@ html.nexus-dark textarea::placeholder { color: #71717a !important; }
 html.nexus-dark main { background-color: #09090b; }
 html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 
-/* Glass login card — translucent, fits purple cosmos */
+/* Glass login card — soft transparent purple, cosmos shows through */
 .login-glass-card {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(139, 92, 246, 0.08));
-  backdrop-filter: blur(22px) saturate(1.4);
-  -webkit-backdrop-filter: blur(22px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(
+    160deg,
+    rgba(88, 28, 135, 0.35) 0%,
+    rgba(30, 10, 60, 0.45) 50%,
+    rgba(15, 5, 40, 0.5) 100%
+  );
+  backdrop-filter: blur(20px) saturate(1.35);
+  -webkit-backdrop-filter: blur(20px) saturate(1.35);
+  border: 1px solid rgba(196, 181, 253, 0.28);
   box-shadow:
-    0 8px 32px rgba(0, 0, 20, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    0 12px 40px rgba(0, 0, 20, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 .login-glass-input {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(196, 181, 253, 0.25) !important;
   color: #faf5ff !important;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 .login-glass-input::placeholder {
-  color: rgba(233, 213, 255, 0.45) !important;
+  color: rgba(233, 213, 255, 0.4) !important;
 }
 .login-glass-input:focus {
-  border-color: rgba(167, 139, 250, 0.55) !important;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
-  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(167, 139, 250, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.28);
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .login-cosmos-sky {
@@ -283,7 +288,7 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
     transform: translate(0, 0) rotate(0deg) scale(0.65);
     opacity: 0;
   }
-  5% { opacity: 0.75; }
+  5% { opacity: 0.7; }
   70% { opacity: 0.55; }
   100% {
     transform: translate(var(--rock-drift, 20px), -78vh) rotate(var(--rock-spin, 180deg)) scale(1.1);
@@ -313,46 +318,22 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 }
 @keyframes login-flyby-ltr {
   from { transform: translateX(0) translateY(0); }
-  30%  { transform: translateX(30vw) translateY(-8px); }
-  60%  { transform: translateX(60vw) translateY(6px); }
-  to   { transform: translateX(110vw) translateY(-4px); }
+  25%  { transform: translateX(28vw) translateY(-6px); }
+  55%  { transform: translateX(58vw) translateY(4px); }
+  to   { transform: translateX(115vw) translateY(-2px); }
 }
 @keyframes login-flyby-rtl {
   from { transform: translateX(0) translateY(0); }
-  30%  { transform: translateX(-30vw) translateY(6px); }
-  60%  { transform: translateX(-60vw) translateY(-8px); }
-  to   { transform: translateX(-110vw) translateY(4px); }
+  25%  { transform: translateX(-28vw) translateY(-6px); }
+  55%  { transform: translateX(-58vw) translateY(4px); }
+  to   { transform: translateX(-115vw) translateY(-2px); }
 }
 .login-flyby-craft {
-  filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.65));
-  transition: transform 0.2s;
+  filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.7));
+  transform: scaleX(1);
 }
-.login-flyby-chat {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: #faf5ff;
-  background: rgba(76, 29, 149, 0.85);
-  border: 1px solid rgba(196, 181, 253, 0.35);
-  border-radius: 10px;
-  padding: 3px 8px;
-  white-space: nowrap;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-  position: relative;
-  animation: login-chat-pop 0.35s ease-out;
-}
-.login-flyby-chat::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  margin-left: -4px;
-  border: 5px solid transparent;
-  border-top-color: rgba(76, 29, 149, 0.85);
-}
-@keyframes login-chat-pop {
-  from { transform: scale(0.6); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
+.login-flyby-rtl .login-flyby-craft {
+  transform: scaleX(-1);
 }
 
 @media (prefers-reduced-motion: reduce) {
