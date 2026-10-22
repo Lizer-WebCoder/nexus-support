@@ -11,10 +11,19 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Assemble and run patcher
+      - name: Decode and run embedded patcher
         run: |
-          cat scripts/patch_parts/part0.pyfrag scripts/patch_parts/part1.pyfrag scripts/patch_parts/part2.pyfrag scripts/patch_parts/part3.pyfrag > scripts/apply_login_tabs_patch.py
-          python3 scripts/apply_login_tabs_patch.py
+          python3 << 'EOF'
+          import gzip, base64
+          from pathlib import Path
+          b64 = Path('scripts/patch-data/wf.b64gz').read_text().strip()
+          text = gzip.decompress(base64.b64decode(b64)).decode()
+          start = text.index("python3 << 'PATCH_EOF'\n") + len("python3 << 'PATCH_EOF'\n")
+          end = text.index("\nPATCH_EOF\n")
+          Path('/tmp/apply_login_tabs_patch.py').write_text(text[start:end])
+          print('extracted patcher', end - start, 'bytes')
+          EOF
+          python3 /tmp/apply_login_tabs_patch.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/context/AuthContext.tsx src/components/LoginPage.tsx src/components/UsersAdminPage.tsx
