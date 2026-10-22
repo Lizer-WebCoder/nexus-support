@@ -169,7 +169,7 @@ function ShootingStars() {
         if (cancelled) return;
         const id = ++idRef.current;
         const top = 8 + Math.random() * 20;
-        const duration = 3.5 + Math.random() * 1.2;
+        const duration = 5.2 + Math.random() * 1.6;
         setStar({ id, top, duration });
         clearTimer = setTimeout(() => {
           if (!cancelled) setStar((s) => (s?.id === id ? null : s));
@@ -299,15 +299,15 @@ function LogoPilotStage() {
               <stop offset="100%" stopColor="#86198f" stopOpacity="0" />
             </linearGradient>
             <filter id="starGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="7" result="blur" />
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
             <filter id="starBloom" x="-150%" y="-150%" width="400%" height="400%">
-              <feGaussianBlur stdDeviation="16" />
+              <feGaussianBlur stdDeviation="10" />
             </filter>
           </defs>
-          <path d={pathD} fill="none" stroke="url(#starTrailGrad)" strokeWidth={48} strokeLinecap="round" strokeLinejoin="round" filter="url(#starBloom)" opacity={0.5} />
-          <path d={pathD} fill="none" stroke="url(#starTrailGrad)" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round" filter="url(#starGlow)" opacity={0.85} />
+          <path d={pathD} fill="none" stroke="url(#starTrailGrad)" strokeWidth={22} strokeLinecap="round" strokeLinejoin="round" filter="url(#starBloom)" opacity={0.4} />
+          <path d={pathD} fill="none" stroke="url(#starTrailGrad)" strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" filter="url(#starGlow)" opacity={0.8} />
         </svg>
       )}
       {trail.slice(2, 12).map((p, i) => {
