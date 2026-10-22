@@ -152,7 +152,7 @@ function SpaceFlybys() {
 }
 
 function ShootingStars() {
-  const [comet, setComet] = useState<{
+  const [star, setStar] = useState<{
     id: number;
     top: number;
     left: number;
@@ -167,64 +167,78 @@ function ShootingStars() {
     const spawn = () => {
       if (cancelled) return;
       const id = ++idRef.current;
-      const top = 4 + Math.random() * 18;
-      const left = -8 + Math.random() * 12;
-      const duration = 4.2 + Math.random() * 1.6;
-      setComet({ id, top, left, duration });
+      const top = 6 + Math.random() * 22;
+      const left = -6 + Math.random() * 10;
+      const duration = 3.8 + Math.random() * 1.4;
+      setStar({ id, top, left, duration });
       setTimeout(() => {
-        if (!cancelled) setComet((c) => (c?.id === id ? null : c));
+        if (!cancelled) setStar((s) => (s?.id === id ? null : s));
       }, duration * 1000 + 200);
-      timer = setTimeout(spawn, (32 + Math.random() * 18) * 1000);
+      timer = setTimeout(spawn, (28 + Math.random() * 16) * 1000);
     };
 
-    timer = setTimeout(spawn, 10000 + Math.random() * 5000);
+    timer = setTimeout(spawn, 9000 + Math.random() * 5000);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
   }, []);
 
-  if (!comet) {
+  if (!star) {
     return <div className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden />;
   }
 
-  const particles = Array.from({ length: 14 }, (_, i) => {
-    const t = i / 13;
+  const glitter = Array.from({ length: 18 }, (_, i) => {
+    const t = i / 17;
     return {
       key: i,
-      x: -12 - t * 180,
-      y: Math.sin(i * 0.9) * (2 + t * 6),
-      size: Math.max(1.5, 6 * (1 - t * 0.8)),
-      opacity: Math.max(0.12, 0.85 * (1 - t)),
+      x: -10 - t * 160,
+      y: Math.sin(i * 1.3) * (1.5 + t * 5),
+      size: Math.max(1, 3.2 * (1 - t * 0.75)),
+      opacity: Math.max(0.1, 0.7 * (1 - t)),
+      delay: t * 0.15,
     };
   });
 
   return (
     <div className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden>
       <div
-        key={comet.id}
-        className="login-comet"
+        key={star.id}
+        className="login-shooting-star"
         style={{
-          top: `${comet.top}%`,
-          left: `${comet.left}%`,
-          animationDuration: `${comet.duration}s`,
+          top: `${star.top}%`,
+          left: `${star.left}%`,
+          animationDuration: `${star.duration}s`,
         }}
       >
-        <span className="login-comet-trail" />
-        {particles.map((p) => (
+        <span className="login-star-trail" />
+        {glitter.map((g) => (
           <span
-            key={p.key}
-            className="login-comet-dust"
+            key={g.key}
+            className="login-star-glitter"
             style={{
-              left: p.x,
-              top: p.y,
-              width: p.size,
-              height: p.size,
-              opacity: p.opacity,
+              left: g.x,
+              top: g.y,
+              width: g.size,
+              height: g.size,
+              opacity: g.opacity,
+              animationDelay: `${g.delay}s`,
             }}
           />
         ))}
-        <span className="login-comet-head" />
+        <svg className="login-star-glyph" width="22" height="22" viewBox="0 0 24 24" aria-hidden>
+          <defs>
+            <radialGradient id="goldStarCore" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#fff8e7" />
+              <stop offset="40%" stopColor="#ffe08a" />
+              <stop offset="100%" stopColor="#e8b84a" />
+            </radialGradient>
+          </defs>
+          <path
+            fill="url(#goldStarCore)"
+            d="M12 1.5 L13.8 9.2 L21.5 9.5 L15.4 14 L17.5 21.5 L12 17.2 L6.5 21.5 L8.6 14 L2.5 9.5 L10.2 9.2 Z"
+          />
+        </svg>
       </div>
     </div>
   );
