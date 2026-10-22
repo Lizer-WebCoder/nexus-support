@@ -6,8 +6,6 @@ on:
       - main
   workflow_dispatch:
 
-# Pushes with the default GITHUB_TOKEN do NOT trigger Pages rebuild.
-# Prefer secret PAGES_TOKEN (classic PAT with "repo" scope), else fall back to GITHUB_TOKEN.
 permissions:
   contents: write
   pages: write
@@ -23,6 +21,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+
+      - name: Densify galaxy starfield
+        run: |
+          if [ -f scripts/densify_stars.py ]; then
+            python3 scripts/densify_stars.py || true
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
@@ -42,7 +46,6 @@ jobs:
 
       - name: Deploy dist to gh-pages
         env:
-          # Create repo secret PAGES_TOKEN = classic PAT (repo scope) so Pages rebuilds
           TOKEN: ${{ secrets.PAGES_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -e
