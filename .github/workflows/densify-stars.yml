@@ -13,20 +13,29 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Restore LoginPage and densify starfield
+      - name: Densify starfield
         run: |
           set -e
-          git show 1c0d5901f96c3fed70031b28b27fb1dd6178cdf2:src/components/LoginPage.tsx > src/components/LoginPage.tsx
-          python3 << 'PY'
+          FILE=src/components/LoginPage.tsx
+          # Ensure file is not empty
+          if [ ! -s "$FILE" ]; then
+            git show 1c0d5901f96c3fed70031b28b27fb1dd6178cdf2:src/components/LoginPage.tsx > "$FILE"
+          fi
+          python3 -c "
           from pathlib import Path
+          import re
           p = Path('src/components/LoginPage.tsx')
-          text = p.read_text()
-          old = """function useFallingStars(count: number) {
+          t = p.read_text()
+          # Bump count to 180
+          t2, n = re.subn(r'useFallingStars\\(\\d+\\)', 'useFallingStars(180)', t, count=1)
+          print('count replacements', n)
+          # Expand generator if still simple
+          old = '''function useFallingStars(count: number) {
   return useMemo(
     () =>
       Array.from({ length: count }, (_, i) => ({
         id: i,
-        left: `${(i * 41 + 13) % 100}%`,
+        left: \`${(i * 41 + 13) % 100}%\`,
         size: i % 5 === 0 ? 3 : i % 3 === 0 ? 2 : 1,
         delay: -((i * 0.37) % 20),
         duration: 8 + (i % 11) * 1.4,
@@ -35,120 +44,45 @@ jobs:
       })),
     [count]
   );
-}"""
-          new = """function useFallingStars(count: number) {
+}'''
+          new = '''function useFallingStars(count: number) {
   return useMemo(
     () =>
       Array.from({ length: count }, (_, i) => {
         const layer = i % 4;
-        const size =
-          layer === 0
-            ? 0.7 + (i % 3) * 0.2
-            : layer === 1
-              ? 1.1 + (i % 4) * 0.3
-              : layer === 2
-                ? 1.7 + (i % 5) * 0.35
-                : i % 7 === 0
-                  ? 4.2
-                  : 2.2 + (i % 4) * 0.45;
-        const duration =
-          layer === 0
-            ? 20 + (i % 12) * 2.6
-            : layer === 1
-              ? 14 + (i % 10) * 1.9
-              : layer === 2
-                ? 9 + (i % 8) * 1.5
-                : 6 + (i % 7) * 1.15;
-        const colors = [
-          '#c4b5fd', '#a78bfa', '#66f0ff', '#ff66cc', '#e9d5ff',
-          '#f0abfc', '#93c5fd', '#ddd6fe', '#f5d0fe', '#a5f3fc',
-          '#fce7f3', '#e0e7ff',
-        ];
+        const size = layer === 0 ? 0.7 + (i % 3) * 0.2 : layer === 1 ? 1.1 + (i % 4) * 0.3 : layer === 2 ? 1.7 + (i % 5) * 0.35 : (i % 7 === 0 ? 4.2 : 2.2 + (i % 4) * 0.45);
+        const duration = layer === 0 ? 20 + (i % 12) * 2.6 : layer === 1 ? 14 + (i % 10) * 1.9 : layer === 2 ? 9 + (i % 8) * 1.5 : 6 + (i % 7) * 1.15;
+        const colors = ['#c4b5fd','#a78bfa','#66f0ff','#ff66cc','#e9d5ff','#f0abfc','#93c5fd','#ddd6fe','#f5d0fe','#a5f3fc','#fce7f3','#e0e7ff'];
         return {
           id: i,
-          left: `${(i * 41 + 13 + layer * 11) % 100}%`,
+          left: \`${(i * 41 + 13 + layer * 11) % 100}%\`,
           size,
           delay: -((i * 0.21 + layer * 1.4) % (duration * 0.95)),
           duration,
           color: colors[i % colors.length],
-          opacity:
-            layer === 0
-              ? 0.1 + (i % 5) * 0.035
-              : layer === 1
-                ? 0.2 + (i % 6) * 0.05
-                : layer === 2
-                  ? 0.4 + (i % 5) * 0.08
-                  : 0.6 + (i % 4) * 0.1,
+          opacity: layer === 0 ? 0.1 + (i % 5) * 0.035 : layer === 1 ? 0.2 + (i % 6) * 0.05 : layer === 2 ? 0.4 + (i % 5) * 0.08 : 0.6 + (i % 4) * 0.1,
           blur: layer === 0 ? 1.1 : layer === 1 ? 0.5 : 0,
         };
       }),
     [count]
   );
-}"""
-          if old not in text:
-              raise SystemExit('star hook not found')
-          text = text.replace(old, new)
-          text = text.replace('useFallingStars(90)', 'useFallingStars(180)')
-          old_span = "style={{ left: s.left, width: s.size, height: s.size, background: s.color, opacity: s.opacity, boxShadow: `0 0 ${s.size * 3}px ${s.color}`, animationDelay: `${s.delay}s`, animationDuration: `${s.duration}s` }}"
-          new_span = "style={{ left: s.left, width: s.size, height: s.size, background: s.color, opacity: s.opacity, boxShadow: `0 0 ${s.size * 4}px ${s.color}, 0 0 ${s.size * 10}px ${s.color}40`, filter: s.blur ? `blur(${s.blur}px)` : undefined, animationDelay: `${s.delay}s`, animationDuration: `${s.duration}s` }}"
-          if old_span in text:
-              text = text.replace(old_span, new_span)
-          p.write_text(text)
-          print('LoginPage', len(text), 'useFallingStars(180)' in text)
-          PY
-          python3 << 'PY'
-          from pathlib import Path
-          p = Path('src/index.css')
-          css = p.read_text()
-          old = """.login-star {
-  top: 110%;
-  will-change: transform, opacity;
-  animation-name: login-star-rise;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-
-.login-starfield {
-  pointer-events: none;
-}
-
-@keyframes login-star-rise {
-  from { transform: translate3d(0, 0, 0) scale(0.55); opacity: 0; }
-  8% { opacity: 0.95; }
-  50% { opacity: 0.75; }
-  88% { opacity: 0.4; }
-  to { transform: translate3d(0, -135vh, 0) scale(1.05); opacity: 0; }
-}"""
-          new = """.login-star {
-  top: 115%;
-  will-change: transform, opacity;
-  animation-name: login-star-rise;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  border-radius: 50%;
-}
-
-.login-starfield {
-  pointer-events: none;
-  z-index: 1;
-}
-
-@keyframes login-star-rise {
-  from { transform: translate3d(0, 0, 0) scale(0.45); opacity: 0; }
-  6% { opacity: 1; }
-  40% { opacity: 0.85; }
-  75% { opacity: 0.5; }
-  to { transform: translate3d(0, -140vh, 0) scale(1.15); opacity: 0; }
-}"""
-          if old in css:
-              p.write_text(css.replace(old, new))
-              print('CSS updated')
+}'''
+          if old in t2:
+              t2 = t2.replace(old, new)
+              print('generator expanded')
           else:
-              print('CSS already updated or pattern differs')
-          PY
+              print('generator already expanded or different')
+          # richer glow
+          t2 = t2.replace(
+              'boxShadow: \`0 0 ${s.size * 3}px ${s.color}\`',
+              'boxShadow: \`0 0 ${s.size * 4}px ${s.color}, 0 0 ${s.size * 10}px ${s.color}40\`, filter: s.blur ? \`blur(${s.blur}px)\` : undefined',
+          )
+          p.write_text(t2)
+          print('ok', 'useFallingStars(180)' in t2, len(t2))
+          "
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/components/LoginPage.tsx src/index.css
+          git add src/components/LoginPage.tsx
           git status
           git commit -m "Login: denser galaxy starfield (180 particles, 4 depth layers)" || echo nochange
           git push origin HEAD:main
