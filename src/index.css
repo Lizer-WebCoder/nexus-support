@@ -1,1 +1,228 @@
-PLACEHOLDER
+/* Nexus Support global styles + login galaxy */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background: #0b0618;
+  color: #e2e8f0;
+}
+
+/* --- Login glass (more transparent so galaxy shows through) --- */
+.login-glass-card {
+  background: linear-gradient(
+    155deg,
+    rgba(98, 32, 150, 0.22) 0%,
+    rgba(40, 12, 70, 0.28) 40%,
+    rgba(18, 6, 42, 0.32) 100%
+  );
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  border: 1px solid rgba(216, 180, 254, 0.22);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 20, 0.4),
+    0 0 0 1px rgba(139, 92, 246, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.login-glass-input {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(196, 181, 253, 0.25) !important;
+  color: #faf5ff !important;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.login-glass-input::placeholder {
+  color: rgba(233, 213, 255, 0.4) !important;
+}
+.login-glass-input:focus {
+  border-color: rgba(167, 139, 250, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.28);
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* --- Cosmos background --- */
+.login-cosmos-sky {
+  background:
+    radial-gradient(ellipse 120% 80% at 20% 10%, rgba(120, 40, 180, 0.45), transparent 55%),
+    radial-gradient(ellipse 90% 70% at 85% 20%, rgba(60, 20, 140, 0.5), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 50% 90%, rgba(30, 10, 80, 0.6), transparent 55%),
+    linear-gradient(180deg, #1a0a3a 0%, #0b0618 45%, #05030e 100%);
+}
+
+.login-nebula {
+  pointer-events: none;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+.login-nebula-a {
+  background: radial-gradient(circle at 30% 40%, rgba(192, 38, 211, 0.25), transparent 45%);
+  animation: nebula-drift 28s ease-in-out infinite alternate;
+}
+.login-nebula-b {
+  background: radial-gradient(circle at 70% 60%, rgba(99, 102, 241, 0.22), transparent 40%);
+  animation: nebula-drift 36s ease-in-out infinite alternate-reverse;
+}
+@keyframes nebula-drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(3%, 2%, 0) scale(1.05); }
+}
+
+.login-starfield {
+  pointer-events: none;
+}
+.login-star {
+  top: 110%;
+  will-change: transform, opacity;
+  animation-name: login-star-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes login-star-rise {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.55);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.95;
+  }
+  70% {
+    opacity: 0.75;
+  }
+  to {
+    transform: translate3d(0, -135vh, 0) scale(1.05);
+    opacity: 0;
+  }
+}
+
+.login-cosmos-vignette {
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(5, 2, 14, 0.55) 100%);
+}
+
+/* Logo mark */
+.login-logo-mark {
+  display: grid;
+  place-items: center;
+}
+.login-logo-core {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+}
+.login-logo-arcs {
+  transform-origin: 24px 24px;
+  animation: logo-spin 12s linear infinite;
+}
+@keyframes logo-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Shooting star */
+.login-shooting-star {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.login-star-trail {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 90px;
+  height: 2px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, rgba(255, 233, 168, 0.85));
+  border-radius: 2px;
+  filter: blur(0.5px);
+}
+.login-star-sparkles {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  box-shadow: 0 0 12px 4px rgba(255, 220, 140, 0.55);
+}
+.login-star-glyph {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 220, 140, 0.9));
+}
+
+/* Pilot trail */
+.login-pilot-stage {
+  overflow: hidden;
+}
+.login-pilot {
+  position: absolute;
+  will-change: transform;
+}
+.login-pilot-glow {
+  position: absolute;
+  inset: -18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(240, 171, 252, 0.35), transparent 70%);
+  filter: blur(8px);
+}
+.login-trail-spark {
+  position: absolute;
+  border-radius: 50%;
+  background: #f0abfc;
+  pointer-events: none;
+}
+
+/* Flybys */
+.login-flyby {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  will-change: transform;
+}
+.login-flyby-ltr {
+  left: -10%;
+  animation-name: flyby-ltr;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.login-flyby-rtl {
+  right: -10%;
+  animation-name: flyby-rtl;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes flyby-ltr {
+  from { transform: translateX(0); }
+  to { transform: translateX(120vw); }
+}
+@keyframes flyby-rtl {
+  from { transform: translateX(0); }
+  to { transform: translateX(-120vw); }
+}
+.login-flyby-chat {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fdf4ff;
+  background: rgba(88, 28, 135, 0.75);
+  border: 1px solid rgba(216, 180, 254, 0.35);
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+}
+
+/* Planets */
+.login-planet-svg {
+  filter: drop-shadow(0 0 12px rgba(180, 140, 255, 0.25));
+}
+
+/* Dark / compact prefs used elsewhere */
+.nexus-dark {
+  color-scheme: dark;
+}
