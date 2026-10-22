@@ -22,6 +22,8 @@ export interface Agent {
   working_hours?: string;
   ooo?: boolean;
   signature?: string;
+  /** Account approval for self-signup agents (not presence status) */
+  approval_status?: 'pending' | 'approved' | 'rejected' | null;
 }
 
 export interface BranchMember {
