@@ -108,6 +108,14 @@ function AppShell() {
     conversations,
   } = usePlatform();
 
+  const openCount = tickets.filter((t) => t.status !== 'resolved' && !t.deleted_at).length;
+  const chatBadge = conversations.filter((c) => c.status !== 'ended').length;
+  const displayName =
+    currentAgent?.name ||
+    (user?.user_metadata?.full_name as string | undefined) ||
+    user?.email?.split('@')[0] ||
+    'Agent';
+
   useEffect(() => {
     const onHash = () => setMode(getModeFromHash());
     window.addEventListener('hashchange', onHash);
@@ -170,11 +178,15 @@ function AppShell() {
       <Sidebar
         active={activeNav}
         onNavigate={setActiveNav}
-        openCount={tickets.filter((t) => t.status !== 'resolved' && !t.deleted_at).length}
-        chatCount={conversations.filter((c) => c.status !== 'ended').length}
-        accountRole={accountRole}
-        onOpenPortal={goPortal}
-        usingSupabase={usingSupabase}
+        ticketCount={openCount}
+        chatCount={chatBadge}
+        userName={displayName}
+        userEmail={user?.email}
+        avatarUrl={currentAgent?.avatar_url || (user?.user_metadata?.avatar_url as string | undefined) || null}
+        agentStatus={currentAgent?.status || 'online'}
+        onSignOut={requiresAuth ? signOut : undefined}
+        onProfile={() => setActiveNav('profile')}
+        isAdmin={accountRole === 'admin' || !!currentAgent?.is_admin}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-14 border-b border-zinc-200 bg-white flex items-center gap-3 px-4 lg:px-6">
@@ -268,10 +280,10 @@ function AppShell() {
             </button>
             <div className="flex items-center gap-2 pl-2 border-l border-zinc-100">
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white text-[10px] font-bold flex items-center justify-center">
-                {(currentAgent?.name || user?.email || 'A').slice(0, 1).toUpperCase()}
+                {displayName.slice(0, 1).toUpperCase()}
               </div>
               <div className="hidden sm:block text-xs">
-                <div className="font-medium text-zinc-800">{currentAgent?.name || user?.email || 'Agent'}</div>
+                <div className="font-medium text-zinc-800">{displayName}</div>
                 <div className="text-zinc-400 capitalize">{accountRole || 'agent'}</div>
               </div>
               {requiresAuth && (
