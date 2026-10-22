@@ -1,0 +1,32 @@
+name: Apply Login Tabs Patch
+on:
+  workflow_dispatch:
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Decode and write patched files
+        run: |
+          python3 << 'EOF'
+          import base64
+          from pathlib import Path
+          for line in Path('scripts/login-tabs-payload.txt').read_text().splitlines():
+              if not line.strip():
+                  continue
+              path, b64 = line.split('\t', 1)
+              Path(path).parent.mkdir(parents=True, exist_ok=True)
+              Path(path).write_bytes(base64.b64decode(b64))
+              print('wrote', path, Path(path).stat().st_size)
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/context/AuthContext.tsx src/components/LoginPage.tsx src/components/UsersAdminPage.tsx src/types.ts supabase-agent-approval.sql
+          git status
+          git commit -m "Login: Agent/Customer tabs, Create account for both, dual approval gate" || echo "no changes"
+          git push origin HEAD:main
