@@ -60,7 +60,7 @@ function roleFromUser(user: User | null): AccountRole {
   return r === 'customer' ? 'customer' : 'agent';
 }
 
-/** Only hard-block rejected agents. Pending/missing must not lock admins out. */
+/** Admins always pass. Pending/rejected agents are blocked. Legacy (no status) pass. */
 async function assertAgentAllowed(user: User): Promise<void> {
   if (!supabase) return;
   if (roleFromUser(user) !== 'agent') return;
@@ -90,35 +90,42 @@ async function assertAgentAllowed(user: User): Promise<void> {
 
     if (row?.is_admin) return;
 
-    const approval = row?.approval_status ?? meta;
+    const approval = (row?.approval_status ?? meta) || '';
+    if (!approval || approval === 'approved') return;
+
+    await supabase.auth.signOut();
     if (approval === 'rejected') {
-      await supabase.auth.signOut();
       throw new Error(
         'This agent account was rejected by an administrator. Contact support if you need access.'
       );
     }
+    throw new Error(
+      'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
+    );
   } catch (e) {
-    if (e instanceof Error && /rejected/i.test(e.message)) throw e;
+    if (e instanceof Error && /(rejected|pending admin)/i.test(e.message)) throw e;
   }
 }
 
-/** Only hard-block rejected customers. Pending does not block portal sign-in. */
+/** Block pending + rejected customers until an admin approves in Users → Pending. */
 async function assertCustomerAllowed(user: User): Promise<void> {
   if (!supabase) return;
   if (roleFromUser(user) !== 'customer') return;
 
   const email = (user.email || '').trim().toLowerCase();
-  if (!email) return;
+  if (!email) {
+    await supabase.auth.signOut();
+    throw new Error('Customer account has no email.');
+  }
 
+  let status: string | null = null;
   try {
-    let status: string | null = null;
-
     const { data: byId } = await supabase
       .from('customers')
       .select('status')
       .eq('id', user.id)
       .maybeSingle();
-    if (byId?.status) status = byId.status;
+    if (byId?.status) status = byId.status as string;
 
     if (!status) {
       const { data: byEmail } = await supabase
@@ -128,18 +135,24 @@ async function assertCustomerAllowed(user: User): Promise<void> {
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (byEmail?.status) status = byEmail.status;
+      if (byEmail?.status) status = byEmail.status as string;
     }
-
-    if (status === 'rejected') {
-      await supabase.auth.signOut();
-      throw new Error(
-        'This customer account was rejected by an administrator. Contact support if you need access.'
-      );
-    }
-  } catch (e) {
-    if (e instanceof Error && /rejected/i.test(e.message)) throw e;
+  } catch {
+    status = status || 'pending';
   }
+
+  if (status === 'approved') return;
+
+  await supabase.auth.signOut();
+
+  if (status === 'rejected') {
+    throw new Error(
+      'This customer account was rejected by an administrator. Contact support if you need access.'
+    );
+  }
+  throw new Error(
+    'Your account is pending admin approval. An administrator must approve it under Users → Pending before you can use the portal.'
+  );
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -281,8 +294,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
       }
-      if (data.session) setSession(data.session);
-      return;
+      await supabase.auth.signOut();
+      setSession(null);
+      throw new Error(
+        'Account created. An administrator must approve it under Users → Pending before you can sign in.'
+      );
     }
 
     if (role === 'agent') {
@@ -303,8 +319,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { error: aErr2 } = await supabase.from('agents').insert(base);
         if (aErr2) console.warn('Agent insert failed', aErr2.message);
       }
-      if (data.session) setSession(data.session);
-      return;
+      await supabase.auth.signOut();
+      setSession(null);
+      throw new Error(
+        'Account created. An administrator must approve it under Users → Pending before you can sign in to the Agent Workspace.'
+      );
     }
   };
 
