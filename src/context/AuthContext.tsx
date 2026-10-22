@@ -60,3 +60,105 @@ function roleFromUser(user: User | null): AccountRole {
   const r = (user?.user_metadata?.role as string | undefined) || 'agent';
   return r === 'customer' ? 'customer' : 'agent';
 }
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const configError = getSupabaseConfigError();
+  const requiresAuth = isSupabaseConfigured();
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setLoading(false);
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string, expectedRole?: AccountRole) => {
+    if (!supabase) throw new Error(configError || 'Supabase is not configured');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw friendlyAuthError(error);
+    const role = roleFromUser(data.user);
+    if (expectedRole && role !== expectedRole) {
+      await supabase.auth.signOut();
+      throw new Error(
+        expectedRole === 'agent'
+          ? 'This account is registered as a customer. Use the Customer tab to sign in.'
+          : 'This account is registered as an agent. Use the Agent tab to sign in.'
+      );
+    }
+    // Optional: check approval_status in profiles if you add that column
+  };
+
+  const signUp = async (email: string, password: string, fullName?: string, role: AccountRole = 'customer') => {
+    if (!supabase) throw new Error(configError || 'Supabase is not configured');
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName || '',
+          role,
+          approval_status: 'pending',
+        },
+      },
+    });
+    if (error) throw friendlyAuthError(error);
+    // Sign out so they must wait for approval / sign in after
+    if (data.session) {
+      await supabase.auth.signOut();
+    }
+    throw new Error(
+      'Account created. An admin must approve your account before you can sign in.'
+    );
+  };
+
+  const resetPassword = async (email: string) => {
+    if (!supabase) throw new Error(configError || 'Supabase is not configured');
+    const redirectTo =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}${window.location.pathname}`
+        : undefined;
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim(),
+      redirectTo ? { redirectTo } : undefined
+    );
+    if (error) throw friendlyAuthError(error);
+  };
+
+  const signOut = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+  };
+
+  const value: AuthContextValue = {
+    session,
+    user: session?.user ?? null,
+    loading,
+    requiresAuth,
+    configError,
+    accountRole: roleFromUser(session?.user ?? null),
+    signIn,
+    signUp,
+    signOut,
+    resetPassword,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}
