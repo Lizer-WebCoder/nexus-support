@@ -195,39 +195,77 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   to { transform: translateY(-130vh) scale(1); opacity: 0; }
 }
 
-.login-shooting-star {
+/* Single comet — bright head + long particle trail (like a meteor) */
+.login-comet {
   position: absolute;
-  width: 120px;
-  height: 2px;
-  border-radius: 2px;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.95),
-    rgba(196, 181, 253, 0.7) 40%,
-    transparent 100%
-  );
-  box-shadow:
-    0 0 6px 2px rgba(255, 255, 255, 0.5),
-    0 0 16px 4px rgba(167, 139, 250, 0.35);
-  animation-name: login-shoot-streak;
-  animation-timing-function: ease-out;
+  width: 8px;
+  height: 8px;
+  animation-name: login-comet-fly;
+  animation-timing-function: linear;
   animation-fill-mode: forwards;
-  opacity: 0;
-  transform-origin: left center;
+  transform: rotate(var(--comet-angle, 35deg));
+  will-change: transform, opacity;
   pointer-events: none;
 }
-@keyframes login-shoot-streak {
+.login-comet-head {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff 0%, #f5e6ff 30%, #c4b5fd 55%, #7c3aed 100%);
+  box-shadow:
+    0 0 8px 3px rgba(255, 255, 255, 0.95),
+    0 0 20px 8px rgba(192, 132, 252, 0.85),
+    0 0 40px 16px rgba(139, 92, 246, 0.45);
+  z-index: 3;
+}
+.login-comet-trail {
+  position: absolute;
+  left: -160px;
+  top: -4px;
+  width: 160px;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(139, 92, 246, 0.15) 15%,
+    rgba(167, 139, 250, 0.45) 45%,
+    rgba(233, 213, 255, 0.75) 75%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+  box-shadow:
+    0 0 12px 2px rgba(167, 139, 250, 0.4),
+    0 0 28px 6px rgba(139, 92, 246, 0.25);
+  z-index: 1;
+  filter: blur(0.5px);
+}
+.login-comet-dust {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, #faf5ff 0%, #c4b5fd 50%, transparent 70%);
+  box-shadow: 0 0 4px 1px rgba(196, 181, 253, 0.6);
+  z-index: 2;
+  pointer-events: none;
+}
+@keyframes login-comet-fly {
   0% {
     opacity: 0;
-    transform: translate(0, 0) scaleX(0.2);
+    transform: rotate(var(--comet-angle, 35deg)) translate(0, 0) scale(0.6);
   }
-  8% {
+  6% {
     opacity: 1;
-    transform: translate(8px, 4px) scaleX(1);
+    transform: rotate(var(--comet-angle, 35deg)) translate(4vw, 2vh) scale(1);
+  }
+  85% {
+    opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: translate(180px, 90px) scaleX(0.4);
+    transform: rotate(var(--comet-angle, 35deg)) translate(95vw, 55vh) scale(0.85);
   }
 }
 
@@ -365,7 +403,7 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   .login-logo-arcs,
   .login-flyby-ltr,
   .login-flyby-rtl,
-  .login-shooting-star {
+  .login-comet {
     animation: none !important;
   }
 }
