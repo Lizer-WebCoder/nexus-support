@@ -1,0 +1,31 @@
+name: Restore LoginPage
+on:
+  workflow_dispatch:
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore LoginPage and apply card header
+        run: |
+          git checkout 1e718e453200e0264ee2c0f68ffe197e30f53e3d -- src/components/LoginPage.tsx
+          python3 << 'EOF'
+          from pathlib import Path
+          p = Path("src/components/LoginPage.tsx")
+          t = p.read_text()
+          old = """          <div className=\"login-glass-card w-full max-w-md rounded-2xl p-6 sm:p-8\">\n            <div className=\"flex gap-2 mb-6 p-1 rounded-xl bg-white/5 border border-white/10\">"""
+          new = """          <div className=\"login-glass-card w-full max-w-md rounded-2xl p-6 sm:p-8 shadow-2xl shadow-violet-950/50\">\n            <div className=\"flex flex-col items-center text-center mb-6\">\n              <div className=\"w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/40 to-fuchsia-600/30 border border-white/20 backdrop-blur flex items-center justify-center mb-3 shadow-lg shadow-violet-500/25\">\n                <NexusLogoMark size={32} />\n              </div>\n              <div className=\"text-lg font-semibold text-white tracking-tight\">Nexus Ops</div>\n              <div className=\"text-sm text-fuchsia-200/80 mt-0.5\">Sign in to Customer Portal</div>\n            </div>\n            <div className=\"flex gap-2 mb-6 p-1 rounded-xl bg-white/5 border border-white/10\">"""
+          if old not in t:
+            raise SystemExit("pattern not found")
+          p.write_text(t.replace(old, new, 1))
+          print("patched ok")
+          EOF
+          git config user.name "divinerayscalbayog-tech"
+          git config user.email "divinerayscalbayog@gmail.com"
+          git add src/components/LoginPage.tsx
+          git commit -m "Login card: centered Nexus Ops logo + Sign in to Customer Portal"
+          git push origin HEAD:main
