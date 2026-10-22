@@ -184,16 +184,22 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 
 .login-star {
   top: 110%;
+  will-change: transform, opacity;
   animation-name: login-star-rise;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
 
+.login-starfield {
+  pointer-events: none;
+}
+
 @keyframes login-star-rise {
-  from { transform: translateY(0) scale(0.6); opacity: 0; }
-  10% { opacity: 0.9; }
-  85% { opacity: 0.55; }
-  to { transform: translateY(-130vh) scale(1); opacity: 0; }
+  from { transform: translate3d(0, 0, 0) scale(0.55); opacity: 0; }
+  8% { opacity: 0.95; }
+  50% { opacity: 0.75; }
+  88% { opacity: 0.4; }
+  to { transform: translate3d(0, -135vh, 0) scale(1.05); opacity: 0; }
 }
 
 /* Golden shooting star — rAF position + local visual animations */
