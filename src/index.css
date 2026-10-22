@@ -118,53 +118,51 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   to { transform: translate(-3%, 4%) scale(1.06); }
 }
 
-.login-planet { position: absolute; border-radius: 50%; pointer-events: none; z-index: 1; }
-.login-planet-main {
-  width: min(48vw, 380px);
-  height: min(48vw, 380px);
-  left: -12%;
-  bottom: -22%;
-  background: radial-gradient(circle at 32% 28%, #3d5a9e 0%, #1a2a5c 45%, #060a18 75%);
-  border: 2px solid rgba(100, 140, 255, 0.25);
-  box-shadow: inset -30px -18px 50px rgba(0, 0, 0, 0.65), 0 0 60px rgba(40, 80, 180, 0.2);
-  animation: login-planet-orbit 50s ease-in-out infinite alternate;
-}
-.login-planet-ring {
+/* Planets that rise from bottom → top (spawned in JS, not permanent) */
+.login-planet-rise {
   position: absolute;
-  left: -8%;
-  bottom: -8%;
-  width: min(58vw, 460px);
-  height: min(14vw, 90px);
-  border: 2px solid rgba(140, 170, 255, 0.28);
-  border-radius: 50%;
+  bottom: -18%;
+  z-index: 2;
   pointer-events: none;
-  z-index: 1;
-  box-shadow: 0 0 20px rgba(100, 140, 255, 0.12);
-  animation: login-ring-orbit 50s ease-in-out infinite alternate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation-name: login-planet-rise;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  opacity: 0;
 }
-.login-planet-far {
-  width: min(18vw, 140px);
-  height: min(18vw, 140px);
-  right: 8%;
-  bottom: 8%;
-  background: radial-gradient(circle at 40% 32%, #4a2080, #120028 70%);
-  border: 1px solid rgba(180, 100, 255, 0.3);
-  box-shadow: inset -10px -8px 24px rgba(0, 0, 0, 0.5);
-  animation: login-planet-far-drift 36s ease-in-out infinite alternate;
-  opacity: 0.85;
+.login-planet-rise-body {
+  border-radius: 50%;
+  display: block;
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.login-planet-rise-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-22deg);
+  border-radius: 50%;
+  border-style: solid;
+  border-width: 2px;
+  box-shadow: 0 0 12px rgba(253, 230, 138, 0.15);
+  z-index: 0;
+  pointer-events: none;
 }
 
-@keyframes login-planet-orbit {
-  from { transform: translate(0, 0) rotate(0deg); }
-  to { transform: translate(4%, -3%) rotate(8deg); }
-}
-@keyframes login-ring-orbit {
-  from { transform: rotate(-18deg) translate(0, 0); }
-  to { transform: rotate(-12deg) translate(3%, -2%); }
-}
-@keyframes login-planet-far-drift {
-  from { transform: translate(0, 0); }
-  to { transform: translate(-6%, -4%); }
+@keyframes login-planet-rise {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(0.7);
+    opacity: 0;
+  }
+  6% { opacity: 0.95; }
+  75% { opacity: 0.85; }
+  100% {
+    transform: translate(var(--planet-drift, 30px), -115vh) rotate(var(--planet-spin, 90deg)) scale(1.05);
+    opacity: 0;
+  }
 }
 
 .login-star {
@@ -270,36 +268,6 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   }
 }
 
-/* Mid-field planets */
-.login-planet-mid {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 2;
-}
-.login-planet-mid-a {
-  width: 56px;
-  height: 56px;
-  left: 62%;
-  top: 18%;
-  background: radial-gradient(circle at 35% 30%, #6ee7b7, #065f46 70%);
-  border: 1px solid rgba(110, 231, 183, 0.35);
-  box-shadow: inset -6px -4px 12px rgba(0, 0, 0, 0.45);
-  opacity: 0.75;
-  animation: login-planet-far-drift 40s ease-in-out infinite alternate;
-}
-.login-planet-mid-b {
-  width: 36px;
-  height: 36px;
-  left: 22%;
-  top: 48%;
-  background: radial-gradient(circle at 40% 32%, #fcd34d, #92400e 75%);
-  border: 1px solid rgba(252, 211, 77, 0.3);
-  box-shadow: inset -4px -3px 10px rgba(0, 0, 0, 0.4);
-  opacity: 0.7;
-  animation: login-planet-far-drift 28s ease-in-out infinite alternate-reverse;
-}
-
 /* UFO / ship flybys */
 .login-flyby {
   position: absolute;
@@ -367,11 +335,7 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   .login-star,
   .login-nebula-a,
   .login-nebula-b,
-  .login-planet-main,
-  .login-planet-far,
-  .login-planet-ring,
-  .login-planet-mid-a,
-  .login-planet-mid-b,
+  .login-planet-rise,
   .login-logo-arcs,
   .login-asteroid,
   .login-flyby-ltr,
