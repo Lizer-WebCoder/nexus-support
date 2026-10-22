@@ -77,6 +77,7 @@ export default function UsersAdminPage() {
       role: a.is_admin ? 'Admin' : a.role || 'Agent',
       is_admin: !!a.is_admin,
       branch: a.branch || '',
+      status: a.approval_status || 'approved',
       agent: a,
     }));
     const branchNameSet = new Set(branchNames.map((b) => b.trim().toUpperCase()));
@@ -154,6 +155,36 @@ export default function UsersAdminPage() {
       await refresh();
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Could not update status');
+    } finally {
+      setActionBusy(null);
+    }
+  };
+
+  const setAgentApproval = async (id: string, status: 'approved' | 'rejected' | 'pending') => {
+    setActionBusy(id);
+    setMsg('');
+    setErr('');
+    try {
+      if (!supabase) throw new Error('Supabase required');
+      const { error } = await supabase.from('agents').update({ approval_status: status }).eq('id', id);
+      if (error) {
+        if (String(error.message).toLowerCase().includes('approval_status')) {
+          throw new Error(
+            "Add column: alter table public.agents add column if not exists approval_status text default 'approved';"
+          );
+        }
+        throw error;
+      }
+      setMsg(
+        status === 'approved'
+          ? 'Agent approved — they can sign in to the Agent Workspace.'
+          : status === 'rejected'
+            ? 'Agent rejected.'
+            : 'Agent set back to pending.'
+      );
+      await refresh();
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Could not update agent approval');
     } finally {
       setActionBusy(null);
     }
@@ -282,10 +313,10 @@ export default function UsersAdminPage() {
           <Clock size={18} className="text-amber-600 shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-amber-900">
-              {pendingCount} customer account{pendingCount !== 1 ? 's' : ''} waiting for approval
+              {pendingCount} account{pendingCount !== 1 ? 's' : ''} waiting for approval
             </div>
             <div className="text-xs text-amber-800 mt-0.5">
-              New portal signups appear here. Approve to grant full customer access.
+              New Agent and Customer signups appear here. Approve to grant workspace or portal access.
             </div>
           </div>
           <button
@@ -393,25 +424,41 @@ export default function UsersAdminPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  {u.kind === 'customer' ? (
-                    <span
-                      className={clsx(
-                        'text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded',
-                        u.status === 'pending' && 'bg-amber-100 text-amber-800',
-                        u.status === 'approved' && 'bg-emerald-50 text-emerald-700',
-                        u.status === 'rejected' && 'bg-rose-50 text-rose-700',
-                        !u.status && 'bg-slate-100 text-slate-600'
-                      )}
-                    >
-                      {u.status || 'approved'}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-slate-400">—</span>
-                  )}
+                  <span
+                    className={clsx(
+                      'text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded',
+                      u.status === 'pending' && 'bg-amber-100 text-amber-800',
+                      u.status === 'approved' && 'bg-emerald-50 text-emerald-700',
+                      u.status === 'rejected' && 'bg-rose-50 text-rose-700',
+                      !u.status && 'bg-slate-100 text-slate-600'
+                    )}
+                  >
+                    {u.status || 'approved'}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-slate-600">{u.branch || '—'}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1.5">
+                    {u.kind === 'agent' && u.status === 'pending' && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={actionBusy === u.id}
+                          onClick={() => void setAgentApproval(u.id, 'approved')}
+                          className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                          <Check size={12} /> Approve
+                        </button>
+                        <button
+                          type="button"
+                          disabled={actionBusy === u.id}
+                          onClick={() => void setAgentApproval(u.id, 'rejected')}
+                          className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg border border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100 disabled:opacity-50"
+                        >
+                          <X size={12} /> Reject
+                        </button>
+                      </>
+                    )}
                     {u.kind === 'customer' && u.status === 'pending' && (
                       <>
                         <button

@@ -401,6 +401,7 @@ const CAPABILITIES = [
 
 export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenAgent }: Props) {
   const { signIn, signUp, configError } = useAuth();
+  const [audienceTab, setAudienceTab] = useState<'agent' | 'customer'>(audience === 'agent' ? 'agent' : 'customer');
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -410,7 +411,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const isAgent = audience === 'agent';
+  const isAgent = audienceTab === 'agent';
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -421,13 +422,13 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
       if (mode === 'signin') {
         await signIn(email.trim(), password);
       } else {
-        await signUp(email.trim(), password, name.trim() || undefined, 'customer');
+        await signUp(email.trim(), password, name.trim() || undefined, isAgent ? 'agent' : 'customer');
         setInfo('Account created. An admin must approve new customer accounts before full portal access.');
         setMode('signin');
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Authentication failed';
-      if (/pending admin approval|must approve/i.test(msg)) {
+      if (/pending|must approve|account created/i.test(msg)) {
         setInfo(msg);
         setMode('signin');
       } else {
@@ -506,28 +507,49 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
               <div className="text-lg font-semibold text-white tracking-tight">Nexus Ops</div>
               <div className="text-xs text-fuchsia-200/70 mt-0.5">{cardSub}</div>
             </div>
-            <div className="flex gap-2 mb-6 p-1 rounded-xl bg-white/5 border border-white/10">
+            <div className="flex gap-2 mb-3 p-1 rounded-xl bg-white/5 border border-white/10">
               <button
                 type="button"
-                onClick={() => { setMode('signin'); setError(''); setInfo(''); }}
+                onClick={() => { setAudienceTab('agent'); setMode('signin'); setError(''); setInfo(''); }}
                 className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  mode === 'signin' ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'
+                  isAgent ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'
                 }`}
               >
-                Sign in
+                Agent
               </button>
-              {!isAgent && (
+              <button
+                type="button"
+                onClick={() => { setAudienceTab('customer'); setMode('signin'); setError(''); setInfo(''); }}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
+                  !isAgent ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'
+                }`}
+              >
+                Customer
+              </button>
+            </div>
+            {mode === 'signin' ? (
+              <p className="text-center text-xs text-fuchsia-200/70 mb-5">
+                New here?{' '}
                 <button
                   type="button"
                   onClick={() => { setMode('signup'); setError(''); setInfo(''); }}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                    mode === 'signup' ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'
-                  }`}
+                  className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline"
                 >
-                  Create account
+                  Create an account
                 </button>
-              )}
-            </div>
+              </p>
+            ) : (
+              <p className="text-center text-xs text-fuchsia-200/70 mb-5">
+                Already registered?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('signin'); setError(''); setInfo(''); }}
+                  className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline"
+                >
+                  Sign in
+                </button>
+              </p>
+            )}
             {configError && (
               <div className="mb-4 rounded-lg bg-amber-400/15 text-amber-100 text-sm px-3 py-2 border border-amber-300/30">{configError}</div>
             )}
@@ -538,7 +560,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
               <div className="mb-4 rounded-lg bg-emerald-500/15 text-emerald-100 text-sm px-3 py-2 border border-emerald-300/30">{info}</div>
             )}
             <form onSubmit={submit} className="space-y-4">
-              {mode === 'signup' && !isAgent && (
+              {mode === 'signup' && (
                 <div>
                   <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Name</label>
                   <input className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoComplete="name" />
