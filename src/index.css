@@ -195,23 +195,22 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   to { transform: translateY(-130vh) scale(1); opacity: 0; }
 }
 
-/* Golden shooting star — dense fluid arc */
+/* Golden shooting star — rAF position (same fluid engine as logo pilot) */
 .login-shooting-layer {
   contain: strict;
   transform: translateZ(0);
 }
 .login-shooting-star {
   position: absolute;
-  left: -5%;
+  left: 0;
+  top: 0;
   width: 18px;
   height: 18px;
-  animation-name: login-star-fly;
-  animation-timing-function: cubic-bezier(0.33, 0.0, 0.2, 1);
-  animation-fill-mode: forwards;
   will-change: transform, opacity;
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(-100px, 0, 0);
   backface-visibility: hidden;
   pointer-events: none;
+  opacity: 0;
 }
 .login-star-glyph {
   position: absolute;
@@ -260,21 +259,6 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   mask-image: linear-gradient(90deg, transparent, #000 30%, #000);
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 30%, #000);
   transform: translateZ(0);
-}
-@keyframes login-star-fly {
-  0%   { opacity: 0; transform: translate3d(0vw, 0vh, 0) rotate(-8deg); }
-  6%   { opacity: 1; transform: translate3d(6vw, 1.2vh, 0) rotate(-7deg); }
-  12%  { opacity: 1; transform: translate3d(12vw, 1.8vh, 0) rotate(-5.5deg); }
-  20%  { opacity: 1; transform: translate3d(22vw, 0.5vh, 0) rotate(-3.5deg); }
-  28%  { opacity: 1; transform: translate3d(32vw, -2vh, 0) rotate(-2deg); }
-  36%  { opacity: 1; transform: translate3d(42vw, -4.2vh, 0) rotate(-0.5deg); }
-  44%  { opacity: 1; transform: translate3d(52vw, -5.5vh, 0) rotate(1deg); }
-  52%  { opacity: 1; transform: translate3d(62vw, -5.2vh, 0) rotate(2.5deg); }
-  60%  { opacity: 1; transform: translate3d(72vw, -3.5vh, 0) rotate(4deg); }
-  70%  { opacity: 1; transform: translate3d(84vw, -0.5vh, 0) rotate(6deg); }
-  80%  { opacity: 1; transform: translate3d(94vw, 3.5vh, 0) rotate(8deg); }
-  90%  { opacity: 0.7; transform: translate3d(102vw, 8vh, 0) rotate(10deg); }
-  100% { opacity: 0; transform: translate3d(112vw, 14vh, 0) rotate(12deg); }
 }
 
 .login-cosmos-vignette {
