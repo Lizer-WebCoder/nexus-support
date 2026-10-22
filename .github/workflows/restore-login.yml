@@ -7,9 +7,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Restore LoginPage and apply card header
         run: |
           git checkout 1e718e453200e0264ee2c0f68ffe197e30f53e3d -- src/components/LoginPage.tsx
@@ -22,10 +23,10 @@ jobs:
           if old not in t:
             raise SystemExit("pattern not found")
           p.write_text(t.replace(old, new, 1))
-          print("patched ok")
+          print("patched ok", len(p.read_text()))
           EOF
-          git config user.name "divinerayscalbayog-tech"
-          git config user.email "divinerayscalbayog@gmail.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/components/LoginPage.tsx
-          git commit -m "Login card: centered Nexus Ops logo + Sign in to Customer Portal"
+          git commit -m "Login card: centered Nexus Ops logo + Sign in to Customer Portal" || echo "no changes"
           git push origin HEAD:main
