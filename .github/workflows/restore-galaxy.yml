@@ -8,22 +8,95 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Decode and write LoginPage
+      - name: Restore LoginPage from good commit and densify stars
         run: |
-          python3 << 'EOF'
-          import base64, gzip
+          git show b965b9a453640c8ccf9d2dabb5a4993f546c8d69:src/components/LoginPage.tsx > src/components/LoginPage.tsx
+          python3 << 'PY'
           from pathlib import Path
-          parts = [
-            "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",
-          ]
-          raw = gzip.decompress(base64.b64decode("".join(parts)))
-          Path("src/components/LoginPage.tsx").write_bytes(raw)
-          print("wrote", len(raw), "bytes")
-          EOF
+          p = Path('src/components/LoginPage.tsx')
+          text = p.read_text()
+          old = '''function useFallingStars(count: number) {
+  return useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => ({
+        id: i,
+        left: `${(i * 41 + 13) % 100}%`,
+        size: i % 5 === 0 ? 3 : i % 3 === 0 ? 2 : 1,
+        delay: -((i * 0.37) % 20),
+        duration: 8 + (i % 11) * 1.4,
+        color: i % 4 === 0 ? '#ff66cc' : i % 3 === 0 ? '#66f0ff' : '#c4b5fd',
+        opacity: 0.35 + (i % 6) * 0.1,
+      })),
+    [count]
+  );
+}'''
+          new = '''function useFallingStars(count: number) {
+  return useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => {
+        const layer = i % 4;
+        const size =
+          layer === 0
+            ? 0.8 + (i % 3) * 0.15
+            : layer === 1
+              ? 1.2 + (i % 4) * 0.25
+              : layer === 2
+                ? 1.8 + (i % 5) * 0.35
+                : i % 6 === 0
+                  ? 3.8
+                  : 2.4 + (i % 3) * 0.4;
+        const duration =
+          layer === 0
+            ? 22 + (i % 11) * 2.4
+            : layer === 1
+              ? 15 + (i % 9) * 1.8
+              : layer === 2
+                ? 10 + (i % 8) * 1.4
+                : 6.5 + (i % 7) * 1.1;
+        const colors = [
+          '#c4b5fd', '#a78bfa', '#66f0ff', '#ff66cc', '#e9d5ff',
+          '#f0abfc', '#93c5fd', '#ddd6fe', '#f5d0fe', '#a5f3fc',
+        ];
+        return {
+          id: i,
+          left: `${(i * 41 + 13 + layer * 9) % 100}%`,
+          size,
+          delay: -((i * 0.23 + layer * 1.35) % (duration * 0.92)),
+          duration,
+          color: colors[i % colors.length],
+          opacity:
+            layer === 0
+              ? 0.12 + (i % 5) * 0.04
+              : layer === 1
+                ? 0.22 + (i % 6) * 0.05
+                : layer === 2
+                  ? 0.38 + (i % 5) * 0.08
+                  : 0.55 + (i % 4) * 0.1,
+          blur: layer === 0 ? 0.9 : layer === 1 ? 0.45 : 0,
+        };
+      }),
+    [count]
+  );
+}'''
+          if old not in text:
+              raise SystemExit('old hook not found')
+          text = text.replace(old, new)
+          text = text.replace('useFallingStars(28)', 'useFallingStars(180)')
+          # richer glow on stars
+          old_span = "boxShadow: `0 0 ${s.size * 3}px ${s.color}`"
+          new_span = "boxShadow: `0 0 ${s.size * 4}px ${s.color}, 0 0 ${s.size * 8}px ${s.color}55`, filter: s.blur ? `blur(${s.blur}px)` : undefined"
+          if old_span in text:
+              text = text.replace(old_span, new_span)
+          p.write_text(text)
+          print('stars:', 'useFallingStars(180)' in text)
+          print('size', len(text))
+          PY
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add src/components/LoginPage.tsx
-          git diff --staged --quiet || git commit -m "Login: denser galaxy starfield (180 particles, 4 depth layers) + full restore"
+          git status
+          git diff --staged --stat
+          git commit -m "Login: denser galaxy starfield (180 particles, 4 depth layers)" || echo "no change"
           git push
