@@ -93,17 +93,18 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 
 .login-glass-card {
   background: linear-gradient(
-    160deg,
-    rgba(88, 28, 135, 0.35) 0%,
-    rgba(30, 10, 60, 0.45) 50%,
-    rgba(15, 5, 40, 0.5) 100%
+    155deg,
+    rgba(98, 32, 150, 0.42) 0%,
+    rgba(40, 12, 70, 0.48) 40%,
+    rgba(18, 6, 42, 0.55) 100%
   );
-  backdrop-filter: blur(20px) saturate(1.35);
-  -webkit-backdrop-filter: blur(20px) saturate(1.35);
-  border: 1px solid rgba(196, 181, 253, 0.28);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid rgba(216, 180, 254, 0.32);
   box-shadow:
-    0 12px 40px rgba(0, 0, 20, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 20px 50px rgba(0, 0, 20, 0.55),
+    0 0 0 1px rgba(139, 92, 246, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 .login-glass-input {
   background: rgba(255, 255, 255, 0.07) !important;
@@ -122,24 +123,24 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 
 .login-cosmos-sky {
   background:
-    radial-gradient(ellipse 50% 35% at 50% 0%, rgba(255, 0, 200, 0.55), transparent 55%),
-    radial-gradient(ellipse 40% 30% at 20% 80%, rgba(40, 0, 120, 0.5), transparent 50%),
-    radial-gradient(ellipse 35% 25% at 85% 60%, rgba(0, 60, 180, 0.35), transparent 50%),
-    linear-gradient(180deg, #2a0060 0%, #0a0020 35%, #000010 70%, #000008 100%);
+    radial-gradient(ellipse 55% 40% at 50% -5%, rgba(192, 38, 211, 0.42), transparent 58%),
+    radial-gradient(ellipse 42% 32% at 18% 78%, rgba(67, 20, 140, 0.45), transparent 52%),
+    radial-gradient(ellipse 38% 28% at 88% 58%, rgba(49, 46, 180, 0.28), transparent 50%),
+    linear-gradient(180deg, #1f0650 0%, #0c0128 38%, #050012 72%, #020008 100%);
 }
 
-.login-nebula { opacity: 0.42; mix-blend-mode: screen; }
+.login-nebula { opacity: 0.38; mix-blend-mode: screen; pointer-events: none; }
 .login-nebula-a {
   background:
-    radial-gradient(ellipse 60% 40% at 30% 40%, rgba(180, 0, 255, 0.25), transparent 60%),
-    radial-gradient(ellipse 50% 35% at 70% 70%, rgba(0, 100, 255, 0.2), transparent 55%);
-  animation: login-nebula-drift 28s ease-in-out infinite alternate;
+    radial-gradient(ellipse 60% 40% at 30% 40%, rgba(168, 85, 247, 0.22), transparent 62%),
+    radial-gradient(ellipse 50% 35% at 72% 68%, rgba(99, 102, 241, 0.16), transparent 55%);
+  animation: login-nebula-drift 32s ease-in-out infinite alternate;
 }
 .login-nebula-b {
   background:
-    radial-gradient(ellipse 45% 30% at 60% 25%, rgba(255, 0, 150, 0.2), transparent 50%),
-    radial-gradient(ellipse 40% 35% at 15% 60%, rgba(80, 0, 200, 0.18), transparent 55%);
-  animation: login-nebula-drift 36s ease-in-out infinite alternate-reverse;
+    radial-gradient(ellipse 45% 30% at 62% 22%, rgba(236, 72, 153, 0.16), transparent 52%),
+    radial-gradient(ellipse 40% 35% at 14% 62%, rgba(124, 58, 237, 0.15), transparent 55%);
+  animation: login-nebula-drift 40s ease-in-out infinite alternate-reverse;
 }
 
 @keyframes login-nebula-drift {
@@ -170,13 +171,13 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 
 @keyframes login-planet-rise {
   0% {
-    transform: translate(0, 0) rotate(0deg) scale(0.7);
+    transform: translate(0, 0) rotate(0deg) scale(0.75);
     opacity: 0;
   }
-  8% { opacity: 1; }
-  80% { opacity: 0.9; }
+  6% { opacity: 0.95; }
+  85% { opacity: 0.85; }
   100% {
-    transform: translate(var(--planet-drift, 30px), -115vh) rotate(var(--planet-spin, 90deg)) scale(1.05);
+    transform: translate(var(--planet-drift, 30px), -118vh) rotate(var(--planet-spin, 90deg)) scale(1.08);
     opacity: 0;
   }
 }
@@ -269,12 +270,12 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 }
 @keyframes login-star-pulse {
   from {
-    transform: scale(0.88) rotate(-8deg);
-    filter: drop-shadow(0 0 3px rgba(255, 214, 120, 0.35));
+    transform: scale(0.92) rotate(-6deg);
+    filter: drop-shadow(0 0 4px rgba(255, 214, 120, 0.4));
   }
   to {
-    transform: scale(1.12) rotate(8deg);
-    filter: drop-shadow(0 0 10px rgba(255, 230, 150, 0.75));
+    transform: scale(1.08) rotate(6deg);
+    filter: drop-shadow(0 0 9px rgba(255, 230, 150, 0.7));
   }
 }
 @keyframes login-trail-shimmer {
@@ -287,7 +288,9 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 }
 
 .login-cosmos-vignette {
-  background: radial-gradient(ellipse 80% 70% at 50% 40%, transparent 25%, rgba(0, 0, 15, 0.35) 100%);
+  background:
+    radial-gradient(ellipse 75% 65% at 50% 42%, transparent 30%, rgba(0, 0, 12, 0.28) 100%),
+    linear-gradient(180deg, transparent 70%, rgba(0, 0, 8, 0.35) 100%);
   z-index: 4;
 }
 
@@ -377,8 +380,9 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   to   { transform: translateX(-115vw) translateY(-2px); }
 }
 .login-flyby-craft {
-  filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.7));
+  filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.55));
   transform: scaleX(1);
+  opacity: 0.95;
 }
 .login-flyby-rtl .login-flyby-craft {
   transform: scaleX(-1);
@@ -386,17 +390,18 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 .login-flyby-chat {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   color: #faf5ff;
-  background: rgba(76, 29, 149, 0.88);
-  border: 1px solid rgba(196, 181, 253, 0.4);
-  border-radius: 10px;
-  padding: 3px 9px;
+  background: rgba(76, 29, 149, 0.9);
+  border: 1px solid rgba(216, 180, 254, 0.45);
+  border-radius: 999px;
+  padding: 4px 11px;
   white-space: nowrap;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 12px rgba(139, 92, 246, 0.25);
   position: relative;
-  animation: login-chat-pop 0.35s ease-out;
-  margin-bottom: 2px;
+  animation: login-chat-pop 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+  margin-bottom: 4px;
+  backdrop-filter: blur(6px);
 }
 .login-flyby-chat::after {
   content: '';
@@ -410,6 +415,26 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
 @keyframes login-chat-pop {
   from { transform: scale(0.6); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
+}
+
+.login-feature-dot {
+  box-shadow: 0 0 8px rgba(192, 132, 252, 0.7);
+}
+.login-submit-btn {
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.login-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(139, 92, 246, 0.45);
+}
+.login-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.login-portal-link {
+  transition: color 0.15s ease, letter-spacing 0.15s ease;
+}
+.login-portal-link:hover {
+  letter-spacing: 0.02em;
 }
 
 @media (prefers-reduced-motion: reduce) {
