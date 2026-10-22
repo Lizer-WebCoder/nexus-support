@@ -24,8 +24,61 @@ t = t.replace(
     'className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-fuchsia-100 hover:text-white px-2 py-1 rounded-md hover:bg-white/10"',
 )
 
+if "handleForgotPassword" not in t:
+    inject = '''
+  const handleForgotPassword = async () => {
+    setError('');
+    setInfo('');
+    const em = email.trim();
+    if (!em) {
+      setError('Enter your email above, then click Forgot Password?');
+      return;
+    }
+    setLoading(true);
+    try {
+      if (!resetPassword) throw new Error('Password reset is not available.');
+      await resetPassword(em);
+      setInfo('Password reset email sent. Check your inbox (and spam folder).');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Could not send reset email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+'''
+    if "const leftTitle" in t:
+        t = t.replace("  const leftTitle", inject + "  const leftTitle")
+    print("handleForgotPassword injected")
+
+if "Passwords do not match" not in t:
+    old = """    setError('');
+    setInfo('');
+    setLoading(true);
+    try {
+      if (mode === 'signin') await signIn(email.trim(), password, isAgent ? 'agent' : 'customer');
+      else {
+        await signUp(email.trim(), password, name.trim() || undefined, isAgent ? 'agent' : 'customer');
+"""
+    new = """    setError('');
+    setInfo('');
+    if (mode === 'signup') {
+      if (!name.trim()) { setError('Please enter your full name.'); return; }
+      if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+      if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
+    }
+    setLoading(true);
+    try {
+      if (mode === 'signin') await signIn(email.trim(), password, isAgent ? 'agent' : 'customer');
+      else {
+        await signUp(email.trim(), password, name.trim() || undefined, isAgent ? 'agent' : 'customer');
+"""
+    if old in t:
+        t = t.replace(old, new)
+        print("submit validation added")
+
 if "Create your account" in t:
-    print("already applied")
+    print("card already applied")
     p.write_text(t)
     raise SystemExit(0)
 
