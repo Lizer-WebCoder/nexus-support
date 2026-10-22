@@ -149,7 +149,13 @@ function SpaceFlybys() {
 }
 
 function ShootingStars() {
-  const [bolts, setBolts] = useState<{ id: number; top: number; left: number; duration: number; angle: number }[]>([]);
+  const [comet, setComet] = useState<{
+    id: number;
+    top: number;
+    left: number;
+    duration: number;
+    angle: number;
+  } | null>(null);
   const idRef = useRef(0);
 
   useEffect(() => {
@@ -159,36 +165,69 @@ function ShootingStars() {
     const spawn = () => {
       if (cancelled) return;
       const id = ++idRef.current;
-      const top = 5 + Math.random() * 45;
-      const left = 10 + Math.random() * 60;
-      const duration = 0.7 + Math.random() * 0.5;
-      const angle = -25 - Math.random() * 20;
-      setBolts((prev) => [...prev.slice(-2), { id, top, left, duration, angle }]);
-      setTimeout(() => setBolts((prev) => prev.filter((b) => b.id !== id)), duration * 1000 + 100);
+      const top = 2 + Math.random() * 28;
+      const left = -5 + Math.random() * 25;
+      const duration = 1.8 + Math.random() * 0.8;
+      const angle = 28 + Math.random() * 18;
+      setComet({ id, top, left, duration, angle });
+      setTimeout(() => {
+        if (!cancelled) setComet((c) => (c?.id === id ? null : c));
+      }, duration * 1000 + 150);
       timer = setTimeout(spawn, (28 + Math.random() * 12) * 1000);
     };
 
-    timer = setTimeout(spawn, 12000 + Math.random() * 8000);
+    timer = setTimeout(spawn, 8000 + Math.random() * 6000);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
   }, []);
 
+  if (!comet) {
+    return <div className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden />;
+  }
+
+  const particles = Array.from({ length: 28 }, (_, i) => {
+    const t = i / 27;
+    return {
+      key: i,
+      x: -8 - t * 140,
+      y: (Math.sin(i * 1.7) * 0.5) * (4 + t * 10),
+      size: Math.max(1.2, 5.5 * (1 - t * 0.85)),
+      opacity: Math.max(0.08, 0.95 * (1 - t)),
+      blur: t * 2.5,
+    };
+  });
+
   return (
     <div className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden>
-      {bolts.map((b) => (
-        <span
-          key={b.id}
-          className="login-shooting-star"
-          style={{
-            top: `${b.top}%`,
-            left: `${b.left}%`,
-            animationDuration: `${b.duration}s`,
-            transform: `rotate(${b.angle}deg)`,
-          }}
-        />
-      ))}
+      <div
+        key={comet.id}
+        className="login-comet"
+        style={{
+          top: `${comet.top}%`,
+          left: `${comet.left}%`,
+          animationDuration: `${comet.duration}s`,
+          ['--comet-angle' as string]: `${comet.angle}deg`,
+        }}
+      >
+        <span className="login-comet-trail" />
+        {particles.map((p) => (
+          <span
+            key={p.key}
+            className="login-comet-dust"
+            style={{
+              left: p.x,
+              top: p.y,
+              width: p.size,
+              height: p.size,
+              opacity: p.opacity,
+              filter: p.blur > 0.3 ? `blur(${p.blur}px)` : undefined,
+            }}
+          />
+        ))}
+        <span className="login-comet-head" />
+      </div>
     </div>
   );
 }
