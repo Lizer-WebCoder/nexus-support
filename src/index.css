@@ -195,88 +195,84 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   to { transform: translateY(-130vh) scale(1); opacity: 0; }
 }
 
-/* Comet — slow rainbow arc across the sky */
-.login-comet {
+/* Golden shooting star — soft glow + glittering trail */
+.login-shooting-star {
   position: absolute;
-  width: 8px;
-  height: 8px;
-  animation-name: login-comet-arc;
-  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  width: 22px;
+  height: 22px;
+  animation-name: login-star-arc;
+  animation-timing-function: cubic-bezier(0.22, 0.15, 0.28, 1);
   animation-fill-mode: forwards;
   will-change: transform, opacity;
   pointer-events: none;
 }
-.login-comet-head {
+.login-star-glyph {
   position: absolute;
   left: 0;
   top: 0;
-  width: 11px;
-  height: 11px;
-  margin: -5.5px 0 0 -5.5px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff 0%, #ffe4f5 25%, #e0aaff 50%, #7c3aed 100%);
-  box-shadow:
-    0 0 10px 4px rgba(255, 255, 255, 0.95),
-    0 0 22px 10px rgba(232, 121, 249, 0.75),
-    0 0 48px 18px rgba(139, 92, 246, 0.4);
+  display: block;
+  filter:
+    drop-shadow(0 0 4px rgba(255, 214, 120, 0.55))
+    drop-shadow(0 0 10px rgba(232, 184, 74, 0.35));
   z-index: 3;
 }
-.login-comet-trail {
+.login-star-trail {
   position: absolute;
-  left: -220px;
-  top: -5px;
-  width: 220px;
-  height: 10px;
+  left: -170px;
+  top: 9px;
+  width: 170px;
+  height: 3px;
   border-radius: 999px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(59, 130, 246, 0.25) 12%,
-    rgba(34, 211, 238, 0.45) 28%,
-    rgba(167, 139, 250, 0.55) 48%,
-    rgba(244, 114, 182, 0.7) 68%,
-    rgba(253, 224, 71, 0.55) 85%,
-    rgba(255, 255, 255, 0.95) 100%
+    rgba(232, 184, 74, 0.08) 20%,
+    rgba(255, 214, 120, 0.28) 55%,
+    rgba(255, 236, 180, 0.45) 85%,
+    rgba(255, 248, 220, 0.55) 100%
   );
-  box-shadow:
-    0 0 14px 3px rgba(192, 132, 252, 0.45),
-    0 0 32px 8px rgba(244, 114, 182, 0.25);
+  box-shadow: 0 0 8px 1px rgba(232, 184, 74, 0.2);
   z-index: 1;
-  filter: blur(0.6px);
+  filter: blur(0.4px);
   transform-origin: right center;
 }
-.login-comet-dust {
+.login-star-glitter {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, #fff 0%, #e9d5ff 40%, transparent 70%);
-  box-shadow: 0 0 6px 1px rgba(216, 180, 254, 0.55);
+  background: radial-gradient(circle, #fff8e0 0%, #ffd978 45%, transparent 70%);
+  box-shadow: 0 0 3px 0.5px rgba(255, 214, 120, 0.45);
   z-index: 2;
   pointer-events: none;
+  animation: login-glitter-twinkle 0.7s ease-in-out infinite alternate;
 }
-@keyframes login-comet-arc {
+@keyframes login-glitter-twinkle {
+  from { transform: scale(0.7); opacity: 0.35; }
+  to { transform: scale(1.15); opacity: 0.85; }
+}
+@keyframes login-star-arc {
   0% {
     opacity: 0;
-    transform: translate(0vw, 0vh) rotate(8deg) scale(0.7);
+    transform: translate(0vw, 0vh) rotate(-8deg) scale(0.65);
   }
-  8% {
-    opacity: 1;
-    transform: translate(8vw, 3vh) rotate(6deg) scale(1);
+  10% {
+    opacity: 0.95;
+    transform: translate(10vw, 2vh) rotate(-6deg) scale(1);
   }
-  30% {
+  35% {
     opacity: 1;
-    transform: translate(32vw, -4vh) rotate(2deg) scale(1);
+    transform: translate(35vw, -5vh) rotate(-2deg) scale(1);
   }
-  50% {
+  55% {
     opacity: 1;
-    transform: translate(52vw, -8vh) rotate(-2deg) scale(1.02);
+    transform: translate(55vw, -7vh) rotate(2deg) scale(1);
   }
-  72% {
-    opacity: 1;
-    transform: translate(75vw, 2vh) rotate(10deg) scale(0.98);
+  80% {
+    opacity: 0.85;
+    transform: translate(82vw, 4vh) rotate(8deg) scale(0.95);
   }
   100% {
     opacity: 0;
-    transform: translate(112vw, 22vh) rotate(18deg) scale(0.85);
+    transform: translate(108vw, 18vh) rotate(12deg) scale(0.75);
   }
 }
 
@@ -414,7 +410,8 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   .login-logo-arcs,
   .login-flyby-ltr,
   .login-flyby-rtl,
-  .login-comet {
+  .login-shooting-star,
+  .login-star-glitter {
     animation: none !important;
   }
 }
