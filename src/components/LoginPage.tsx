@@ -180,7 +180,6 @@ function ShootingStars() {
       const id = ++idRef.current;
       void id;
 
-      // Quadratic bezier: start → peak → end (gentle arc)
       const startX = -40;
       const startY = h * (0.08 + Math.random() * 0.18);
       const endX = w + 40;
@@ -196,11 +195,9 @@ function ShootingStars() {
         if (cancelled) return;
         const raw = Math.min(1, (now - t0) / duration);
         const t = ease(raw);
-        // Quadratic Bezier
         const inv = 1 - t;
         const x = inv * inv * startX + 2 * inv * t * ctrlX + t * t * endX;
         const y = inv * inv * startY + 2 * inv * t * ctrlY + t * t * endY;
-        // Tangent for slight rotation
         const dx = 2 * inv * (ctrlX - startX) + 2 * t * (endX - ctrlX);
         const dy = 2 * inv * (ctrlY - startY) + 2 * t * (endY - ctrlY);
         const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
@@ -376,7 +373,7 @@ function LogoPilotStage() {
 }
 
 function CosmicFallBackground() {
-  const stars = useFallingStars(42);
+  const stars = useFallingStars(28);
   return (
     <div className="login-cosmos absolute inset-0 overflow-hidden" aria-hidden>
       <div className="login-cosmos-sky absolute inset-0" />
@@ -488,7 +485,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
             <ul className="mt-8 space-y-3">
               {caps.map((c) => (
                 <li key={c.title} className="flex gap-3 items-start">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-fuchsia-400 shrink-0" />
+                  <span className="login-feature-dot mt-1.5 w-1.5 h-1.5 rounded-full bg-fuchsia-400 shrink-0" />
                   <div>
                     <div className="text-sm font-medium text-white">{c.title}</div>
                     <div className="text-xs text-fuchsia-100/60">{c.blurb}</div>
@@ -497,12 +494,12 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
               ))}
             </ul>
           </div>
-          <div className="mt-auto pt-8 text-xs text-fuchsia-200/40 hidden lg:block">{footerCredit}</div>
+          <div className="mt-auto pt-10 text-[11px] text-fuchsia-200/35 hidden lg:block tracking-wide">{footerCredit}</div>
         </div>
 
         <div className="flex items-center justify-center lg:justify-end">
           <div className="login-glass-card w-full max-w-md rounded-2xl p-6 sm:p-8">
-            <div className="flex flex-col items-center mb-5">
+            <div className="flex flex-col items-center mb-6">
               <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center mb-3">
                 <NexusLogoMark size={28} />
               </div>
@@ -558,17 +555,17 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
                   <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-fuchsia-200/60 hover:text-white px-2" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
                 </div>
               </div>
-              <button type="submit" disabled={loading} className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 transition shadow-lg shadow-violet-600/40">
+              <button type="submit" disabled={loading} className="login-submit-btn w-full rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-violet-600 bg-[length:160%_100%] hover:from-violet-500 hover:via-fuchsia-500 hover:to-violet-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 shadow-lg shadow-violet-600/40">
                 {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
               </button>
             </form>
             {isAgent && onOpenPortal && (
-              <button type="button" onClick={onOpenPortal} className="mt-5 w-full text-center text-sm text-fuchsia-200/80 hover:text-white font-medium">
+              <button type="button" onClick={onOpenPortal} className="login-portal-link mt-5 w-full text-center text-sm text-fuchsia-200/80 hover:text-white font-medium">
                 Customer portal →
               </button>
             )}
             {!isAgent && onOpenAgent && (
-              <button type="button" onClick={onOpenAgent} className="mt-5 w-full text-center text-sm text-fuchsia-200/80 hover:text-white font-medium">
+              <button type="button" onClick={onOpenAgent} className="login-portal-link mt-5 w-full text-center text-sm text-fuchsia-200/80 hover:text-white font-medium">
                 Agent Portal →
               </button>
             )}
