@@ -36,52 +36,28 @@ function NexusLogoMark({ size = 56 }: { size?: number }) {
   );
 }
 
-const ROCK_PATHS = [
-  'M20 4 L34 10 L42 22 L36 36 L22 42 L8 34 L4 18 L12 6 Z',
-  'M24 2 L38 8 L44 20 L40 34 L26 44 L10 38 L4 24 L8 10 Z',
-  'M16 6 L32 4 L44 16 L40 32 L28 42 L10 38 L4 22 L8 10 Z',
-  'M22 4 L36 12 L42 28 L30 42 L12 40 L4 26 L8 12 Z',
+const CHAT_LINES = [
+  'WOAH COOL',
+  'NICE TRAIL!',
+  'Is that Nexus?',
+  'Sick logo',
+  'Beep boop',
+  'Over here!',
+  'Support desk?',
+  'Zoom!',
+  'Hello agents',
+  'To the branch!',
+  'Copy that',
+  'Need backup?',
+  'Tickets flying!',
+  'SLA green',
+  'Branch online',
+  'Portal live',
+  'Route me in',
+  'Clear skies',
+  'Warp speed',
+  'Got a ticket?',
 ];
-
-function AsteroidSvg({ variant, size }: { variant: number; size: number }) {
-  const path = ROCK_PATHS[variant % ROCK_PATHS.length];
-  const hue = 30 + (variant * 17) % 40;
-  return (
-    <svg width={size} height={size} viewBox="0 0 48 48" className="login-asteroid-svg">
-      <defs>
-        <radialGradient id={`rock-g-${variant}`} cx="32%" cy="28%" r="70%">
-          <stop offset="0%" stopColor={`hsl(${hue} 18% 48%)`} />
-          <stop offset="55%" stopColor={`hsl(${hue} 22% 28%)`} />
-          <stop offset="100%" stopColor={`hsl(${hue} 25% 12%)`} />
-        </radialGradient>
-      </defs>
-      <path d={path} fill={`url(#rock-g-${variant})`} stroke={`hsl(${hue} 15% 35%)`} strokeWidth="1.2" />
-      <circle cx="18" cy="16" r="3.2" fill="rgba(0,0,0,0.28)" />
-      <circle cx="30" cy="26" r="2.2" fill="rgba(0,0,0,0.22)" />
-      <circle cx="22" cy="32" r="1.6" fill="rgba(0,0,0,0.2)" />
-      <ellipse cx="34" cy="14" rx="2" ry="1.4" fill="rgba(255,255,255,0.08)" />
-    </svg>
-  );
-}
-
-function useAsteroids(count: number) {
-  return useMemo(() => {
-    const starts = [16, 26, 36, 52, 66, 78];
-    return Array.from({ length: count }, (_, i) => {
-      const seed = (i * 17 + 11) % 97;
-      return {
-        id: i,
-        size: 22 + (seed % 20),
-        left: starts[i % starts.length] + (seed % 4),
-        delay: -((i * 2.8) % 18),
-        duration: 12 + (seed % 8),
-        drift: (seed % 2 === 0 ? 1 : -1) * (12 + (seed % 28)),
-        rotate: 140 + (seed % 200),
-        variant: i % ROCK_PATHS.length,
-      };
-    });
-  }, [count]);
-}
 
 type Flyby = {
   id: number;
@@ -89,6 +65,7 @@ type Flyby = {
   top: number;
   duration: number;
   fromLeft: boolean;
+  chat: string | null;
 };
 
 function UfoIcon() {
@@ -106,7 +83,6 @@ function UfoIcon() {
 }
 
 function ShipIcon() {
-  /* Drawn facing RIGHT: nose at right, engines + flame at left */
   return (
     <svg width="72" height="28" viewBox="0 0 72 28" fill="none" aria-hidden>
       <ellipse cx="10" cy="14" rx="10" ry="5" fill="url(#rocketFlame)" opacity="0.9" />
@@ -143,7 +119,8 @@ function SpaceFlybys() {
         const duration = 6 + Math.random() * 5;
         const fromLeft = Math.random() < 0.5;
         const top = 12 + Math.random() * 55;
-        setFlybys((prev) => [...prev, { id, kind, top, duration, fromLeft }]);
+        const chat = Math.random() < 0.65 ? CHAT_LINES[Math.floor(Math.random() * CHAT_LINES.length)] : null;
+        setFlybys((prev) => [...prev, { id, kind, top, duration, fromLeft, chat }]);
         setTimeout(() => setFlybys((prev) => prev.filter((f) => f.id !== id)), duration * 1000 + 200);
         schedule();
       }, wait);
@@ -151,7 +128,7 @@ function SpaceFlybys() {
     timer = setTimeout(() => {
       if (cancelled) return;
       const id = ++idRef.current;
-      setFlybys([{ id, kind: 'ship', top: 20 + Math.random() * 40, duration: 7, fromLeft: true }]);
+      setFlybys([{ id, kind: 'ship', top: 20 + Math.random() * 40, duration: 7, fromLeft: true, chat: 'WOAH COOL' }]);
       setTimeout(() => setFlybys((p) => p.filter((f) => f.id !== id)), 7200);
       schedule();
     }, 8000);
@@ -161,10 +138,56 @@ function SpaceFlybys() {
     <div className="login-flybys absolute inset-0 pointer-events-none z-[7] overflow-hidden hidden lg:block">
       {flybys.map((f) => (
         <div key={f.id} className={`login-flyby ${f.fromLeft ? 'login-flyby-ltr' : 'login-flyby-rtl'}`} style={{ top: `${f.top}%`, animationDuration: `${f.duration}s` }}>
+          {f.chat && <div className="login-flyby-chat">{f.chat}</div>}
           <div className="login-flyby-craft">
             {f.kind === 'ufo' ? <UfoIcon /> : <ShipIcon />}
           </div>
         </div>
+      ))}
+    </div>
+  );
+}
+
+function ShootingStars() {
+  const [bolts, setBolts] = useState<{ id: number; top: number; left: number; duration: number; angle: number }[]>([]);
+  const idRef = useRef(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    const spawn = () => {
+      if (cancelled) return;
+      const id = ++idRef.current;
+      const top = 5 + Math.random() * 45;
+      const left = 10 + Math.random() * 60;
+      const duration = 0.7 + Math.random() * 0.5;
+      const angle = -25 - Math.random() * 20;
+      setBolts((prev) => [...prev.slice(-2), { id, top, left, duration, angle }]);
+      setTimeout(() => setBolts((prev) => prev.filter((b) => b.id !== id)), duration * 1000 + 100);
+      timer = setTimeout(spawn, (28 + Math.random() * 12) * 1000);
+    };
+
+    timer = setTimeout(spawn, 12000 + Math.random() * 8000);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  return (
+    <div className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden>
+      {bolts.map((b) => (
+        <span
+          key={b.id}
+          className="login-shooting-star"
+          style={{
+            top: `${b.top}%`,
+            left: `${b.left}%`,
+            animationDuration: `${b.duration}s`,
+            transform: `rotate(${b.angle}deg)`,
+          }}
+        />
       ))}
     </div>
   );
@@ -176,7 +199,6 @@ function easeInOut(t: number) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t
 function randomIn(min: number, max: number) { return min + Math.random() * (max - min); }
 
 function LogoPilotStage() {
-  const asteroids = useAsteroids(4);
   const pilotRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const history = useRef<TrailPoint[]>([]);
@@ -249,11 +271,6 @@ function LogoPilotStage() {
 
   return (
     <div ref={stageRef} className="login-pilot-stage absolute inset-0 pointer-events-none z-[5] hidden lg:block" aria-hidden>
-      {asteroids.map((a) => (
-        <span key={a.id} className="login-asteroid" style={{ width: a.size, height: a.size, left: `${a.left}%`, animationDelay: `${a.delay}s`, animationDuration: `${a.duration}s`, ['--rock-drift' as string]: `${a.drift}px`, ['--rock-spin' as string]: `${a.rotate}deg` }}>
-          <AsteroidSvg variant={a.variant} size={a.size} />
-        </span>
-      ))}
       {pathD && (
         <svg className="login-light-trail absolute inset-0 w-full h-full overflow-visible" width={stageSize.w} height={stageSize.h} viewBox={`0 0 ${stageSize.w} ${stageSize.h}`}>
           <defs>
@@ -297,6 +314,7 @@ function CosmicFallBackground() {
       <div className="login-nebula login-nebula-a absolute inset-0" />
       <div className="login-nebula login-nebula-b absolute inset-0" />
       <SpacePlanets />
+      <ShootingStars />
       <div className="login-starfield absolute inset-0">
         {stars.map((s) => (
           <span key={s.id} className="login-star absolute rounded-full" style={{ left: s.left, width: s.size, height: s.size, background: s.color, opacity: s.opacity, boxShadow: `0 0 ${s.size * 3}px ${s.color}`, animationDelay: `${s.delay}s`, animationDuration: `${s.duration}s` }} />
@@ -381,7 +399,7 @@ export default function LoginPage({ onOpenPortal }: Props) {
               ))}
             </ul>
           </div>
-          <div className="mt-auto pt-8 text-xs text-fuchsia-200/40 hidden lg:block">Nexus Ops · agent workspace</div>
+          <div className="mt-auto pt-8 text-xs text-fuchsia-200/40 hidden lg:block">NexusOps Agent Workspace · © 2026 Lizer & Kirzhian</div>
         </div>
 
         <div className="flex items-center justify-center lg:justify-end">
