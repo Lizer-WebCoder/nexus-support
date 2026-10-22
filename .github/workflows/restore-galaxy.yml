@@ -1,6 +1,9 @@
 name: Restore galaxy LoginPage
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/restore-galaxy.yml'
 jobs:
   restore:
     runs-on: ubuntu-latest
@@ -8,6 +11,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Restore LoginPage from good commit and densify stars
         run: |
           git show b965b9a453640c8ccf9d2dabb5a4993f546c8d69:src/components/LoginPage.tsx > src/components/LoginPage.tsx
@@ -82,7 +87,6 @@ jobs:
               raise SystemExit('old hook not found')
           text = text.replace(old, new)
           text = text.replace('useFallingStars(28)', 'useFallingStars(180)')
-          # richer glow on stars
           old_span = "boxShadow: `0 0 ${s.size * 3}px ${s.color}`"
           new_span = "boxShadow: `0 0 ${s.size * 4}px ${s.color}, 0 0 ${s.size * 8}px ${s.color}55`, filter: s.blur ? `blur(${s.blur}px)` : undefined"
           if old_span in text:
