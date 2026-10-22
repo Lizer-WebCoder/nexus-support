@@ -22,10 +22,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
 
-      - name: Fix login layout + densify starfield
+      - name: Fix login layout, card UI, densify starfield
         run: |
           if [ -f scripts/fix_login_layout.py ]; then
             python3 scripts/fix_login_layout.py || true
+          fi
+          if [ -f scripts/fix_login_card.py ]; then
+            python3 scripts/fix_login_card.py || true
           fi
           if [ -f scripts/densify_stars.py ]; then
             python3 scripts/densify_stars.py || true
