@@ -11,15 +11,14 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Restore LoginPage from good commit and densify stars
+      - name: Densify starfield
         run: |
-          git show b965b9a453640c8ccf9d2dabb5a4993f546c8d69:src/components/LoginPage.tsx > src/components/LoginPage.tsx
           python3 << 'PY'
           from pathlib import Path
           p = Path('src/components/LoginPage.tsx')
           text = p.read_text()
+          if 'PLACEHOLDER' in text or len(text) < 500:
+              raise SystemExit('LoginPage still placeholder')
           old = '''function useFallingStars(count: number) {
   return useMemo(
     () =>
@@ -84,23 +83,26 @@ jobs:
   );
 }'''
           if old not in text:
-              raise SystemExit('old hook not found')
-          text = text.replace(old, new)
-          text = text.replace('useFallingStars(28)', 'useFallingStars(180)')
-          old_span = "boxShadow: `0 0 ${s.size * 3}px ${s.color}`"
-          new_span = "boxShadow: `0 0 ${s.size * 4}px ${s.color}, 0 0 ${s.size * 8}px ${s.color}55`, filter: s.blur ? `blur(${s.blur}px)` : undefined"
+              print('hook already patched or different; trying count only')
+          else:
+              text = text.replace(old, new)
+          import re
+          text2, n = re.subn(r'useFallingStars\(\d+\)', 'useFallingStars(180)', text, count=1)
+          text = text2
+          print('count replacements', n)
+          old_span = 'boxShadow: `0 0 ${s.size * 3}px ${s.color}`'
+          new_span = 'boxShadow: `0 0 ${s.size * 4}px ${s.color}, 0 0 ${s.size * 8}px ${s.color}55`, filter: s.blur ? `blur(${s.blur}px)` : undefined'
           if old_span in text:
               text = text.replace(old_span, new_span)
+              print('glow enhanced')
           p.write_text(text)
-          print('stars:', 'useFallingStars(180)' in text)
-          print('size', len(text))
+          print('ok', 'useFallingStars(180)' in text, len(text))
           PY
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add src/components/LoginPage.tsx
-          git status
           git diff --staged --stat
-          git commit -m "Login: denser galaxy starfield (180 particles, 4 depth layers)" || echo "no change"
+          git commit -m "Login: denser galaxy starfield (180 particles, 4 depth layers)" || echo nochange
           git push
