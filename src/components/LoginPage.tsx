@@ -344,7 +344,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
     setInfo('');
     setLoading(true);
     try {
-      if (mode === 'signin') await signIn(email.trim(), password);
+      if (mode === 'signin') await signIn(email.trim(), password, isAgent ? 'agent' : 'customer');
       else {
         await signUp(email.trim(), password, name.trim() || undefined, isAgent ? 'agent' : 'customer');
         setInfo('Account created. You can sign in now.');
@@ -352,7 +352,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Authentication failed';
-      if (/pending admin approval|must approve/i.test(msg)) {
+      if (/pending admin approval|must approve|Account created/i.test(msg)) {
         setInfo(msg);
         setMode('signin');
       } else setError(msg);
