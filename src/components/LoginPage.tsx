@@ -3,7 +3,10 @@ import { useAuth } from '../context/AuthContext';
 import SpacePlanets from './SpacePlanets';
 
 interface Props {
+  /** customer = portal login (default). agent = workspace login. */
+  audience?: 'customer' | 'agent';
   onOpenPortal?: () => void;
+  onOpenAgent?: () => void;
 }
 
 function useFallingStars(count: number) {
@@ -149,84 +152,108 @@ function SpaceFlybys() {
 }
 
 function ShootingStars() {
-  const [comet, setComet] = useState<{
-    id: number;
-    top: number;
-    left: number;
-    duration: number;
-    angle: number;
-  } | null>(null);
+  const layerRef = useRef<HTMLDivElement>(null);
+  const starRef = useRef<HTMLDivElement>(null);
   const idRef = useRef(0);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    let timer: ReturnType<typeof setTimeout>;
+    let raf = 0;
+    let spawnTimer: ReturnType<typeof setTimeout>;
+    let running = false;
 
-    const spawn = () => {
-      if (cancelled) return;
+    const ease = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const flyOnce = () => {
+      if (cancelled || running) return;
+      const layer = layerRef.current;
+      const el = starRef.current;
+      if (!layer || !el) return;
+
+      const w = layer.clientWidth || window.innerWidth;
+      const h = layer.clientHeight || window.innerHeight;
+      if (w < 20 || h < 20) return;
+
+      running = true;
       const id = ++idRef.current;
-      const top = 2 + Math.random() * 28;
-      const left = -5 + Math.random() * 25;
-      const duration = 1.8 + Math.random() * 0.8;
-      const angle = 28 + Math.random() * 18;
-      setComet({ id, top, left, duration, angle });
-      setTimeout(() => {
-        if (!cancelled) setComet((c) => (c?.id === id ? null : c));
-      }, duration * 1000 + 150);
-      timer = setTimeout(spawn, (28 + Math.random() * 12) * 1000);
+      void id;
+
+      const startX = -40;
+      const startY = h * (0.08 + Math.random() * 0.18);
+      const endX = w + 40;
+      const endY = startY + h * (0.08 + Math.random() * 0.12);
+      const ctrlX = w * (0.42 + Math.random() * 0.16);
+      const ctrlY = startY - h * (0.06 + Math.random() * 0.08);
+
+      const duration = 4800 + Math.random() * 1600;
+      const t0 = performance.now();
+      setVisible(true);
+
+      const tick = (now: number) => {
+        if (cancelled) return;
+        const raw = Math.min(1, (now - t0) / duration);
+        const t = ease(raw);
+        const inv = 1 - t;
+        const x = inv * inv * startX + 2 * inv * t * ctrlX + t * t * endX;
+        const y = inv * inv * startY + 2 * inv * t * ctrlY + t * t * endY;
+        const dx = 2 * inv * (ctrlX - startX) + 2 * t * (endX - ctrlX);
+        const dy = 2 * inv * (ctrlY - startY) + 2 * t * (endY - ctrlY);
+        const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+
+        let opacity = 1;
+        if (raw < 0.08) opacity = raw / 0.08;
+        else if (raw > 0.88) opacity = (1 - raw) / 0.12;
+
+        el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${angle}deg)`;
+        el.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+
+        if (raw < 1) {
+          raf = requestAnimationFrame(tick);
+        } else {
+          el.style.opacity = '0';
+          setVisible(false);
+          running = false;
+          if (!cancelled) {
+            spawnTimer = setTimeout(flyOnce, 26000 + Math.random() * 14000);
+          }
+        }
+      };
+
+      el.style.opacity = '0';
+      el.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
+      raf = requestAnimationFrame(tick);
     };
 
-    timer = setTimeout(spawn, 8000 + Math.random() * 6000);
+    spawnTimer = setTimeout(flyOnce, 7000 + Math.random() * 3000);
+
     return () => {
       cancelled = true;
-      clearTimeout(timer);
+      cancelAnimationFrame(raf);
+      clearTimeout(spawnTimer);
     };
   }, []);
 
-  if (!comet) {
-    return <div className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden />;
-  }
-
-  const particles = Array.from({ length: 28 }, (_, i) => {
-    const t = i / 27;
-    return {
-      key: i,
-      x: -8 - t * 140,
-      y: (Math.sin(i * 1.7) * 0.5) * (4 + t * 10),
-      size: Math.max(1.2, 5.5 * (1 - t * 0.85)),
-      opacity: Math.max(0.08, 0.95 * (1 - t)),
-      blur: t * 2.5,
-    };
-  });
-
   return (
-    <div className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden>
+    <div
+      ref={layerRef}
+      className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden"
+      aria-hidden
+    >
       <div
-        key={comet.id}
-        className="login-comet"
-        style={{
-          top: `${comet.top}%`,
-          left: `${comet.left}%`,
-          animationDuration: `${comet.duration}s`,
-          ['--comet-angle' as string]: `${comet.angle}deg`,
-        }}
+        ref={starRef}
+        className="login-shooting-star"
+        style={{ opacity: visible ? undefined : 0, visibility: visible ? 'visible' : 'hidden' }}
       >
-        <span className="login-comet-trail" />
-        {particles.map((p) => (
-          <span
-            key={p.key}
-            className="login-comet-dust"
-            style={{
-              left: p.x,
-              top: p.y,
-              width: p.size,
-              height: p.size,
-              opacity: p.opacity,
-              filter: p.blur > 0.3 ? `blur(${p.blur}px)` : undefined,
-            }}
+        <span className="login-star-trail" />
+        <span className="login-star-sparkles" />
+        <svg className="login-star-glyph" width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+          <path
+            fill="#ffe9a8"
+            d="M12 1.5 L13.8 9.2 L21.5 9.5 L15.4 14 L17.5 21.5 L12 17.2 L6.5 21.5 L8.6 14 L2.5 9.5 L10.2 9.2 Z"
           />
-        ))}
-        <span className="login-comet-head" />
+        </svg>
       </div>
     </div>
   );
@@ -320,15 +347,15 @@ function LogoPilotStage() {
               <stop offset="100%" stopColor="#86198f" stopOpacity="0" />
             </linearGradient>
             <filter id="starGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="7" result="blur" />
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
             <filter id="starBloom" x="-150%" y="-150%" width="400%" height="400%">
-              <feGaussianBlur stdDeviation="16" />
+              <feGaussianBlur stdDeviation="10" />
             </filter>
           </defs>
-          <path d={pathD} fill="none" stroke="url(#starTrailGrad)" strokeWidth={48} strokeLinecap="round" strokeLinejoin="round" filter="url(#starBloom)" opacity={0.5} />
-          <path d={pathD} fill="none" stroke="url(#starTrailGrad)" strokeWidth={18} strokeLinecap="round" strokeLinejoin="round" filter="url(#starGlow)" opacity={0.85} />
+          <path d={pathD} fill="none" stroke="url(#starTrailGrad)" strokeWidth={22} strokeLinecap="round" strokeLinejoin="round" filter="url(#starBloom)" opacity={0.4} />
+          <path d={pathD} fill="none" stroke="url(#starTrailGrad)" strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" filter="url(#starGlow)" opacity={0.8} />
         </svg>
       )}
       {trail.slice(2, 12).map((p, i) => {
@@ -346,7 +373,7 @@ function LogoPilotStage() {
 }
 
 function CosmicFallBackground() {
-  const stars = useFallingStars(42);
+  const stars = useFallingStars(90);
   return (
     <div className="login-cosmos absolute inset-0 overflow-hidden" aria-hidden>
       <div className="login-cosmos-sky absolute inset-0" />
@@ -372,9 +399,10 @@ const CAPABILITIES = [
   { title: 'SLA + automations', blurb: 'Rules fire on create, priority, and breach.' },
 ];
 
-export default function LoginPage({ onOpenPortal }: Props) {
+export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenAgent }: Props) {
   const { signIn, signUp, configError } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [audienceTab, setAudienceTab] = useState<'agent' | 'customer'>(audience === 'agent' ? 'agent' : 'customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -382,6 +410,8 @@ export default function LoginPage({ onOpenPortal }: Props) {
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const isAgent = audienceTab === 'agent';
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -392,44 +422,76 @@ export default function LoginPage({ onOpenPortal }: Props) {
       if (mode === 'signin') {
         await signIn(email.trim(), password);
       } else {
-        await signUp(email.trim(), password, name.trim() || undefined);
-        setInfo('Account created. An admin must approve new customer accounts before full portal access.');
+        await signUp(email.trim(), password, name.trim() || undefined, isAgent ? 'agent' : 'customer');
+        setInfo(
+          isAgent
+            ? 'Account created. An admin must approve new agent accounts before workspace access.'
+            : 'Account created. An admin must approve new customer accounts before full portal access.'
+        );
         setMode('signin');
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+      const msg = err instanceof Error ? err.message : 'Authentication failed';
+      if (/pending admin approval|must approve/i.test(msg)) {
+        setInfo(msg);
+        setMode('signin');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const leftTitle = isAgent ? 'Resolve faster.' : 'Get help, fast.';
+  const leftSub = isAgent
+    ? 'Stay organized across every branch.'
+    : 'Submit requests, chat live, and track every ticket.';
+  const leftBlurb = isAgent
+    ? 'Nexus Ops connects your customer portal, live chat, and agent desk. Route by branch, track SLA, and keep every conversation in one place.'
+    : 'Open a request, talk to an agent in real time, or check the status of an existing ticket — all from one place.';
+  const caps = isAgent
+    ? CAPABILITIES
+    : [
+        { title: 'Submit & track', blurb: 'Open a request and follow status anytime.' },
+        { title: 'Live chat', blurb: 'Reach an agent when you need a quick answer.' },
+        { title: 'Branch-aware', blurb: 'Your tickets stay with the right workplace team.' },
+      ];
+  const cardSub = isAgent ? 'Sign in to Agent Workspace' : 'Sign in to Customer Portal';
+  const footerCredit = isAgent
+    ? 'NexusOps Agent Workspace · © 2026 Lizer & Kirzhian'
+    : 'NexusOps Customer Portal · © 2026 Lizer & Kirzhian';
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <CosmicFallBackground />
-      <div className="relative z-10 min-h-screen grid lg:grid-cols-[1fr_minmax(340px,420px)] gap-6 lg:gap-10 px-5 sm:px-8 lg:px-12 py-8 lg:py-10">
-        <div className="flex flex-col min-h-[280px] lg:min-h-0 relative z-10">
+      <div className="relative z-10 min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-6xl xl:max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 px-5 sm:px-8 lg:px-10 xl:px-12 py-8 lg:py-12 items-center">
+        <div className="flex flex-col relative z-10 order-2 lg:order-1">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 backdrop-blur flex items-center justify-center overflow-hidden">
               <NexusLogoMark size={22} />
             </div>
             <div>
               <div className="text-sm font-semibold text-white tracking-tight">Nexus Ops</div>
-              <div className="text-[11px] text-fuchsia-200/70">Support operations platform</div>
+              <div className="text-[11px] text-fuchsia-200/70">
+                {isAgent ? 'Support operations platform' : 'Customer support portal'}
+              </div>
             </div>
           </div>
-          <div className="mt-10 lg:mt-14 max-w-md">
-            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-fuchsia-300/80 mb-3">Built for agent teams</p>
-            <h1 className="text-[1.85rem] sm:text-4xl font-semibold text-white leading-tight tracking-tight">
-              Resolve faster.
-              <span className="block text-fuchsia-200/90 font-normal mt-1">Stay organized across every branch.</span>
-            </h1>
-            <p className="mt-5 text-sm text-fuchsia-100/75 leading-relaxed">
-              Nexus Ops connects your customer portal, live chat, and agent desk. Route by branch, track SLA, and keep every conversation in one place.
+          <div className="mt-8 lg:mt-12 max-w-lg">
+            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-fuchsia-300/80 mb-3">
+              {isAgent ? 'Built for agent teams' : 'Built for customers'}
             </p>
+            <h1 className="text-3xl sm:text-4xl xl:text-[2.75rem] font-semibold text-white leading-tight tracking-tight">
+              {leftTitle}
+              <span className="block text-fuchsia-200/90 font-normal mt-1">{leftSub}</span>
+            </h1>
+            <p className="mt-5 text-sm sm:text-[15px] text-fuchsia-100/75 leading-relaxed max-w-md">{leftBlurb}</p>
             <ul className="mt-8 space-y-3">
-              {CAPABILITIES.map((c) => (
+              {caps.map((c) => (
                 <li key={c.title} className="flex gap-3 items-start">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-fuchsia-400 shrink-0" />
+                  <span className="login-feature-dot mt-1.5 w-1.5 h-1.5 rounded-full bg-fuchsia-400 shrink-0" />
                   <div>
                     <div className="text-sm font-medium text-white">{c.title}</div>
                     <div className="text-xs text-fuchsia-100/60">{c.blurb}</div>
@@ -438,26 +500,60 @@ export default function LoginPage({ onOpenPortal }: Props) {
               ))}
             </ul>
           </div>
-          <div className="mt-auto pt-8 text-xs text-fuchsia-200/40 hidden lg:block">NexusOps Agent Workspace · © 2026 Lizer & Kirzhian</div>
+          <div className="mt-10 lg:mt-14 text-[11px] text-fuchsia-200/35 hidden lg:block tracking-wide">{footerCredit}</div>
         </div>
 
-        <div className="flex items-center justify-center lg:justify-end">
-          <div className="login-glass-card w-full max-w-md rounded-2xl p-6 sm:p-8 shadow-2xl shadow-violet-950/50">
-            <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500/40 to-fuchsia-600/30 border border-white/20 backdrop-blur flex items-center justify-center mb-3 shadow-lg shadow-violet-500/25">
-                <NexusLogoMark size={32} />
+        <div className="flex items-center justify-center lg:justify-end order-1 lg:order-2">
+          <div className="login-glass-card w-full max-w-[400px] sm:max-w-[420px] rounded-2xl p-6 sm:p-8">
+            <div className="flex flex-col items-center mb-5">
+              <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center mb-3">
+                <NexusLogoMark size={28} />
               </div>
               <div className="text-lg font-semibold text-white tracking-tight">Nexus Ops</div>
-              <div className="text-sm text-fuchsia-200/80 mt-0.5">Sign in to Customer Portal</div>
             </div>
-            <div className="flex gap-2 mb-6 p-1 rounded-xl bg-white/5 border border-white/10">
-              <button type="button" onClick={() => { setMode('signin'); setError(''); setInfo(''); }} className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                mode === 'signin' ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'
-              }`}>Sign in</button>
-              <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); }} className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                mode === 'signup' ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'
-              }`}>Create account</button>
+            <div className="flex gap-2 mb-3 p-1 rounded-xl bg-white/5 border border-white/10">
+              <button
+                type="button"
+                onClick={() => { setAudienceTab('agent'); setMode('signin'); setError(''); setInfo(''); }}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
+                  isAgent ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'
+                }`}
+              >
+                Agent
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAudienceTab('customer'); setMode('signin'); setError(''); setInfo(''); }}
+                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${
+                  !isAgent ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'
+                }`}
+              >
+                Customer
+              </button>
             </div>
+            {mode === 'signin' ? (
+              <p className="text-center text-xs text-fuchsia-200/70 mb-5">
+                New here?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('signup'); setError(''); setInfo(''); }}
+                  className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline"
+                >
+                  Create an account
+                </button>
+              </p>
+            ) : (
+              <p className="text-center text-xs text-fuchsia-200/70 mb-5">
+                Already registered?{' '}
+                <button
+                  type="button"
+                  onClick={() => { setMode('signin'); setError(''); setInfo(''); }}
+                  className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline"
+                >
+                  Sign in
+                </button>
+              </p>
+            )}
             {configError && (
               <div className="mb-4 rounded-lg bg-amber-400/15 text-amber-100 text-sm px-3 py-2 border border-amber-300/30">{configError}</div>
             )}
@@ -485,16 +581,23 @@ export default function LoginPage({ onOpenPortal }: Props) {
                   <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-fuchsia-200/60 hover:text-white px-2" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
                 </div>
               </div>
-              <button type="submit" disabled={loading} className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 transition shadow-lg shadow-violet-600/40">
+              <p className="text-center text-xs text-fuchsia-200/75 -mt-1">{cardSub}</p>
+              <button type="submit" disabled={loading} className="login-submit-btn w-full rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-violet-600 bg-[length:160%_100%] hover:from-violet-500 hover:via-fuchsia-500 hover:to-violet-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 shadow-lg shadow-violet-600/40">
                 {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
               </button>
             </form>
-            {onOpenPortal && (
-              <button type="button" onClick={onOpenPortal} className="mt-5 w-full text-center text-sm text-fuchsia-200/80 hover:text-white font-medium">
+            {isAgent && onOpenPortal && (
+              <button type="button" onClick={onOpenPortal} className="login-portal-link mt-5 w-full text-center text-sm text-fuchsia-200/80 hover:text-white font-medium">
                 Customer portal →
               </button>
             )}
+            {!isAgent && onOpenAgent && (
+              <button type="button" onClick={onOpenAgent} className="login-portal-link mt-5 w-full text-center text-sm text-fuchsia-200/80 hover:text-white font-medium">
+                Agent Portal →
+              </button>
+            )}
           </div>
+        </div>
         </div>
       </div>
     </div>
