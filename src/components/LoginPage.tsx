@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { SpaceFlybys } from './LoginFlybys';
+import { markJustLoggedIn } from './PostLoginLoader';
+import SpacePlanets from './SpacePlanets';
 
 interface Props {
   audience?: 'customer' | 'agent';
@@ -13,14 +14,12 @@ function useFallingStars(count: number) {
     () =>
       Array.from({ length: count }, (_, i) => ({
         id: i,
-        left: `${(i * 37 + 7) % 100}%`,
-        top: `${(i * 53 + 11) % 100}%`,
-        size: i % 7 === 0 ? 2.4 : i % 3 === 0 ? 1.6 : 1,
-        delay: -((i * 0.47) % 18),
-        duration: 14 + (i % 9) * 2.2,
-        twinkle: 2.4 + (i % 5) * 0.7,
-        color: i % 5 === 0 ? '#f9a8d4' : i % 4 === 0 ? '#67e8f9' : i % 3 === 0 ? '#ffffff' : '#c4b5fd',
-        opacity: 0.25 + (i % 5) * 0.12,
+        left: `${(i * 41 + 13) % 100}%`,
+        size: i % 5 === 0 ? 3 : i % 3 === 0 ? 2 : 1,
+        delay: -((i * 0.37) % 20),
+        duration: 8 + (i % 11) * 1.4,
+        color: i % 4 === 0 ? '#ff66cc' : i % 3 === 0 ? '#66f0ff' : '#c4b5fd',
+        opacity: 0.35 + (i % 6) * 0.1,
       })),
     [count]
   );
@@ -30,15 +29,169 @@ function NexusLogoMark({ size = 56 }: { size?: number }) {
   return (
     <div className="login-logo-mark" style={{ width: size, height: size }}>
       <svg viewBox="0 0 48 48" width={size} height={size} fill="none" aria-hidden>
-        <circle cx="24" cy="24" r="5.2" fill="#e9d5ff" className="login-logo-core" />
+        <circle cx="24" cy="24" r="5.5" fill="white" className="login-logo-core" />
         <g className="login-logo-arcs">
-          <path d="M24 7a17 17 0 0 1 17 17" stroke="#c4b5fd" strokeWidth="3" strokeLinecap="round" />
-          <path d="M24 41a17 17 0 0 1-17-17" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
-        </g>
-        <g className="login-logo-arcs-rev">
-          <path d="M10 30a16 16 0 0 1 4-14" stroke="#f0abfc" strokeWidth="1.6" strokeLinecap="round" opacity="0.8" />
+          <path d="M24 6a18 18 0 0 1 18 18" stroke="white" strokeWidth="3.2" strokeLinecap="round" />
+          <path d="M24 42a18 18 0 0 1-18-18" stroke="white" strokeWidth="3.2" strokeLinecap="round" opacity="0.55" />
         </g>
       </svg>
+    </div>
+  );
+}
+
+const CHAT_LINES = [
+  'WOAH COOL', 'NICE TRAIL!', 'Is that Nexus?', 'Sick logo', 'Beep boop', 'Over here!',
+  'Support desk?', 'Zoom!', 'Hello agents', 'To the branch!', 'Copy that', 'Need backup?',
+  'Tickets flying!', 'SLA green', 'Branch online', 'Portal live', 'Route me in', 'Clear skies',
+  'Warp speed', 'Got a ticket?',
+];
+
+type Flyby = { id: number; kind: 'ufo' | 'ship'; top: number; duration: number; fromLeft: boolean; chat: string | null };
+
+function UfoIcon() {
+  return (
+    <svg width="56" height="28" viewBox="0 0 56 28" fill="none">
+      <ellipse cx="28" cy="18" rx="24" ry="7" fill="#94a3b8" opacity="0.9" />
+      <ellipse cx="28" cy="16" rx="18" ry="5" fill="#cbd5e1" />
+      <ellipse cx="28" cy="12" rx="10" ry="8" fill="#a5b4fc" />
+      <ellipse cx="28" cy="10" rx="7" ry="5" fill="#c7d2fe" opacity="0.7" />
+      <circle cx="20" cy="18" r="1.5" fill="#f0abfc" />
+      <circle cx="28" cy="19" r="1.5" fill="#67e8f9" />
+      <circle cx="36" cy="18" r="1.5" fill="#fde68a" />
+    </svg>
+  );
+}
+
+function ShipIcon() {
+  return (
+    <svg width="72" height="28" viewBox="0 0 72 28" fill="none" aria-hidden>
+      <ellipse cx="10" cy="14" rx="10" ry="5" fill="url(#rocketFlame)" opacity="0.9" />
+      <path d="M14 10 L14 18 L8 20 L4 14 L8 8 Z" fill="#c4b5fd" opacity="0.85" />
+      <path d="M16 9 L52 6 L66 14 L52 22 L16 19 Z" fill="#e2e8f0" />
+      <path d="M52 6 L66 14 L52 22 Z" fill="#a5b4fc" />
+      <rect x="28" y="11" width="12" height="6" rx="1.5" fill="#67e8f9" opacity="0.9" />
+      <circle cx="58" cy="14" r="2.2" fill="#fde68a" />
+      <path d="M22 9 L18 4 L24 9 Z" fill="#94a3b8" />
+      <path d="M22 19 L18 24 L24 19 Z" fill="#94a3b8" />
+      <defs>
+        <radialGradient id="rocketFlame" cx="80%" cy="50%" r="70%">
+          <stop offset="0%" stopColor="#fde047" />
+          <stop offset="45%" stopColor="#f97316" />
+          <stop offset="100%" stopColor="transparent" />
+        </radialGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function SpaceFlybys() {
+  const [flybys, setFlybys] = useState<Flyby[]>([]);
+  const idRef = useRef(0);
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      const wait = (20 + Math.random() * 30) * 1000;
+      timer = setTimeout(() => {
+        if (cancelled) return;
+        const id = ++idRef.current;
+        const kind: 'ufo' | 'ship' = Math.random() < 0.35 ? 'ufo' : 'ship';
+        const duration = 6 + Math.random() * 5;
+        const fromLeft = Math.random() < 0.5;
+        const top = 12 + Math.random() * 55;
+        const chat = Math.random() < 0.65 ? CHAT_LINES[Math.floor(Math.random() * CHAT_LINES.length)] : null;
+        setFlybys((prev) => [...prev, { id, kind, top, duration, fromLeft, chat }]);
+        setTimeout(() => setFlybys((prev) => prev.filter((f) => f.id !== id)), duration * 1000 + 200);
+        schedule();
+      }, wait);
+    };
+    timer = setTimeout(() => {
+      if (cancelled) return;
+      const id = ++idRef.current;
+      setFlybys([{ id, kind: 'ship', top: 20 + Math.random() * 40, duration: 7, fromLeft: true, chat: 'WOAH COOL' }]);
+      setTimeout(() => setFlybys((p) => p.filter((f) => f.id !== id)), 7200);
+      schedule();
+    }, 8000);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, []);
+  return (
+    <div className="login-flybys absolute inset-0 pointer-events-none z-[7] overflow-hidden hidden lg:block">
+      {flybys.map((f) => (
+        <div key={f.id} className={`login-flyby ${f.fromLeft ? 'login-flyby-ltr' : 'login-flyby-rtl'}`} style={{ top: `${f.top}%`, animationDuration: `${f.duration}s` }}>
+          {f.chat && <div className="login-flyby-chat">{f.chat}</div>}
+          <div className="login-flyby-craft">{f.kind === 'ufo' ? <UfoIcon /> : <ShipIcon />}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ShootingStars() {
+  const layerRef = useRef<HTMLDivElement>(null);
+  const starRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    let raf = 0;
+    let spawnTimer: ReturnType<typeof setTimeout>;
+    let running = false;
+    const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    const flyOnce = () => {
+      if (cancelled || running) return;
+      const layer = layerRef.current;
+      const el = starRef.current;
+      if (!layer || !el) return;
+      const w = layer.clientWidth || window.innerWidth;
+      const h = layer.clientHeight || window.innerHeight;
+      if (w < 20 || h < 20) return;
+      running = true;
+      const startX = -40;
+      const startY = h * (0.08 + Math.random() * 0.18);
+      const endX = w + 40;
+      const endY = startY + h * (0.08 + Math.random() * 0.12);
+      const ctrlX = w * (0.42 + Math.random() * 0.16);
+      const ctrlY = startY - h * (0.06 + Math.random() * 0.08);
+      const duration = 4800 + Math.random() * 1600;
+      const t0 = performance.now();
+      setVisible(true);
+      const tick = (now: number) => {
+        if (cancelled) return;
+        const raw = Math.min(1, (now - t0) / duration);
+        const t = ease(raw);
+        const inv = 1 - t;
+        const x = inv * inv * startX + 2 * inv * t * ctrlX + t * t * endX;
+        const y = inv * inv * startY + 2 * inv * t * ctrlY + t * t * endY;
+        const dx = 2 * inv * (ctrlX - startX) + 2 * t * (endX - ctrlX);
+        const dy = 2 * inv * (ctrlY - startY) + 2 * t * (endY - ctrlY);
+        const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+        let opacity = 1;
+        if (raw < 0.08) opacity = raw / 0.08;
+        else if (raw > 0.88) opacity = (1 - raw) / 0.12;
+        el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${angle}deg)`;
+        el.style.opacity = String(Math.max(0, Math.min(1, opacity)));
+        if (raw < 1) raf = requestAnimationFrame(tick);
+        else {
+          el.style.opacity = '0';
+          setVisible(false);
+          running = false;
+          if (!cancelled) spawnTimer = setTimeout(flyOnce, 26000 + Math.random() * 14000);
+        }
+      };
+      el.style.opacity = '0';
+      el.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
+      raf = requestAnimationFrame(tick);
+    };
+    spawnTimer = setTimeout(flyOnce, 7000 + Math.random() * 3000);
+    return () => { cancelled = true; cancelAnimationFrame(raf); clearTimeout(spawnTimer); };
+  }, []);
+  return (
+    <div ref={layerRef} className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden>
+      <div ref={starRef} className="login-shooting-star" style={{ opacity: visible ? undefined : 0, visibility: visible ? 'visible' : 'hidden' }}>
+        <span className="login-star-trail" /><span className="login-star-sparkles" />
+        <svg className="login-star-glyph" width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+          <path fill="#ffe9a8" d="M12 1.5 L13.8 9.2 L21.5 9.5 L15.4 14 L17.5 21.5 L12 17.2 L6.5 21.5 L8.6 14 L2.5 9.5 L10.2 9.2 Z" />
+        </svg>
+      </div>
     </div>
   );
 }
@@ -69,8 +222,7 @@ function LogoPilotStage() {
       fromX = x; fromY = y; fromScale = scale; toX = nx; toY = ny; toScale = randomIn(0.88, 1.14);
       startT = performance.now();
       const dist = Math.hypot(toX - fromX, toY - fromY);
-      const travel = dist * 2.2 + randomIn(200, 800);
-      duration = Math.min(4200, Math.max(1400, travel));
+      duration = Math.min(4200, Math.max(1400, dist * 2.2 + randomIn(200, 800)));
     };
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
@@ -141,30 +293,24 @@ function LogoPilotStage() {
         return <span key={`spark-${i}-${Math.round(p.x)}`} className="login-trail-spark" style={{ left: p.x + ((i % 3) - 1) * 5, top: p.y + ((i % 2) * 3 - 1), opacity: Math.max(0, 0.55 * (1 - t)), width: 2 + (1 - t) * 3, height: 2 + (1 - t) * 3 }} />;
       })}
       <div ref={pilotRef} className="login-pilot login-pilot-js" style={{ left: 0, top: 0, transform: 'translate(-50%, -50%)' }}>
-        <div className="login-pilot-glow" /><NexusLogoMark size={40} />
+        <div className="login-pilot-glow" /><NexusLogoMark size={64} />
       </div>
     </div>
   );
 }
 
 function CosmicFallBackground() {
-  const stars = useFallingStars(70);
-  const field = useFallingStars(48);
+  const stars = useFallingStars(90);
   return (
     <div className="login-cosmos absolute inset-0 overflow-hidden" aria-hidden>
       <div className="login-cosmos-sky absolute inset-0" />
-      <div className="login-galaxy-band" />
       <div className="login-nebula login-nebula-a absolute inset-0" />
       <div className="login-nebula login-nebula-b absolute inset-0" />
-      <div className="login-dust absolute inset-0" />
-      <div className="absolute inset-0">
-        {field.map((s) => (
-          <span key={`t-${s.id}`} className="absolute rounded-full" style={{ left: s.left, top: s.top, width: s.size, height: s.size, background: s.color, boxShadow: `0 0 ${s.size * 4}px ${s.color}`, animation: `login-twinkle ${s.twinkle}s ease-in-out ${s.delay}s infinite` }} />
-        ))}
-      </div>
+      <SpacePlanets />
+      <ShootingStars />
       <div className="login-starfield absolute inset-0">
         {stars.map((s) => (
-          <span key={s.id} className="login-star absolute rounded-full" style={{ left: s.left, width: s.size, height: s.size, background: s.color, opacity: s.opacity, boxShadow: `0 0 ${s.size * 4}px ${s.color}`, animationDelay: `${s.delay}s`, animationDuration: `${s.duration}s` }} />
+          <span key={s.id} className="login-star absolute rounded-full" style={{ left: s.left, width: s.size, height: s.size, background: s.color, opacity: s.opacity, boxShadow: `0 0 ${s.size * 3}px ${s.color}`, animationDelay: `${s.delay}s`, animationDuration: `${s.duration}s` }} />
         ))}
       </div>
       <LogoPilotStage />
@@ -183,7 +329,7 @@ const CAPABILITIES = [
 export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenAgent }: Props) {
   const { signIn, signUp, resetPassword, configError } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [audienceTab, setAudienceTab] = useState<'agent' | 'customer'>(audience === 'agent' ? 'agent' : 'customer');
+  const [audienceTab, setAudienceTab] = useState<'agent' | 'customer'>('customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -206,8 +352,11 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
     }
     setLoading(true);
     try {
-      if (mode === 'signin') await signIn(email.trim(), password, isAgent ? 'agent' : 'customer');
-      else {
+      if (mode === 'signin') {
+        markJustLoggedIn();
+        await signIn(email.trim(), password, isAgent ? 'agent' : 'customer');
+        window.location.hash = isAgent ? '' : 'portal';
+      } else {
         await signUp(email.trim(), password, name.trim() || undefined, isAgent ? 'agent' : 'customer');
         setInfo('Account created. You can sign in now.');
         setMode('signin');
@@ -222,6 +371,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
       setLoading(false);
     }
   };
+
 
   const handleForgotPassword = async () => {
     setError('');
@@ -253,7 +403,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
     : [
         { title: 'Submit & track', blurb: 'Open a request and follow status anytime.' },
         { title: 'Live chat', blurb: 'Reach an agent when you need a quick answer.' },
-        { title: 'Community', blurb: 'Ask other customers before opening a ticket.' },
+        { title: 'Branch-aware', blurb: 'Your tickets stay with the right workplace team.' },
       ];
   const cardSub = isAgent ? 'Sign in to Agent Workspace' : 'Sign in to Customer Portal';
   const footerCredit = isAgent
@@ -267,28 +417,27 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
         <div className="w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] gap-10 lg:gap-14 xl:gap-20 2xl:gap-28 px-5 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8 lg:py-12 items-center">
           <div className="flex flex-col relative z-10 order-2 lg:order-1">
             <div className="flex items-center gap-3">
-              <div className="login-brand-badge">
-                <NexusLogoMark size={20} />
+              <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 backdrop-blur flex items-center justify-center overflow-hidden">
+                <NexusLogoMark size={22} />
               </div>
               <div>
                 <div className="text-sm font-semibold text-white tracking-tight">Nexus Ops</div>
                 <div className="text-[11px] text-fuchsia-200/70">{isAgent ? 'Support operations platform' : 'Customer support portal'}</div>
               </div>
             </div>
-            <div className="mt-8 lg:mt-10 max-w-lg">
-              <div className="login-status-pill mb-4"><span className="login-status-dot" /> Desk online</div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-fuchsia-300/80 mb-3">{isAgent ? 'Built for agent teams' : 'Built for customers'}</p>
-              <h1 className="login-hero-title text-3xl sm:text-4xl xl:text-[2.75rem] font-semibold leading-[1.08] tracking-tight">
-                {leftTitle}<span className="block text-fuchsia-200/90 font-normal mt-1" style={{ WebkitTextFillColor: 'rgba(245, 208, 254, 0.92)', background: 'none' }}>{leftSub}</span>
+            <div className="mt-8 lg:mt-12 max-w-lg">
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-fuchsia-300/80 mb-3">{isAgent ? 'Built for agent teams' : 'Built for customers'}</p>
+              <h1 className="text-3xl sm:text-4xl xl:text-[2.75rem] font-semibold text-white leading-tight tracking-tight">
+                {leftTitle}<span className="block text-fuchsia-200/90 font-normal mt-1">{leftSub}</span>
               </h1>
-              <p className="mt-4 text-sm sm:text-[15px] text-fuchsia-100/75 leading-relaxed max-w-md">{leftBlurb}</p>
-              <ul className="mt-6 space-y-2.5 max-w-md">
-                {caps.map((c, i) => (
-                  <li key={c.title} className="login-cap">
-                    <span className="login-cap-index">{String(i + 1).padStart(2, '0')}</span>
+              <p className="mt-5 text-sm sm:text-[15px] text-fuchsia-100/75 leading-relaxed max-w-md">{leftBlurb}</p>
+              <ul className="mt-8 space-y-3">
+                {caps.map((c) => (
+                  <li key={c.title} className="flex gap-3 items-start">
+                    <span className="login-feature-dot mt-1.5 w-1.5 h-1.5 rounded-full bg-fuchsia-400 shrink-0" />
                     <div>
                       <div className="text-sm font-medium text-white">{c.title}</div>
-                      <div className="text-xs text-fuchsia-100/65 mt-0.5">{c.blurb}</div>
+                      <div className="text-xs text-fuchsia-100/60">{c.blurb}</div>
                     </div>
                   </li>
                 ))}
@@ -299,20 +448,24 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
 
           <div className="flex items-center justify-center lg:justify-end order-1 lg:order-2 w-full lg:w-auto">
             {mode === 'signin' ? (
-            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-[22px] px-6 py-7 sm:px-7">
-              <div className="flex flex-col items-center text-center mb-5">
-                <div className="login-card-logo"><NexusLogoMark size={28} /></div>
-                <div className="mt-3 text-[22px] font-semibold text-white tracking-tight">Nexus Ops</div>
-                <div className="text-[13px] text-violet-200/75 mt-1">{cardSub}</div>
+            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-2xl p-5 sm:p-7">
+              <div className="flex flex-col items-center mb-5">
+                <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center mb-3">
+                  <NexusLogoMark size={28} />
+                </div>
+                <div className="text-lg font-semibold text-white tracking-tight">Nexus Ops</div>
+                <p className="mt-1.5 text-xs text-fuchsia-200/80 text-center">{cardSub}</p>
               </div>
-              <div className="flex gap-2 mb-4 text-sm">
-                <button type="button" onClick={() => setAudienceTab('customer')} className={`login-tab ${audienceTab === 'customer' ? 'login-tab-on' : ''}`}>Customer</button>
-                <button type="button" onClick={() => setAudienceTab('agent')} className={`login-tab ${audienceTab === 'agent' ? 'login-tab-on' : ''}`}>Agent</button>
+              <div className="flex gap-2 mb-5 p-1 rounded-xl bg-white/5 border border-white/10">
+                <button type="button" onClick={() => { setAudienceTab('customer'); setError(''); setInfo(''); }}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${!isAgent ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'}`}>Customer</button>
+                <button type="button" onClick={() => { setAudienceTab('agent'); setError(''); setInfo(''); }}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition ${isAgent ? 'bg-violet-500/90 text-white shadow-lg shadow-violet-600/30' : 'text-fuchsia-100/70 hover:text-white'}`}>Agent</button>
               </div>
-              {configError && <div className="mb-3 text-sm text-amber-200 bg-amber-500/10 border border-amber-400/30 rounded-lg px-3 py-2">{configError}</div>}
-              {error && <div className="mb-3 text-sm text-rose-200 bg-rose-500/10 border border-rose-400/30 rounded-lg px-3 py-2">{error}</div>}
-              {info && <div className="mb-3 text-sm text-emerald-200 bg-emerald-500/10 border border-emerald-400/30 rounded-lg px-3 py-2">{info}</div>}
-              <form onSubmit={submit} className="space-y-3.5">
+              {configError && <div className="mb-4 rounded-lg bg-amber-400/15 text-amber-100 text-sm px-3 py-2 border border-amber-300/30">{configError}</div>}
+              {error && <div className="mb-4 rounded-lg bg-rose-500/15 text-rose-100 text-sm px-3 py-2 border border-rose-300/30">{error}</div>}
+              {info && <div className="mb-4 rounded-lg bg-emerald-500/15 text-emerald-100 text-sm px-3 py-2 border border-emerald-300/30">{info}</div>}
+              <form onSubmit={submit} className="space-y-4" autoComplete="off">
                 <div>
                   <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Email</label>
                   <input type="email" required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} name="nexus_email_manual" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" />
@@ -324,30 +477,43 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-fuchsia-100/90 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
                   </div>
                 </div>
-                <button type="submit" disabled={loading} className="login-submit-btn w-full rounded-xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 hover:from-violet-400 hover:via-fuchsia-400 hover:to-violet-400 disabled:opacity-60 text-white font-semibold text-sm py-2.5 shadow-lg shadow-fuchsia-600/30">
-                  {loading ? 'Signing in…' : 'Sign in'}
+                <button type="submit" disabled={loading} className="login-submit-btn w-full rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-violet-600 bg-[length:160%_100%] hover:from-violet-500 hover:via-fuchsia-500 hover:to-violet-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 shadow-lg shadow-violet-600/40">
+                  {loading ? 'Please wait…' : 'Sign in'}
                 </button>
-                <p className="text-center text-xs text-violet-200/70 pt-1">
-                  New here?{' '}
-                  <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); }} className="text-white font-semibold hover:text-fuchsia-100">{isAgent ? 'Create an agent account' : 'Create a customer account'}</button>
-                </p>
-                <div className="text-center">
-                  <button type="button" onClick={() => void handleForgotPassword()} className="text-xs font-medium text-violet-100/80 hover:text-white">Forgot Password?</button>
+                <div className="space-y-2 pt-1">
+                  <p className="text-center text-xs text-fuchsia-200/70">
+                    New here?{' '}
+                    <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); setPassword(''); setConfirmPassword(''); }} className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline">{isAgent ? 'Create an agent account' : 'Create a customer account'}</button>
+                  </p>
+                  {!isAgent && (
+                    <p className="text-center text-xs text-fuchsia-200/70">
+                      <button type="button" className="text-fuchsia-100/90 hover:text-white font-medium underline-offset-2 hover:underline" onClick={handleForgotPassword}>
+                        Forgot Password?
+                      </button>
+                    </p>
+                  )}
                 </div>
               </form>
             </div>
             ) : (
-            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-[22px] px-6 py-7 sm:px-7">
-              <div className="flex flex-col items-center text-center mb-4">
-                <div className="login-card-logo"><NexusLogoMark size={28} /></div>
-                <div className="mt-3 text-[22px] font-semibold text-white tracking-tight">Create your account</div>
-                <div className="text-[13px] text-violet-200/75 mt-1">{isAgent ? 'Register for Agent Workspace' : 'Register for Customer Portal'}</div>
-                <div className="login-role-chip mt-3"><span className="login-status-dot" style={{ width: 6, height: 6 }} />{isAgent ? 'Agent registration' : 'Customer registration'}</div>
+            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-2xl p-5 sm:p-7 border border-fuchsia-300/15">
+              <div className="flex flex-col items-center mb-5">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 border border-white/20 flex items-center justify-center mb-3">
+                  <NexusLogoMark size={28} />
+                </div>
+                <div className="text-lg font-semibold text-white tracking-tight">Create your account</div>
+                <p className="mt-1.5 text-xs text-fuchsia-200/80 text-center">
+                  {isAgent ? 'Register for Agent Workspace' : 'Register for Customer Portal'}
+                </p>
+                <span className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium border ${isAgent ? 'bg-violet-500/20 border-violet-400/40 text-violet-100' : 'bg-fuchsia-500/20 border-fuchsia-400/40 text-fuchsia-100'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isAgent ? 'bg-violet-300' : 'bg-fuchsia-300'}`} />
+                  {isAgent ? 'Agent registration' : 'Customer registration'}
+                </span>
               </div>
-              {configError && <div className="mb-3 text-sm text-amber-200 bg-amber-500/10 border border-amber-400/30 rounded-lg px-3 py-2">{configError}</div>}
-              {error && <div className="mb-3 text-sm text-rose-200 bg-rose-500/10 border border-rose-400/30 rounded-lg px-3 py-2">{error}</div>}
-              {info && <div className="mb-3 text-sm text-emerald-200 bg-emerald-500/10 border border-emerald-400/30 rounded-lg px-3 py-2">{info}</div>}
-              <form onSubmit={submit} className="space-y-3.5">
+              {configError && <div className="mb-4 rounded-lg bg-amber-400/15 text-amber-100 text-sm px-3 py-2 border border-amber-300/30">{configError}</div>}
+              {error && <div className="mb-4 rounded-lg bg-rose-500/15 text-rose-100 text-sm px-3 py-2 border border-rose-300/30">{error}</div>}
+              {info && <div className="mb-4 rounded-lg bg-emerald-500/15 text-emerald-100 text-sm px-3 py-2 border border-emerald-300/30">{info}</div>}
+              <form onSubmit={submit} className="space-y-3.5" autoComplete="off">
                 <div>
                   <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Full name</label>
                   <input required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Doe" autoComplete="off" name="nexus_name_manual" data-lpignore="true" data-1p-ignore="true" data-form-type="other" />
@@ -380,6 +546,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
               </form>
             </div>
             )}
+
           </div>
         </div>
       </div>
