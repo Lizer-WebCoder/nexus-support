@@ -2,6 +2,7 @@
 
 .portal-content {
   isolation: isolate;
+  background: transparent;
 }
 
 .portal-desert {
@@ -10,49 +11,6 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
-
-  /* Night defaults (dark) */
-  --pd-far-top: #4c1d95;
-  --pd-far-bot: #2e1065;
-  --pd-mid-top: #6d28d9;
-  --pd-mid-mid: #5b21b6;
-  --pd-mid-bot: #3b0764;
-  --pd-near-top: #7c3aed;
-  --pd-near-bot: #4c1d95;
-  --pd-near-crest: #a78bfa;
-  --pd-cliff-hi: #7c3aed;
-  --pd-cliff-mid: #5b21b6;
-  --pd-cliff-lo: #2e1065;
-  --pd-cliff-edge: #c4b5fd;
-  --pd-cliff-strata: #a78bfa;
-  --pd-ridge-hi: #c4b5fd;
-  --pd-ridge-edge: #ddd6fe;
-  --pd-rock: #4c1d95;
-  --pd-cactus: #a78bfa;
-  --pd-cactus-spine: #e9d5ff;
-  --pd-shrub: #6d28d9;
-}
-
-html.nexus-light .portal-desert {
-  --pd-far-top: #c4b5fd;
-  --pd-far-bot: #a78bfa;
-  --pd-mid-top: #ddd6fe;
-  --pd-mid-mid: #c4b5fd;
-  --pd-mid-bot: #a78bfa;
-  --pd-near-top: #e9d5ff;
-  --pd-near-bot: #c4b5fd;
-  --pd-near-crest: #f5f3ff;
-  --pd-cliff-hi: #a78bfa;
-  --pd-cliff-mid: #8b5cf6;
-  --pd-cliff-lo: #7c3aed;
-  --pd-cliff-edge: #f5f3ff;
-  --pd-cliff-strata: #e9d5ff;
-  --pd-ridge-hi: #f5f3ff;
-  --pd-ridge-edge: #fff;
-  --pd-rock: #8b5cf6;
-  --pd-cactus: #7c3aed;
-  --pd-cactus-spine: #4c1d95;
-  --pd-shrub: #a78bfa;
 }
 
 /* —— Sky —— */
@@ -100,22 +58,15 @@ html.nexus-light .portal-desert-sky-glow {
     0 0 22px rgba(125, 211, 252, 0.35);
 }
 html.nexus-light .portal-desert-star {
-  opacity: 0.75;
+  opacity: 0.7;
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.85);
 }
 @keyframes portal-desert-twinkle {
-  0%,
-  100% {
-    opacity: 0.18;
-    transform: scale(0.82);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.28);
-  }
+  0%, 100% { opacity: 0.18; transform: scale(0.82); }
+  50% { opacity: 1; transform: scale(1.28); }
 }
 
-/* —— Shooting stars (head + long tail, smooth fly) —— */
+/* —— Shooting stars —— */
 .portal-desert-meteors {
   position: absolute;
   inset: 0 0 38% 0;
@@ -152,8 +103,7 @@ html.nexus-light .portal-desert-star {
   background: radial-gradient(circle, #fff 0%, #e0f2fe 45%, transparent 72%);
   box-shadow:
     0 0 10px 3px rgba(255, 255, 255, 0.95),
-    0 0 20px 7px rgba(125, 211, 252, 0.55),
-    0 0 32px 10px rgba(56, 189, 248, 0.2);
+    0 0 20px 7px rgba(125, 211, 252, 0.55);
 }
 
 .portal-meteor-a {
@@ -168,97 +118,45 @@ html.nexus-light .portal-desert-star {
   transform: rotate(-28deg);
   animation: portal-meteor-b 13s cubic-bezier(0.25, 0.1, 0.25, 1) 4s infinite;
 }
-.portal-meteor-b .portal-meteor-tail {
-  width: 85px;
-  height: 1.8px;
-}
+.portal-meteor-b .portal-meteor-tail { width: 85px; height: 1.8px; }
 .portal-meteor-c {
   top: 6%;
   left: 42%;
   transform: rotate(-38deg);
   animation: portal-meteor-c 12s cubic-bezier(0.25, 0.1, 0.25, 1) 7.5s infinite;
 }
-.portal-meteor-c .portal-meteor-tail {
-  width: 140px;
-  height: 2.6px;
-}
+.portal-meteor-c .portal-meteor-tail { width: 140px; height: 2.6px; }
 .portal-meteor-d {
   top: 16%;
   left: 5%;
   transform: rotate(-30deg);
   animation: portal-meteor-d 14s cubic-bezier(0.25, 0.1, 0.25, 1) 1.8s infinite;
 }
-.portal-meteor-d .portal-meteor-tail {
-  width: 95px;
-}
+.portal-meteor-d .portal-meteor-tail { width: 95px; }
 
 @keyframes portal-meteor-a {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(-34deg) scaleX(0.45);
-  }
-  3% {
-    opacity: 1;
-  }
-  16% {
-    opacity: 0;
-    transform: translate3d(58vw, 34vh, 0) rotate(-34deg) scaleX(1.05);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(58vw, 34vh, 0) rotate(-34deg) scaleX(1.05);
-  }
+  0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-34deg) scaleX(0.45); }
+  3% { opacity: 1; }
+  16% { opacity: 0; transform: translate3d(58vw, 34vh, 0) rotate(-34deg) scaleX(1.05); }
+  100% { opacity: 0; transform: translate3d(58vw, 34vh, 0) rotate(-34deg) scaleX(1.05); }
 }
 @keyframes portal-meteor-b {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(-28deg) scaleX(0.5);
-  }
-  3% {
-    opacity: 1;
-  }
-  14% {
-    opacity: 0;
-    transform: translate3d(48vw, 28vh, 0) rotate(-28deg) scaleX(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(48vw, 28vh, 0) rotate(-28deg) scaleX(1);
-  }
+  0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-28deg) scaleX(0.5); }
+  3% { opacity: 1; }
+  14% { opacity: 0; transform: translate3d(48vw, 28vh, 0) rotate(-28deg) scaleX(1); }
+  100% { opacity: 0; transform: translate3d(48vw, 28vh, 0) rotate(-28deg) scaleX(1); }
 }
 @keyframes portal-meteor-c {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(-38deg) scaleX(0.4);
-  }
-  2.5% {
-    opacity: 1;
-  }
-  15% {
-    opacity: 0;
-    transform: translate3d(52vw, 38vh, 0) rotate(-38deg) scaleX(1.1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(52vw, 38vh, 0) rotate(-38deg) scaleX(1.1);
-  }
+  0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-38deg) scaleX(0.4); }
+  2.5% { opacity: 1; }
+  15% { opacity: 0; transform: translate3d(52vw, 38vh, 0) rotate(-38deg) scaleX(1.1); }
+  100% { opacity: 0; transform: translate3d(52vw, 38vh, 0) rotate(-38deg) scaleX(1.1); }
 }
 @keyframes portal-meteor-d {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(-30deg) scaleX(0.5);
-  }
-  3% {
-    opacity: 0.9;
-  }
-  13% {
-    opacity: 0;
-    transform: translate3d(42vw, 26vh, 0) rotate(-30deg) scaleX(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(42vw, 26vh, 0) rotate(-30deg) scaleX(1);
-  }
+  0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-30deg) scaleX(0.5); }
+  3% { opacity: 0.9; }
+  13% { opacity: 0; transform: translate3d(42vw, 26vh, 0) rotate(-30deg) scaleX(1); }
+  100% { opacity: 0; transform: translate3d(42vw, 26vh, 0) rotate(-30deg) scaleX(1); }
 }
 
 html.nexus-light .portal-meteor-tail {
@@ -316,10 +214,7 @@ html.nexus-light .portal-meteor-head {
     radial-gradient(circle at 65% 68%, rgba(125, 211, 252, 0.22) 0%, transparent 8%);
   pointer-events: none;
 }
-html.nexus-light .portal-desert-moon-wrap {
-  width: 76px;
-  height: 76px;
-}
+html.nexus-light .portal-desert-moon-wrap { width: 76px; height: 76px; }
 html.nexus-light .portal-desert-moon {
   background: radial-gradient(circle at 32% 30%, #fff 0%, #fef9c3 42%, #fde68a 100%);
   box-shadow:
@@ -329,37 +224,17 @@ html.nexus-light .portal-desert-moon {
 html.nexus-light .portal-desert-moon-halo {
   background: radial-gradient(circle, rgba(254, 243, 199, 0.4) 0%, rgba(253, 224, 71, 0.12) 45%, transparent 70%);
 }
-html.nexus-light .portal-desert-moon-craters {
-  background:
-    radial-gradient(circle at 58% 42%, rgba(253, 224, 71, 0.3) 0%, transparent 12%),
-    radial-gradient(circle at 38% 62%, rgba(251, 191, 36, 0.25) 0%, transparent 9%);
-}
-html.nexus-dark .portal-desert-moon-wrap {
-  width: 96px;
-  height: 96px;
-}
+html.nexus-dark .portal-desert-moon-wrap { width: 96px; height: 96px; }
 @keyframes portal-desert-moon-pulse {
-  from {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-  to {
-    transform: scale(1.045);
-    filter: brightness(1.1);
-  }
+  from { transform: scale(1); filter: brightness(1); }
+  to { transform: scale(1.045); filter: brightness(1.1); }
 }
 @keyframes portal-moon-halo {
-  from {
-    opacity: 0.7;
-    transform: scale(1);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1.08);
-  }
+  from { opacity: 0.7; transform: scale(1); }
+  to { opacity: 1; transform: scale(1.08); }
 }
 
-/* —— Clouds (multi-lobe soft veils) —— */
+/* —— Clouds —— */
 .portal-cloud {
   position: absolute;
   pointer-events: none;
@@ -373,112 +248,41 @@ html.nexus-dark .portal-desert-moon-wrap {
   filter: blur(18px);
 }
 .portal-cloud-a {
-  top: 22%;
-  left: -18%;
-  width: 320px;
-  height: 90px;
+  top: 22%; left: -18%; width: 320px; height: 90px;
   animation: portal-cloud-drift-a 62s linear infinite;
 }
-.portal-cloud-a .l1 {
-  width: 160px;
-  height: 55px;
-  top: 15px;
-  left: 20px;
-}
-.portal-cloud-a .l2 {
-  width: 130px;
-  height: 48px;
-  top: 5px;
-  left: 110px;
-  opacity: 0.85;
-}
-.portal-cloud-a .l3 {
-  width: 100px;
-  height: 40px;
-  top: 28px;
-  left: 200px;
-  opacity: 0.7;
-}
+.portal-cloud-a .l1 { width: 160px; height: 55px; top: 15px; left: 20px; }
+.portal-cloud-a .l2 { width: 130px; height: 48px; top: 5px; left: 110px; opacity: 0.85; }
+.portal-cloud-a .l3 { width: 100px; height: 40px; top: 28px; left: 200px; opacity: 0.7; }
 .portal-cloud-b {
-  top: 30%;
-  left: 15%;
-  width: 260px;
-  height: 70px;
-  opacity: 0.75;
+  top: 30%; left: 15%; width: 260px; height: 70px; opacity: 0.75;
   animation: portal-cloud-drift-b 78s linear infinite;
 }
-.portal-cloud-b .l1 {
-  width: 130px;
-  height: 42px;
-  top: 10px;
-  left: 10px;
-}
-.portal-cloud-b .l2 {
-  width: 110px;
-  height: 38px;
-  top: 0;
-  left: 90px;
-}
-.portal-cloud-b .l3 {
-  width: 80px;
-  height: 32px;
-  top: 20px;
-  left: 170px;
-  opacity: 0.65;
-}
+.portal-cloud-b .l1 { width: 130px; height: 42px; top: 10px; left: 10px; }
+.portal-cloud-b .l2 { width: 110px; height: 38px; top: 0; left: 90px; }
+.portal-cloud-b .l3 { width: 80px; height: 32px; top: 20px; left: 170px; opacity: 0.65; }
 .portal-cloud-c {
-  top: 14%;
-  left: 48%;
-  width: 280px;
-  height: 75px;
-  opacity: 0.55;
+  top: 14%; left: 48%; width: 280px; height: 75px; opacity: 0.55;
   animation: portal-cloud-drift-c 95s linear infinite;
 }
-.portal-cloud-c .l1 {
-  width: 140px;
-  height: 48px;
-  top: 8px;
-  left: 15px;
-}
-.portal-cloud-c .l2 {
-  width: 120px;
-  height: 40px;
-  top: 18px;
-  left: 120px;
-  opacity: 0.8;
-}
-
+.portal-cloud-c .l1 { width: 140px; height: 48px; top: 8px; left: 15px; }
+.portal-cloud-c .l2 { width: 120px; height: 40px; top: 18px; left: 120px; opacity: 0.8; }
 html.nexus-light .portal-cloud-lobe {
   background: rgba(255, 255, 255, 0.42);
   filter: blur(22px);
 }
-
 @keyframes portal-cloud-drift-a {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(70vw, 3vh, 0);
-  }
-  100% {
-    transform: translate3d(130vw, 1vh, 0);
-  }
+  0% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(70vw, 3vh, 0); }
+  100% { transform: translate3d(130vw, 1vh, 0); }
 }
 @keyframes portal-cloud-drift-b {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(120vw, -2vh, 0);
-  }
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(120vw, -2vh, 0); }
 }
 @keyframes portal-cloud-drift-c {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(95vw, 4vh, 0);
-  }
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(95vw, 4vh, 0); }
 }
 
 /* —— Landscape SVG —— */
@@ -488,20 +292,20 @@ html.nexus-light .portal-cloud-lobe {
   right: 0;
   bottom: 0;
   width: 100%;
-  height: min(42%, 320px);
+  height: min(48%, 360px);
   z-index: 1;
 }
+/* Theme switch: only show matching land SVG */
+.portal-desert-land-dark { display: block; }
+.portal-desert-land-light { display: none; }
+html.nexus-light .portal-desert-land-dark { display: none; }
+html.nexus-light .portal-desert-land-light { display: block; }
+html:not(.nexus-light) .portal-desert-land-dark { display: block; }
+html:not(.nexus-light) .portal-desert-land-light { display: none; }
 
-.portal-desert-cactus-g {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
-}
-
-/* Atmospheric haze over horizon */
 .portal-desert-haze {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 28%;
+  left: 0; right: 0; bottom: 28%;
   height: 22%;
   background: linear-gradient(
     180deg,
@@ -516,7 +320,7 @@ html.nexus-light .portal-desert-haze {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(196, 181, 253, 0.2) 45%,
+    rgba(196, 181, 253, 0.22) 45%,
     rgba(233, 213, 255, 0.15) 100%
   );
 }
@@ -527,7 +331,7 @@ html.nexus-light .portal-desert-haze {
   background: radial-gradient(
     ellipse 88% 78% at 50% 42%,
     transparent 32%,
-    rgba(10, 6, 30, 0.32) 100%
+    rgba(10, 6, 30, 0.28) 100%
   );
   pointer-events: none;
   z-index: 2;
@@ -536,14 +340,14 @@ html.nexus-light .portal-desert-vignette {
   background: radial-gradient(
     ellipse 90% 80% at 50% 40%,
     transparent 38%,
-    rgba(99, 102, 241, 0.12) 100%
+    rgba(99, 102, 241, 0.1) 100%
   );
 }
 
 /* —— Glass cards —— */
 .portal-glass-card {
-  background: rgba(255, 255, 255, 0.52);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.42);
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
   box-shadow:
@@ -551,35 +355,35 @@ html.nexus-light .portal-desert-vignette {
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 html.nexus-dark .portal-glass-card {
-  background: rgba(20, 12, 48, 0.5);
+  background: rgba(20, 12, 48, 0.52);
   border-color: rgba(196, 181, 253, 0.2);
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 html.nexus-light .portal-glass-card {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.62);
   border-color: rgba(139, 92, 246, 0.16);
 }
 
 .portal-home-card {
-  background: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.52) !important;
   backdrop-filter: blur(14px);
   border-color: rgba(255, 255, 255, 0.35) !important;
   box-shadow: 0 6px 24px rgba(49, 46, 129, 0.08);
 }
 html.nexus-dark .portal-home-card {
-  background: rgba(24, 14, 55, 0.5) !important;
+  background: rgba(24, 14, 55, 0.52) !important;
   border-color: rgba(196, 181, 253, 0.18) !important;
 }
 .portal-home-hero {
-  background: rgba(255, 255, 255, 0.48) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.35);
   box-shadow: 0 10px 36px rgba(49, 46, 129, 0.1);
 }
 html.nexus-dark .portal-home-hero {
-  background: rgba(40, 18, 90, 0.45) !important;
+  background: rgba(40, 18, 90, 0.48) !important;
   border-color: rgba(196, 181, 253, 0.2);
 }
 .portal-content .portal-home-ambient {
