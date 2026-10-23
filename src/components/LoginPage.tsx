@@ -107,17 +107,24 @@ function ShootingStars() {
         <span className="login-comet-particle login-comet-p2" />
         <span className="login-comet-particle login-comet-p3" />
         <span className="login-comet-particle login-comet-p4" />
-        <svg className="login-star-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+        <svg className="login-star-glyph" width="22" height="22" viewBox="0 0 22 22" aria-hidden>
           <defs>
-            <radialGradient id="cometHead" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="40%" stopColor="#a5f3fc" />
-              <stop offset="75%" stopColor="#22d3ee" />
+            <radialGradient id="cometAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.5" />
+              <stop offset="55%" stopColor="#22d3ee" stopOpacity="0.2" />
               <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
             </radialGradient>
+            <radialGradient id="cometHead" cx="40%" cy="35%" r="55%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="35%" stopColor="#e0f2fe" />
+              <stop offset="65%" stopColor="#67e8f9" />
+              <stop offset="100%" stopColor="#0891b2" />
+            </radialGradient>
           </defs>
-          <circle cx="8" cy="8" r="7" fill="url(#cometHead)" />
-          <circle cx="8" cy="8" r="3" fill="#ffffff" opacity="0.95" />
+          <circle cx="11" cy="11" r="10.5" fill="url(#cometAura)" />
+          <circle cx="11" cy="11" r="7" fill="url(#cometHead)" />
+          <circle cx="11" cy="11" r="3.2" fill="#ffffff" />
+          <ellipse cx="9" cy="8.5" rx="2" ry="1.4" fill="#ffffff" opacity="0.85" />
         </svg>
       </div>
     </div>
