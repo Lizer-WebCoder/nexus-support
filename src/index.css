@@ -1,261 +1,191 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Nexus Ops global styles — login cosmic + app shell */
 
 :root {
-  font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light;
-  color: #18181b;
-  background-color: #f4f4f5;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+}
+
+html, body, #root {
+  min-height: 100%;
 }
 
 body {
   margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: #050012;
+  color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #a1a1aa;
-}
-
-.portal-atmosphere {
-  background-color: #f5f3ff !important;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(139, 92, 246, 0.18), transparent),
-    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(99, 102, 241, 0.12), transparent),
-    radial-gradient(ellipse 50% 30% at 50% 100%, rgba(167, 139, 250, 0.1), transparent);
-  min-height: 100vh;
-}
-
-html.nexus-dark {
-  color-scheme: dark;
-  color: #f4f4f5;
-  background-color: #09090b;
-}
-html.nexus-dark body {
-  background-color: #09090b;
-  color: #f4f4f5;
-}
-html.nexus-dark .bg-white { background-color: #18181b !important; }
-html.nexus-dark .bg-zinc-100,
-html.nexus-dark .bg-slate-50 { background-color: #09090b !important; }
-html.nexus-dark .bg-zinc-50,
-html.nexus-dark .bg-slate-100 { background-color: #27272a !important; }
-html.nexus-dark .text-zinc-900,
-html.nexus-dark .text-slate-900,
-html.nexus-dark .text-slate-800 { color: #fafafa !important; }
-html.nexus-dark .text-zinc-800,
-html.nexus-dark .text-slate-700 { color: #e4e4e7 !important; }
-html.nexus-dark .text-zinc-600,
-html.nexus-dark .text-slate-600 { color: #a1a1aa !important; }
-html.nexus-dark .text-zinc-500,
-html.nexus-dark .text-slate-500,
-html.nexus-dark .text-slate-400 { color: #71717a !important; }
-html.nexus-dark .border-zinc-200,
-html.nexus-dark .border-slate-200,
-html.nexus-dark .border-slate-100,
-html.nexus-dark .border-zinc-100 { border-color: #3f3f46 !important; }
-html.nexus-dark .hover\:bg-zinc-100:hover,
-html.nexus-dark .hover\:bg-slate-50:hover { background-color: #27272a !important; }
-html.nexus-dark input,
-html.nexus-dark select,
-html.nexus-dark textarea {
-  background-color: #27272a !important;
-  border-color: #3f3f46 !important;
-  color: #f4f4f5 !important;
-}
-html.nexus-dark input::placeholder,
-html.nexus-dark textarea::placeholder { color: #71717a !important; }
-html.nexus-dark main { background-color: #09090b; }
-html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
-
+/* --- Login glass card --- */
 .login-glass-card {
-  background: linear-gradient(
-    155deg,
-    rgba(98, 32, 150, 0.22) 0%,
-    rgba(40, 12, 70, 0.28) 40%,
-    rgba(18, 6, 42, 0.32) 100%
-  );
-  backdrop-filter: blur(18px) saturate(1.25);
-  -webkit-backdrop-filter: blur(18px) saturate(1.25);
-  border: 1px solid rgba(216, 180, 254, 0.28);
+  background: linear-gradient(160deg, rgba(30, 10, 60, 0.72) 0%, rgba(15, 5, 35, 0.78) 100%);
+  border: 1px solid rgba(192, 132, 252, 0.28);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   box-shadow:
-    0 0 0 1px rgba(167, 139, 250, 0.15),
-    0 0 24px 4px rgba(139, 92, 246, 0.35),
-    0 0 48px 8px rgba(192, 38, 211, 0.22),
-    0 0 80px 12px rgba(99, 102, 241, 0.12),
-    0 20px 44px rgba(0, 0, 20, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 20px 50px rgba(0, 0, 0, 0.45),
+    0 0 60px rgba(139, 92, 246, 0.22);
   animation: login-card-glow 4.5s ease-in-out infinite alternate;
 }
 
 @keyframes login-card-glow {
   from {
     box-shadow:
-      0 0 0 1px rgba(167, 139, 250, 0.12),
-      0 0 20px 3px rgba(139, 92, 246, 0.28),
-      0 0 40px 6px rgba(192, 38, 211, 0.16),
-      0 0 70px 10px rgba(99, 102, 241, 0.08),
-      0 20px 44px rgba(0, 0, 20, 0.45),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+      0 20px 50px rgba(0, 0, 0, 0.45),
+      0 0 40px rgba(139, 92, 246, 0.18);
   }
   to {
     box-shadow:
-      0 0 0 1px rgba(216, 180, 254, 0.22),
-      0 0 28px 6px rgba(167, 139, 250, 0.42),
-      0 0 56px 12px rgba(217, 70, 239, 0.28),
-      0 0 90px 16px rgba(129, 140, 248, 0.16),
-      0 22px 48px rgba(0, 0, 20, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+      0 24px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(192, 132, 252, 0.32);
   }
 }
+
 .login-glass-input {
-  background: rgba(255, 255, 255, 0.07) !important;
-  border: 1px solid rgba(196, 181, 253, 0.25) !important;
-  color: #faf5ff !important;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 .login-glass-input::placeholder {
-  color: rgba(233, 213, 255, 0.4) !important;
+  color: rgba(221, 214, 254, 0.45);
 }
 .login-glass-input:focus {
-  border-color: rgba(167, 139, 250, 0.6) !important;
+  border-color: rgba(167, 139, 250, 0.7);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.28);
-  background: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.09);
 }
 
 .login-cosmos-sky {
   background:
-    radial-gradient(ellipse 55% 40% at 50% -5%, rgba(192, 38, 211, 0.42), transparent 58%),
-    radial-gradient(ellipse 42% 32% at 18% 78%, rgba(67, 20, 140, 0.45), transparent 52%),
-    radial-gradient(ellipse 38% 28% at 88% 58%, rgba(49, 46, 180, 0.28), transparent 50%),
-    linear-gradient(180deg, #1f0650 0%, #0c0128 38%, #050012 72%, #020008 100%);
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(76, 29, 149, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 20% 20%, rgba(124, 58, 237, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 30% at 80% 30%, rgba(192, 38, 211, 0.2) 0%, transparent 45%),
+    linear-gradient(180deg, #0a0018 0%, #12002a 40%, #1a0540 100%);
 }
 
-.login-nebula { opacity: 0.38; mix-blend-mode: screen; pointer-events: none; }
+.login-nebula {
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
 .login-nebula-a {
-  background:
-    radial-gradient(ellipse 60% 40% at 30% 40%, rgba(168, 85, 247, 0.22), transparent 62%),
-    radial-gradient(ellipse 50% 35% at 72% 68%, rgba(99, 102, 241, 0.16), transparent 55%);
-  animation: login-nebula-drift 32s ease-in-out infinite alternate;
+  background: radial-gradient(ellipse 60% 40% at 30% 70%, rgba(168, 85, 247, 0.35), transparent 70%);
+  animation: login-nebula-drift 28s ease-in-out infinite alternate;
 }
 .login-nebula-b {
-  background:
-    radial-gradient(ellipse 45% 30% at 62% 22%, rgba(236, 72, 153, 0.16), transparent 52%),
-    radial-gradient(ellipse 40% 35% at 14% 62%, rgba(124, 58, 237, 0.15), transparent 55%);
-  animation: login-nebula-drift 40s ease-in-out infinite alternate-reverse;
+  background: radial-gradient(ellipse 50% 35% at 75% 40%, rgba(236, 72, 153, 0.22), transparent 65%);
+  animation: login-nebula-drift 36s ease-in-out infinite alternate-reverse;
 }
-
 @keyframes login-nebula-drift {
   from { transform: translate(0, 0) scale(1); }
-  to { transform: translate(-3%, 4%) scale(1.06); }
+  to { transform: translate(-2%, 3%) scale(1.06); }
+}
+
+.login-star {
+  animation-name: login-star-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes login-star-fall {
+  from { transform: translateY(-8vh); }
+  to { transform: translateY(110vh); }
 }
 
 .login-planet-rise {
   position: absolute;
-  bottom: -18%;
-  z-index: 2;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  bottom: -12%;
+  will-change: transform, opacity;
   animation-name: login-planet-rise;
   animation-timing-function: linear;
   animation-fill-mode: forwards;
-  opacity: 0;
+  pointer-events: none;
 }
 .login-planet-svg {
   display: block;
-  filter: drop-shadow(0 0 14px rgba(167, 139, 250, 0.3));
+  filter: drop-shadow(0 0 12px rgba(167, 139, 250, 0.35));
 }
 .login-planet-bands {
-  mix-blend-mode: multiply;
+  opacity: 0.85;
 }
-
 @keyframes login-planet-rise {
   0% {
-    transform: translate(0, 0) rotate(0deg) scale(0.75);
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.85);
     opacity: 0;
   }
-  6% { opacity: 0.95; }
-  85% { opacity: 0.85; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
   100% {
-    transform: translate(var(--planet-drift, 30px), -118vh) rotate(var(--planet-spin, 90deg)) scale(1.08);
+    transform: translate3d(var(--planet-drift, 20px), -120vh, 0) rotate(var(--planet-spin, 30deg)) scale(1.05);
     opacity: 0;
   }
-}
-
-.login-star {
-  top: 115%;
-  will-change: transform, opacity;
-  animation-name: login-star-rise;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  border-radius: 50%;
-}
-
-.login-starfield {
-  pointer-events: none;
-  z-index: 1;
-}
-
-@keyframes login-star-rise {
-  from { transform: translate3d(0, 0, 0) scale(0.45); opacity: 0; }
-  6% { opacity: 1; }
-  40% { opacity: 0.85; }
-  75% { opacity: 0.5; }
-  to { transform: translate3d(0, -140vh, 0) scale(1.15); opacity: 0; }
 }
 
 .login-shooting-layer {
-  contain: strict;
-  transform: translateZ(0);
+  overflow: hidden;
 }
 .login-shooting-star {
   position: absolute;
   left: 0;
   top: 0;
-  width: 18px;
-  height: 18px;
+  width: 28px;
+  height: 28px;
   will-change: transform, opacity;
   transform: translate3d(-100px, 0, 0);
   backface-visibility: hidden;
   pointer-events: none;
   opacity: 0;
 }
+
+/* Comet-style shooting star (cyan light trails) */
+.login-comet-trail {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  height: 3px;
+  border-radius: 999px;
+  transform-origin: right center;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, rgba(165, 243, 252, 0.15) 20%, rgba(34, 211, 238, 0.75) 70%, #ffffff 100%);
+  box-shadow:
+    0 0 8px 2px rgba(34, 211, 238, 0.55),
+    0 0 18px 4px rgba(6, 182, 212, 0.35);
+}
+.login-comet-trail-a {
+  width: 110px;
+  transform: translateY(-50%) rotate(-2deg);
+  opacity: 0.95;
+  height: 4px;
+}
+.login-comet-trail-b {
+  width: 78px;
+  transform: translateY(-50%) rotate(4deg);
+  opacity: 0.7;
+  height: 2.5px;
+  top: calc(50% - 5px);
+}
+.login-comet-trail-c {
+  width: 56px;
+  transform: translateY(-50%) rotate(-6deg);
+  opacity: 0.55;
+  height: 2px;
+  top: calc(50% + 6px);
+}
 .login-star-glyph {
   position: absolute;
   left: 0;
   top: 0;
   display: block;
-  transform-origin: 9px 9px;
-  filter: drop-shadow(0 0 5px rgba(255, 214, 120, 0.55));
+  transform-origin: 14px 14px;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.9)) drop-shadow(0 0 16px rgba(165, 243, 252, 0.6));
   z-index: 3;
   animation: login-star-pulse 0.9s ease-in-out infinite alternate;
 }
 .login-star-trail {
+  display: none; /* replaced by login-comet-trail */
   position: absolute;
   right: 14px;
   top: 50%;
@@ -269,118 +199,84 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
     rgba(232, 184, 74, 0.08) 15%,
     rgba(255, 214, 120, 0.4) 50%,
     rgba(255, 236, 180, 0.7) 78%,
-    rgba(255, 248, 220, 0.85) 100%
+    rgba(255, 255, 255, 0.95) 100%
   );
-  background-size: 200% 100%;
-  z-index: 1;
-  transform: translateZ(0);
-  animation: login-trail-shimmer 1.1s linear infinite;
   box-shadow: 0 0 6px 1px rgba(255, 214, 120, 0.25);
+  transform-origin: right center;
 }
 .login-star-sparkles {
   position: absolute;
-  right: 20px;
-  top: 50%;
-  width: 130px;
-  height: 10px;
-  margin-top: -5px;
-  z-index: 2;
+  left: -4px;
+  top: -4px;
+  width: 36px;
+  height: 36px;
   pointer-events: none;
-  background-image:
-    radial-gradient(circle, rgba(255, 236, 180, 0.85) 0 1.2px, transparent 1.6px),
-    radial-gradient(circle, rgba(255, 214, 120, 0.65) 0 1px, transparent 1.5px),
-    radial-gradient(circle, rgba(255, 248, 220, 0.7) 0 0.9px, transparent 1.3px),
-    radial-gradient(circle, rgba(232, 184, 74, 0.55) 0 1.1px, transparent 1.5px);
-  background-size: 28px 8px, 36px 10px, 22px 6px, 40px 8px;
-  background-position: 0% 40%, 15% 70%, 35% 25%, 55% 60%;
-  background-repeat: repeat-x;
-  opacity: 0.9;
-  mask-image: linear-gradient(90deg, transparent, #000 30%, #000);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 30%, #000);
-  transform: translateZ(0);
-  animation: login-sparkle-drift 1.4s linear infinite;
 }
 @keyframes login-star-pulse {
-  from {
-    transform: scale(0.92) rotate(-6deg);
-    filter: drop-shadow(0 0 4px rgba(255, 214, 120, 0.4));
-  }
-  to {
-    transform: scale(1.08) rotate(6deg);
-    filter: drop-shadow(0 0 9px rgba(255, 230, 150, 0.7));
-  }
-}
-@keyframes login-trail-shimmer {
-  from { background-position: 100% 0; opacity: 0.65; }
-  to { background-position: -20% 0; opacity: 1; }
-}
-@keyframes login-sparkle-drift {
-  from { background-position: 0% 40%, 15% 70%, 35% 25%, 55% 60%; opacity: 0.55; }
-  to { background-position: 40% 40%, 55% 70%, 75% 25%, 95% 60%; opacity: 1; }
+  from { transform: scale(0.92); opacity: 0.85; }
+  to { transform: scale(1.08); opacity: 1; }
 }
 
-.login-cosmos-vignette {
-  background:
-    radial-gradient(ellipse 75% 65% at 50% 42%, transparent 30%, rgba(0, 0, 12, 0.28) 100%),
-    linear-gradient(180deg, transparent 70%, rgba(0, 0, 8, 0.35) 100%);
-  z-index: 4;
+.login-logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-logo-arcs {
+  transform-origin: 24px 24px;
+  animation: login-logo-spin 8s linear infinite;
+}
+.login-logo-core {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+}
+@keyframes login-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
+.login-pilot-stage {
+  overflow: hidden;
+}
 .login-pilot {
   position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 6;
-  filter: drop-shadow(0 0 18px rgba(232, 121, 249, 0.55));
   will-change: transform;
 }
 .login-pilot-js { animation: none !important; }
-
 .login-pilot-glow {
   position: absolute;
   inset: -18px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(192, 38, 211, 0.35), transparent 70%);
-  animation: login-beam-pulse 2.5s ease-in-out infinite;
-  z-index: 0;
+  background: radial-gradient(circle, rgba(232, 121, 249, 0.45) 0%, transparent 70%);
+  filter: blur(8px);
+  pointer-events: none;
 }
-
-@keyframes login-beam-pulse {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
-}
-
 .login-trail-spark {
   position: absolute;
   border-radius: 50%;
   background: #f0abfc;
   box-shadow: 0 0 6px #e879f9, 0 0 12px #c026d3;
   pointer-events: none;
-  z-index: 5;
-  margin-left: -2px;
-  margin-top: -2px;
+  transform: translate(-50%, -50%);
 }
 
-.login-logo-mark {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-}
-.login-logo-core { filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8)); }
-.login-logo-arcs {
-  transform-origin: 24px 24px;
-  animation: login-logo-spin 9s linear infinite;
+.login-cosmos-vignette {
+  background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 40%, rgba(5, 0, 18, 0.55) 100%);
 }
 
-@keyframes login-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.login-submit-btn {
+  transition: filter 0.15s, transform 0.15s;
+}
+.login-submit-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.login-feature-dot {
+  box-shadow: 0 0 8px rgba(232, 121, 249, 0.7);
 }
 
+/* Flybys */
 .login-flyby {
   position: absolute;
+  left: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -388,191 +284,141 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   will-change: transform;
 }
 .login-flyby-ltr {
-  left: -80px;
   animation-name: login-flyby-ltr;
   animation-timing-function: linear;
   animation-fill-mode: forwards;
 }
 .login-flyby-rtl {
-  right: -80px;
   animation-name: login-flyby-rtl;
   animation-timing-function: linear;
   animation-fill-mode: forwards;
 }
 @keyframes login-flyby-ltr {
-  from { transform: translateX(0) translateY(0); }
-  25%  { transform: translateX(28vw) translateY(-6px); }
-  55%  { transform: translateX(58vw) translateY(4px); }
-  to   { transform: translateX(115vw) translateY(-2px); }
+  from { transform: translateX(-12vw); }
+  to { transform: translateX(112vw); }
 }
 @keyframes login-flyby-rtl {
-  from { transform: translateX(0) translateY(0); }
-  25%  { transform: translateX(-28vw) translateY(-6px); }
-  55%  { transform: translateX(-58vw) translateY(4px); }
-  to   { transform: translateX(-115vw) translateY(-2px); }
+  from { transform: translateX(112vw); }
+  to { transform: translateX(-12vw); }
 }
 .login-flyby-craft {
-  filter: drop-shadow(0 0 10px rgba(192, 132, 252, 0.55));
-  transform: scaleX(1);
-  opacity: 0.95;
-}
-.login-flyby-rtl .login-flyby-craft {
-  transform: scaleX(-1);
-}
-
-/* Ship engine exhaust: fire core + smoke trail */
-.login-flyby-ship {
   position: relative;
   display: flex;
   align-items: center;
 }
+.login-flyby-rtl .login-flyby-craft {
+  transform: scaleX(-1);
+}
+.login-flyby-rtl .login-flyby-chat {
+  transform: scaleX(-1);
+}
+.login-flyby-ufo {
+  transform: scale(1.05);
+}
+.login-flyby-ship {
+  position: relative;
+}
 .login-ship-exhaust {
   position: absolute;
-  left: -4px;
+  left: -6px;
   top: 50%;
-  width: 56px;
+  width: 28px;
   height: 28px;
-  transform: translate(-100%, -50%);
+  transform: translateY(-50%);
   pointer-events: none;
   z-index: 0;
 }
 .login-ship-svg {
   position: relative;
   z-index: 1;
-  overflow: visible;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
 }
 .login-ship-flame-core {
-  animation: login-flame-pulse 0.18s ease-in-out infinite alternate;
-  transform-origin: 22px 16px;
+  animation: login-flame-pulse 0.35s ease-in-out infinite alternate;
 }
 .login-ship-flame-hot {
-  animation: login-flame-pulse 0.12s ease-in-out infinite alternate-reverse;
-  transform-origin: 18px 16px;
+  animation: login-flame-pulse 0.28s ease-in-out infinite alternate-reverse;
 }
 @keyframes login-flame-pulse {
-  from { opacity: 0.75; transform: scaleX(0.88) scaleY(0.92); }
-  to   { opacity: 1;    transform: scaleX(1.12) scaleY(1.08); }
+  from { opacity: 0.75; transform: scaleX(0.9); }
+  to { opacity: 1; transform: scaleX(1.08); }
 }
 .login-ship-smoke {
   position: absolute;
-  right: 8px;
+  left: 0;
   top: 50%;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(148, 163, 184, 0.55) 0%, rgba(100, 116, 139, 0.25) 45%, transparent 70%);
-  filter: blur(2px);
-  animation-name: login-smoke-drift;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+  background: rgba(148, 163, 184, 0.35);
+  filter: blur(3px);
+  transform: translateY(-50%);
+  animation: login-smoke-drift 0.9s ease-out infinite;
 }
 .login-ship-smoke-a {
-  width: 14px; height: 14px;
-  margin-top: -7px;
-  animation-duration: 0.85s;
   animation-delay: 0s;
+  width: 12px;
+  height: 12px;
 }
 .login-ship-smoke-b {
-  width: 18px; height: 18px;
-  margin-top: -9px;
-  right: 18px;
-  animation-duration: 1.1s;
-  animation-delay: 0.15s;
-  opacity: 0.7;
+  animation-delay: 0.2s;
+  top: 40%;
+  width: 8px;
+  height: 8px;
 }
 .login-ship-smoke-c {
-  width: 22px; height: 22px;
-  margin-top: -11px;
-  right: 28px;
-  animation-duration: 1.35s;
-  animation-delay: 0.3s;
-  opacity: 0.45;
+  animation-delay: 0.4s;
+  top: 60%;
+  width: 9px;
+  height: 9px;
 }
 @keyframes login-smoke-drift {
-  0%   { transform: translateX(0) translateY(0) scale(0.55); opacity: 0.7; }
-  40%  { transform: translateX(-10px) translateY(-3px) scale(1); opacity: 0.45; }
-  100% { transform: translateX(-28px) translateY(2px) scale(1.6); opacity: 0; }
+  0% { opacity: 0.5; transform: translateY(-50%) translateX(0) scale(0.7); }
+  100% { opacity: 0; transform: translateY(-50%) translateX(-18px) scale(1.4); }
 }
 .login-ship-ember {
   position: absolute;
-  right: 10px;
+  left: 2px;
   top: 50%;
   width: 4px;
   height: 4px;
-  margin-top: -2px;
   border-radius: 50%;
-  background: #fbbf24;
+  background: #f97316;
   box-shadow: 0 0 6px 2px rgba(249, 115, 22, 0.85), 0 0 12px rgba(239, 68, 68, 0.45);
-  animation-name: login-ember-fly;
-  animation-timing-function: ease-out;
-  animation-iteration-count: infinite;
+  transform: translateY(-50%);
+  animation: login-ember-fly 0.6s ease-out infinite;
 }
 .login-ship-ember-a { animation-duration: 0.55s; animation-delay: 0s; }
 .login-ship-ember-b { animation-duration: 0.7s;  animation-delay: 0.12s; top: 42%; background: #fb923c; }
 .login-ship-ember-c { animation-duration: 0.62s; animation-delay: 0.24s; top: 58%; background: #fde68a; width: 3px; height: 3px; }
 .login-ship-ember-d { animation-duration: 0.8s;  animation-delay: 0.08s; top: 48%; background: #ef4444; width: 3px; height: 3px; }
-@keyframes login-ember-fly {
-  0%   { transform: translateX(0) translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateX(-36px) translateY(var(--ember-y, -4px)) scale(0.2); opacity: 0; }
-}
 .login-ship-ember-b { --ember-y: 5px; }
 .login-ship-ember-c { --ember-y: -6px; }
 .login-ship-ember-d { --ember-y: 3px; }
-
+@keyframes login-ember-fly {
+  0% { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
+  100% { opacity: 0; transform: translateY(calc(-50% + var(--ember-y, 0px))) translateX(-22px) scale(0.4); }
+}
 .login-flyby-chat {
-  font-size: 10px;
+  background: rgba(15, 10, 30, 0.85);
+  border: 1px solid rgba(192, 132, 252, 0.35);
+  color: #f5d0fe;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.03em;
-  color: #faf5ff;
-  background: rgba(76, 29, 149, 0.9);
-  border: 1px solid rgba(216, 180, 254, 0.45);
+  padding: 4px 10px;
   border-radius: 999px;
-  padding: 4px 11px;
   white-space: nowrap;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 12px rgba(139, 92, 246, 0.25);
-  position: relative;
-  animation: login-chat-pop 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
-  margin-bottom: 4px;
-  backdrop-filter: blur(6px);
+  margin-bottom: 2px;
 }
 .login-flyby-chat::after {
   content: '';
   position: absolute;
-  bottom: -5px;
-  left: 50%;
-  margin-left: -4px;
-  border: 5px solid transparent;
-  border-top-color: rgba(76, 29, 149, 0.88);
-}
-@keyframes login-chat-pop {
-  from { transform: scale(0.6); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.login-feature-dot {
-  box-shadow: 0 0 8px rgba(192, 132, 252, 0.7);
-}
-.login-submit-btn {
-  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
-}
-.login-submit-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 28px rgba(139, 92, 246, 0.45);
-}
-.login-submit-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-.login-portal-link {
-  transition: color 0.15s ease, letter-spacing 0.15s ease;
-}
-.login-portal-link:hover {
-  letter-spacing: 0.02em;
+  /* kept simple */
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .login-star,
-  .login-nebula-a,
-  .login-nebula-b,
   .login-planet-rise,
-  .login-logo-arcs,
   .login-flyby-ltr,
   .login-flyby-rtl,
   .login-ship-flame-core,
@@ -582,7 +428,10 @@ html.nexus-dark .portal-atmosphere { background-color: #0c0a12 !important; }
   .login-shooting-star,
   .login-star-glyph,
   .login-star-trail,
-  .login-star-sparkles {
+  .login-logo-arcs,
+  .login-nebula-a,
+  .login-nebula-b,
+  .login-star {
     animation: none !important;
   }
 }
