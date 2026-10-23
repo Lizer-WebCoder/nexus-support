@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import LoginPage from './LoginPage';
+import PostLoginLoader from './PostLoginLoader';
 
 interface Props {
   children: ReactNode;
@@ -11,18 +13,21 @@ interface Props {
 
 /**
  * Customer portal gate: show cosmic login until a customer session exists.
- * Agents who land here are pointed back to the agent workspace.
+ * Agents who land here are auto-sent to the agent workspace (no intermediate gate UI).
  */
 export default function PortalAuthGate({ children, onOpenAgent, onBackToAgent }: Props) {
-  const { user, loading, requiresAuth, accountRole, signOut, configError } = useAuth();
+  const { user, loading, requiresAuth, accountRole, configError } = useAuth();
   const goAgent = onOpenAgent || onBackToAgent;
 
+  useEffect(() => {
+    if (requiresAuth && user && accountRole === 'agent') {
+      if (goAgent) goAgent();
+      else window.location.hash = '';
+    }
+  }, [requiresAuth, user, accountRole, goAgent]);
+
   if (requiresAuth && loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0c0128] text-fuchsia-200/80 text-sm">
-        Loading portal…
-      </div>
-    );
+    return <PostLoginLoader label="Opening customer portal…" subtitle="Preparing your tickets and chat." />;
   }
 
   if (requiresAuth && configError) {
@@ -44,24 +49,10 @@ export default function PortalAuthGate({ children, onOpenAgent, onBackToAgent }:
 
   if (requiresAuth && user && accountRole === 'agent') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-[#0c0128] px-4">
-        <p className="text-sm text-fuchsia-100/80 text-center">
-          This is an agent account. Open the agent workspace instead.
-        </p>
-        <button
-          type="button"
-          className="text-sm font-medium text-fuchsia-300 hover:text-white"
-          onClick={() => {
-            if (goAgent) goAgent();
-            else window.location.hash = '';
-          }}
-        >
-          Agent workspace →
-        </button>
-        <button type="button" className="text-xs text-fuchsia-200/50" onClick={() => void signOut()}>
-          Sign out
-        </button>
-      </div>
+      <PostLoginLoader
+        label="Opening agent workspace…"
+        subtitle="This account is for the agent desk — redirecting you now."
+      />
     );
   }
 
