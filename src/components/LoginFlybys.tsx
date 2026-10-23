@@ -132,7 +132,7 @@ export function SpaceFlybys() {
       timer = setTimeout(() => {
         if (cancelled) return;
         const id = ++idRef.current;
-        const kind: 'ufo' | 'ship' = Math.random() < 0.35 ? 'ufo' : 'ship';
+        const kind: 'ufo' | 'ship' = Math.random() < 0.5 ? 'ufo' : 'ship';
         const duration = 6 + Math.random() * 5;
         const fromLeft = Math.random() < 0.5;
         const top = 12 + Math.random() * 55;
@@ -145,7 +145,7 @@ export function SpaceFlybys() {
     timer = setTimeout(() => {
       if (cancelled) return;
       const id = ++idRef.current;
-      setFlybys([{ id, kind: 'ship', top: 20 + Math.random() * 40, duration: 7, fromLeft: true, chat: 'WOAH COOL' }]);
+      setFlybys([{ id, kind: Math.random() < 0.5 ? 'ufo' : 'ship', top: 20 + Math.random() * 40, duration: 7, fromLeft: true, chat: 'WOAH COOL' }]);
       setTimeout(() => setFlybys((p) => p.filter((f) => f.id !== id)), 7200);
       schedule();
     }, 8000);
