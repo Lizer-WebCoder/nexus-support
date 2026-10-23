@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 const MIN_MS = 3200;
 const FADE_MS = 1200;
@@ -31,6 +31,27 @@ function clearJustLoggedIn() {
   }
 }
 
+function LogoMark({ spinning }: { spinning: boolean }) {
+  return (
+    <div className="w-16 h-16 rounded-2xl bg-white/[0.08] border border-white/20 flex items-center justify-center shadow-[0_0_40px_rgba(167,139,250,0.35)] backdrop-blur-md">
+      <svg viewBox="0 0 48 48" width={36} height={36} fill="none" aria-hidden>
+        {/* core stays still */}
+        <circle cx="24" cy="24" r="5.5" fill="white" />
+        {/* only the ring arcs spin */}
+        <g
+          style={{
+            transformOrigin: '24px 24px',
+            animation: spinning ? 'pl-spin-ring 1.15s linear infinite' : 'none',
+          }}
+        >
+          <path d="M24 6a18 18 0 0 1 18 18" stroke="white" strokeWidth="3.2" strokeLinecap="round" />
+          <path d="M24 42a18 18 0 0 1-18-18" stroke="white" strokeWidth="3.2" strokeLinecap="round" opacity="0.55" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
 /** Simple boot screen (hard refresh / session restore). */
 export function BootLoader({ label = 'Loading…' }: { label?: string }) {
   return (
@@ -44,27 +65,53 @@ export function BootLoader({ label = 'Loading…' }: { label?: string }) {
         }}
       />
       <div className="relative z-10 flex flex-col items-center gap-5">
-        <div
-          className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md shadow-[0_0_36px_rgba(167,139,250,0.35)]"
-          style={{ animation: 'pl-spin-logo 1.15s linear infinite' }}
-        >
-          <svg viewBox="0 0 48 48" width={32} height={32} fill="none" aria-hidden>
-            <circle cx="24" cy="24" r="5.5" fill="white" />
-            <path d="M24 6a18 18 0 0 1 18 18" stroke="white" strokeWidth="3.2" strokeLinecap="round" />
-            <path d="M24 42a18 18 0 0 1-18-18" stroke="white" strokeWidth="3.2" strokeLinecap="round" opacity="0.55" />
-          </svg>
-        </div>
+        <LogoMark spinning />
         <p className="text-sm text-fuchsia-100/70">{label}</p>
       </div>
-      <style>{`@keyframes pl-spin-logo { to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes pl-spin-ring { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+function FloatingParticles() {
+  const dots = useMemo(
+    () =>
+      Array.from({ length: 28 }, (_, i) => ({
+        id: i,
+        left: `${(i * 37 + 11) % 100}%`,
+        size: i % 5 === 0 ? 3 : i % 3 === 0 ? 2 : 1.5,
+        delay: `${(i * 0.37) % 6}s`,
+        duration: `${10 + (i % 7) * 1.4}s`,
+        opacity: 0.25 + (i % 5) * 0.1,
+      })),
+    [],
+  );
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {dots.map((d) => (
+        <span
+          key={d.id}
+          className="absolute rounded-full bg-fuchsia-200"
+          style={{
+            left: d.left,
+            bottom: '-4%',
+            width: d.size,
+            height: d.size,
+            opacity: d.opacity,
+            boxShadow: d.size > 2 ? '0 0 6px rgba(232,121,249,0.6)' : undefined,
+            animation: `pl-particle-rise ${d.duration} linear infinite`,
+            animationDelay: d.delay,
+          }}
+        />
+      ))}
     </div>
   );
 }
 
 /**
- * Post-login ceremony (photo layout):
- * spinning logo card → status → progress bar.
- * No product name / platform subtitle. No separate spinner ring.
+ * Post-login ceremony:
+ * still glass card, spinning ring only, status + richer progress bar, particles.
  */
 export default function PostLoginLoader({
   label = 'Opening workspace…',
@@ -94,13 +141,13 @@ export default function PostLoginLoader({
 
   const status = steps[Math.min(stepIdx, steps.length - 1)];
   const isReady = stepIdx >= steps.length - 1;
-  // Prefer stepped status; fall back to label on first beat
   const line = stepIdx === 0 && label ? label : status;
+  const progress = Math.min(100, ((stepIdx + 1) / steps.length) * 100);
 
   return (
     <div
       className={`relative min-h-screen overflow-hidden flex items-center justify-center bg-[#0b0618] ${
-        fading ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
+        fading ? 'opacity-0 scale-[0.985]' : 'opacity-100 scale-100'
       }`}
       style={{
         transition: `opacity ${FADE_MS}ms cubic-bezier(0.22, 1, 0.36, 1), transform ${FADE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
@@ -116,6 +163,8 @@ export default function PostLoginLoader({
             'linear-gradient(180deg, #1a0a3a 0%, #0b0618 45%, #05030e 100%)',
         }}
       />
+
+      {/* soft nebula orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
           className="absolute w-80 h-80 rounded-full opacity-25 blur-3xl"
@@ -137,44 +186,76 @@ export default function PostLoginLoader({
         />
       </div>
 
+      <FloatingParticles />
+
       <div className="relative z-10 flex flex-col items-center px-6 text-center">
-        {/* Spinning logo on glass card — replaces separate spinner */}
-        <div
-          className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(167,139,250,0.4)] backdrop-blur-md"
-          style={{ animation: isReady ? 'pl-pulse 1.2s ease-in-out infinite' : 'pl-spin-logo 1.1s linear infinite' }}
-        >
-          <svg viewBox="0 0 48 48" width={34} height={34} fill="none" aria-hidden>
-            <circle cx="24" cy="24" r="5.5" fill="white" />
-            <path d="M24 6a18 18 0 0 1 18 18" stroke="white" strokeWidth="3.2" strokeLinecap="round" />
-            <path d="M24 42a18 18 0 0 1-18-18" stroke="white" strokeWidth="3.2" strokeLinecap="round" opacity="0.55" />
-          </svg>
-        </div>
+        <LogoMark spinning={!isReady} />
 
         <p
           key={line}
-          className={`text-sm font-medium ${isReady ? 'text-emerald-300/90' : 'text-fuchsia-100/90'}`}
+          className={`mt-7 text-sm font-medium tracking-wide ${
+            isReady ? 'text-emerald-300/90' : 'text-fuchsia-100/90'
+          }`}
         >
           {isReady ? '✓  ' : ''}
           {line}
         </p>
 
-        <div className="mt-6 w-48 h-1 rounded-full bg-white/10 overflow-hidden">
+        {/* richer progress track */}
+        <div className="mt-7 w-56 relative">
+          <div className="h-[5px] rounded-full bg-white/[0.08] border border-white/10 overflow-hidden backdrop-blur-sm">
+            <div
+              className="relative h-full rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: `${progress}%`,
+                background:
+                  'linear-gradient(90deg, #7c3aed 0%, #d946ef 45%, #a78bfa 75%, #c084fc 100%)',
+                boxShadow: '0 0 12px rgba(217, 70, 239, 0.55), 0 0 24px rgba(124, 58, 237, 0.25)',
+              }}
+            >
+              {/* shimmer */}
+              <div
+                className="absolute inset-0 opacity-60"
+                style={{
+                  background:
+                    'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%)',
+                  animation: 'pl-shimmer 1.4s ease-in-out infinite',
+                }}
+              />
+            </div>
+          </div>
+          {/* soft glow under bar */}
           <div
-            className="h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-violet-500 transition-all duration-700 ease-out"
-            style={{ width: `${Math.min(100, ((stepIdx + 1) / steps.length) * 100)}%` }}
+            className="absolute -bottom-2 left-0 h-3 rounded-full blur-md pointer-events-none transition-all duration-700"
+            style={{
+              width: `${progress}%`,
+              background: 'rgba(217, 70, 239, 0.35)',
+            }}
           />
         </div>
       </div>
 
       <style>{`
-        @keyframes pl-spin-logo { to { transform: rotate(360deg); } }
-        @keyframes pl-pulse {
-          0%, 100% { box-shadow: 0 0 28px rgba(167,139,250,0.35); }
-          50% { box-shadow: 0 0 48px rgba(52,211,153,0.45); }
-        }
+        @keyframes pl-spin-ring { to { transform: rotate(360deg); } }
         @keyframes pl-drift {
           from { transform: translate3d(0,0,0); }
           to { transform: translate3d(3%, 2%, 0); }
+        }
+        @keyframes pl-particle-rise {
+          from {
+            transform: translate3d(0, 0, 0) scale(0.6);
+            opacity: 0;
+          }
+          12% { opacity: 0.85; }
+          70% { opacity: 0.45; }
+          to {
+            transform: translate3d(8px, -110vh, 0) scale(1);
+            opacity: 0;
+          }
+        }
+        @keyframes pl-shimmer {
+          0% { transform: translateX(-120%); }
+          100% { transform: translateX(120%); }
         }
       `}</style>
     </div>
@@ -184,7 +265,6 @@ export default function PostLoginLoader({
 /**
  * After sign-in: ceremony ≥3s + smooth fade, then children.
  * Hard refresh: skip ceremony (children as soon as ready).
- * Flag is only cleared after the ceremony finishes (survives Strict Mode).
  */
 export function PostLoginShell({
   ready,
@@ -231,11 +311,10 @@ export function PostLoginShell({
     return () => window.clearTimeout(t);
   }, [mode]);
 
-  // Re-arm ceremony if flag appears while already ready (login race)
   useEffect(() => {
     if (!ready || mode === 'ceremony' || mode === 'fading') return;
     if (!hasJustLoggedIn()) return;
-    if (wantCeremony.current && mode === 'done') return; // already played
+    if (wantCeremony.current && mode === 'done') return;
     wantCeremony.current = true;
     started.current = true;
     setMode('ceremony');
@@ -253,13 +332,15 @@ export function PostLoginShell({
 
   return (
     <div
-      className="min-h-screen animate-[pl-fadein_0.7s_cubic-bezier(0.22,1,0.36,1)]"
-      style={{ animationFillMode: 'both' }}
+      className="min-h-screen"
+      style={{
+        animation: 'pl-fadein 0.75s cubic-bezier(0.22, 1, 0.36, 1) both',
+      }}
     >
       {children}
       <style>{`
         @keyframes pl-fadein {
-          from { opacity: 0; transform: translateY(6px); }
+          from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
