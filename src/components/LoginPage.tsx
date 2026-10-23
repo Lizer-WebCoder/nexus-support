@@ -461,15 +461,15 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
               {configError && <div className="mb-4 rounded-lg bg-amber-400/15 text-amber-100 text-sm px-3 py-2 border border-amber-300/30">{configError}</div>}
               {error && <div className="mb-4 rounded-lg bg-rose-500/15 text-rose-100 text-sm px-3 py-2 border border-rose-300/30">{error}</div>}
               {info && <div className="mb-4 rounded-lg bg-emerald-500/15 text-emerald-100 text-sm px-3 py-2 border border-emerald-300/30">{info}</div>}
-              <form onSubmit={submit} className="space-y-4">
+              <form onSubmit={submit} className="space-y-4" autoComplete="off">
                 <div>
                   <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Email</label>
-                  <input type="email" required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="email" />
+                  <input type="email" required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="username" name="nexus-email" readOnly onFocus={(e) => { e.currentTarget.readOnly = false; }} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Password</label>
                   <div className="relative">
-                    <input type={showPassword ? 'text' : 'password'} required minLength={6} className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none pr-12" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
+                    <input type={showPassword ? 'text' : 'password'} required minLength={6} className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none pr-12" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" name="nexus-password" readOnly onFocus={(e) => { e.currentTarget.readOnly = false; }} />
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-fuchsia-100/90 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
                   </div>
                 </div>
@@ -509,26 +509,26 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
               {configError && <div className="mb-4 rounded-lg bg-amber-400/15 text-amber-100 text-sm px-3 py-2 border border-amber-300/30">{configError}</div>}
               {error && <div className="mb-4 rounded-lg bg-rose-500/15 text-rose-100 text-sm px-3 py-2 border border-rose-300/30">{error}</div>}
               {info && <div className="mb-4 rounded-lg bg-emerald-500/15 text-emerald-100 text-sm px-3 py-2 border border-emerald-300/30">{info}</div>}
-              <form onSubmit={submit} className="space-y-3.5">
+              <form onSubmit={submit} className="space-y-3.5" autoComplete="off">
                 <div>
                   <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Full name</label>
                   <input required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Doe" autoComplete="name" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Email</label>
-                  <input type="email" required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="email" />
+                  <input type="email" required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="off" name="nexus-reg-email" readOnly onFocus={(e) => { e.currentTarget.readOnly = false; }} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Password</label>
                   <div className="relative">
-                    <input type={showPassword ? 'text' : 'password'} required minLength={6} className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none pr-12" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" />
+                    <input type={showPassword ? 'text' : 'password'} required minLength={6} className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none pr-12" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" name="nexus-reg-password" readOnly onFocus={(e) => { e.currentTarget.readOnly = false; }} />
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-fuchsia-100/90 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Confirm password</label>
                   <div className="relative">
-                    <input type={showConfirm ? 'text' : 'password'} required minLength={6} className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none pr-12" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter password" autoComplete="new-password" />
+                    <input type={showConfirm ? 'text' : 'password'} required minLength={6} className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none pr-12" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter password" autoComplete="new-password" name="nexus-reg-confirm" readOnly onFocus={(e) => { e.currentTarget.readOnly = false; }} />
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-fuchsia-100/90 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition" onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? 'Hide' : 'Show'}</button>
                   </div>
                 </div>
