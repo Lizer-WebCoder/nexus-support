@@ -60,7 +60,7 @@ function AgentShell() {
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const { tickets, usingSupabase, currentAgent } = useTickets();
-  const { user, loading: authLoading, requiresAuth, signOut, accountRole } = useAuth();
+  const { user, loading: authLoading, authBusy, requiresAuth, signOut, accountRole } = useAuth();
   const {
     notifications,
     unreadCount,
@@ -95,14 +95,15 @@ function AgentShell() {
     return () => document.removeEventListener('mousedown', onDoc);
   }, []);
 
-  if (requiresAuth && authLoading) {
+  if (requiresAuth && authLoading && !authBusy) {
     return <BootLoader label="Loading workspace…" />;
   }
 
-  if (requiresAuth && !user) {
+  // Keep login form mounted while validating so wrong-tab / pending errors show
+  if (requiresAuth && (!user || authBusy)) {
     return (
       <LoginPage
-        audience="customer"
+        audience="agent"
         onOpenPortal={() => {
           window.location.hash = 'portal';
         }}
@@ -110,14 +111,14 @@ function AgentShell() {
     );
   }
 
-  if (requiresAuth && user && accountRole === 'customer') {
+  if (requiresAuth && user && accountRole === 'customer' && !authBusy) {
     if (!window.location.hash.toLowerCase().includes('portal')) {
       window.location.hash = 'portal';
     }
     return <BootLoader label="Opening customer portal…" />;
   }
 
-  const agentReady = !requiresAuth || (!!user && accountRole !== 'customer' && !authLoading);
+  const agentReady = !requiresAuth || (!!user && accountRole !== 'customer' && !authLoading && !authBusy);
 
   return (
     <PostLoginShell ready={agentReady} label="Opening agent workspace…" variant="agent">
