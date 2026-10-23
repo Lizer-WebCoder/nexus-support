@@ -20,7 +20,7 @@ import ProfilePage from './components/ProfilePage';
 import LoginPage from './components/LoginPage';
 import CustomerPortal from './components/CustomerPortal';
 import PortalAuthGate from './components/PortalAuthGate';
-import PostLoginLoader, { PostLoginShell } from './components/PostLoginLoader';
+import { PostLoginShell, BootLoader } from './components/PostLoginLoader';
 import { TicketProvider, useTickets } from './context/TicketContext';
 import { PlatformProvider, usePlatform } from './context/PlatformContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -95,7 +95,7 @@ function AgentShell() {
   }, []);
 
   if (requiresAuth && authLoading) {
-    return <PostLoginLoader label="Loading workspace…" subtitle="Checking your session and desk access." />;
+    return <BootLoader label="Loading workspace…" />;
   }
 
   if (requiresAuth && !user) {
@@ -114,10 +114,7 @@ function AgentShell() {
       window.location.hash = 'portal';
     }
     return (
-      <PostLoginLoader
-        label="Opening customer portal…"
-        subtitle="Taking you to your tickets and live chat."
-      />
+      <BootLoader label="Opening customer portal…" />
     );
   }
 
@@ -127,7 +124,7 @@ function AgentShell() {
     <PostLoginShell
       ready={agentReady}
       label="Opening agent workspace…"
-      subtitle="Loading your desk, tickets, and live chat."
+      variant="agent"
     >
     <div className="flex min-h-screen bg-zinc-50">
       <Sidebar

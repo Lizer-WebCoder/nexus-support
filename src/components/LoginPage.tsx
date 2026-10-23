@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { markJustLoggedIn } from './PostLoginLoader';
 import SpacePlanets from './SpacePlanets';
 
 interface Props {
@@ -353,6 +354,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
     try {
       if (mode === 'signin') {
         await signIn(email.trim(), password, isAgent ? 'agent' : 'customer');
+        markJustLoggedIn();
         window.location.hash = isAgent ? '' : 'portal';
       } else {
         await signUp(email.trim(), password, name.trim() || undefined, isAgent ? 'agent' : 'customer');
