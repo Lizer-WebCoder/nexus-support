@@ -13,17 +13,10 @@ type RisingPlanet = {
 };
 
 const PLANET_KINDS: PlanetKind[] = [
-  'jupiter',
-  'saturn',
-  'neptune',
-  'mars',
-  'earth',
-  'venus',
-  'mercury',
-  'uranus',
+  'jupiter', 'saturn', 'neptune', 'mars', 'earth', 'venus', 'mercury', 'uranus',
 ];
 
-/** Cartoon planets matching the reference sheet style */
+/** Cartoon planets matching the reference sheet */
 function PlanetSvg({ kind, size }: { kind: PlanetKind; size: number }) {
   const id = `p-${kind}-${Math.round(size)}`;
 
@@ -31,17 +24,19 @@ function PlanetSvg({ kind, size }: { kind: PlanetKind; size: number }) {
     return (
       <svg width={size} height={size} viewBox="0 0 100 100" className="login-planet-svg" style={{ overflow: 'visible' }}>
         <defs>
-          <radialGradient id={`${id}-sphere`} cx="35%" cy="30%" r="70%">
+          <radialGradient id={`${id}-s`} cx="35%" cy="28%" r="70%">
             <stop offset="0%" stopColor="#7dd3fc" />
-            <stop offset="55%" stopColor="#0ea5e9" />
-            <stop offset="100%" stopColor="#0369a1" />
+            <stop offset="50%" stopColor="#0284c7" />
+            <stop offset="100%" stopColor="#0c4a6e" />
           </radialGradient>
         </defs>
-        <circle cx="50" cy="50" r="44" fill={`url(#${id}-sphere)`} />
-        <path d="M28 38 Q36 28 48 32 Q52 40 44 48 Q34 50 28 42 Z" fill="#22c55e" />
-        <path d="M55 42 Q68 36 74 48 Q70 58 58 56 Q52 50 55 42 Z" fill="#16a34a" />
-        <path d="M32 58 Q42 54 48 62 Q40 72 30 68 Q28 62 32 58 Z" fill="#22c55e" />
-        <ellipse cx="36" cy="34" rx="8" ry="5" fill="rgba(255,255,255,0.28)" />
+        <circle cx="50" cy="50" r="46" fill={`url(#${id}-s)`} />
+        <path d="M22 40 Q30 22 48 28 Q55 38 48 50 Q35 55 24 48 Z" fill="#4ade80" />
+        <path d="M52 36 Q70 28 78 42 Q74 58 58 56 Q50 48 52 36 Z" fill="#22c55e" />
+        <path d="M30 58 Q44 52 52 64 Q44 78 28 72 Q24 64 30 58 Z" fill="#16a34a" />
+        <path d="M60 62 Q70 60 74 70 Q68 78 58 74 Z" fill="#4ade80" />
+        <ellipse cx="34" cy="30" rx="10" ry="6" fill="rgba(255,255,255,0.35)" />
+        <ellipse cx="58" cy="40" rx="6" ry="3.5" fill="rgba(255,255,255,0.2)" />
       </svg>
     );
   }
@@ -50,19 +45,19 @@ function PlanetSvg({ kind, size }: { kind: PlanetKind; size: number }) {
     return (
       <svg width={size} height={size} viewBox="0 0 100 100" className="login-planet-svg" style={{ overflow: 'visible' }}>
         <defs>
-          <radialGradient id={`${id}-sphere`} cx="32%" cy="28%" r="72%">
+          <radialGradient id={`${id}-s`} cx="32%" cy="26%" r="72%">
             <stop offset="0%" stopColor="#fda4af" />
-            <stop offset="40%" stopColor="#ef4444" />
-            <stop offset="75%" stopColor="#b91c1c" />
+            <stop offset="35%" stopColor="#f43f5e" />
+            <stop offset="70%" stopColor="#be123c" />
             <stop offset="100%" stopColor="#7f1d1d" />
           </radialGradient>
         </defs>
-        <circle cx="50" cy="50" r="44" fill={`url(#${id}-sphere)`} />
-        <path d="M18 40 Q50 48 82 38" stroke="#9f1239" strokeWidth="4" fill="none" opacity="0.45" />
-        <path d="M20 55 Q50 62 80 52" stroke="#be123c" strokeWidth="3.5" fill="none" opacity="0.4" />
-        <path d="M22 68 Q50 74 78 66" stroke="#9f1239" strokeWidth="3" fill="none" opacity="0.35" />
-        <circle cx="38" cy="36" r="5" fill="#7f1d1d" opacity="0.35" />
-        <ellipse cx="34" cy="32" rx="9" ry="6" fill="rgba(255,255,255,0.2)" />
+        <circle cx="50" cy="50" r="46" fill={`url(#${id}-s)`} />
+        <path d="M14 38 Q50 48 86 36" stroke="#9f1239" strokeWidth="5" fill="none" opacity="0.5" strokeLinecap="round" />
+        <path d="M16 54 Q50 64 84 52" stroke="#881337" strokeWidth="4" fill="none" opacity="0.45" strokeLinecap="round" />
+        <path d="M18 68 Q50 76 82 66" stroke="#9f1239" strokeWidth="3.5" fill="none" opacity="0.4" strokeLinecap="round" />
+        <circle cx="36" cy="34" r="7" fill="#7f1d1d" opacity="0.3" />
+        <ellipse cx="32" cy="28" rx="11" ry="7" fill="rgba(255,255,255,0.22)" />
       </svg>
     );
   }
@@ -71,47 +66,43 @@ function PlanetSvg({ kind, size }: { kind: PlanetKind; size: number }) {
     return (
       <svg width={size} height={size} viewBox="0 0 100 100" className="login-planet-svg" style={{ overflow: 'visible' }}>
         <defs>
-          <radialGradient id={`${id}-sphere`} cx="32%" cy="28%" r="72%">
-            <stop offset="0%" stopColor="#fde68a" />
-            <stop offset="45%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#92400e" />
+          <radialGradient id={`${id}-s`} cx="30%" cy="26%" r="74%">
+            <stop offset="0%" stopColor="#fef3c7" />
+            <stop offset="40%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#78350f" />
           </radialGradient>
-          <linearGradient id={`${id}-bands`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.55" />
-            <stop offset="18%" stopColor="#b45309" stopOpacity="0.5" />
-            <stop offset="35%" stopColor="#fde68a" stopOpacity="0.4" />
-            <stop offset="52%" stopColor="#c2410c" stopOpacity="0.55" />
-            <stop offset="70%" stopColor="#fcd34d" stopOpacity="0.4" />
-            <stop offset="88%" stopColor="#9a3412" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#fef3c7" stopOpacity="0.3" />
-          </linearGradient>
         </defs>
-        <circle cx="50" cy="50" r="44" fill={`url(#${id}-sphere)`} />
-        <circle cx="50" cy="50" r="44" fill={`url(#${id}-bands)`} />
-        <ellipse cx="62" cy="58" rx="10" ry="7" fill="#dc2626" opacity="0.75" />
-        <ellipse cx="62" cy="58" rx="7" ry="4.5" fill="#f87171" opacity="0.5" />
-        <ellipse cx="34" cy="32" rx="10" ry="7" fill="rgba(255,255,255,0.22)" />
+        <circle cx="50" cy="50" r="46" fill={`url(#${id}-s)`} />
+        <ellipse cx="50" cy="28" rx="42" ry="6" fill="#fde68a" opacity="0.55" />
+        <ellipse cx="50" cy="40" rx="44" ry="5" fill="#b45309" opacity="0.5" />
+        <ellipse cx="50" cy="52" rx="44" ry="6" fill="#fcd34d" opacity="0.45" />
+        <ellipse cx="50" cy="64" rx="42" ry="5" fill="#92400e" opacity="0.5" />
+        <ellipse cx="50" cy="74" rx="38" ry="4" fill="#fde68a" opacity="0.4" />
+        <ellipse cx="64" cy="58" rx="12" ry="8" fill="#dc2626" opacity="0.85" />
+        <ellipse cx="64" cy="58" rx="8" ry="5" fill="#f87171" opacity="0.55" />
+        <ellipse cx="32" cy="30" rx="12" ry="8" fill="rgba(255,255,255,0.25)" />
       </svg>
     );
   }
 
   if (kind === 'saturn') {
     return (
-      <svg width={size} height={size} viewBox="0 0 120 100" className="login-planet-svg" style={{ overflow: 'visible' }}>
+      <svg width={size} height={size} viewBox="0 0 130 100" className="login-planet-svg" style={{ overflow: 'visible' }}>
         <defs>
-          <radialGradient id={`${id}-sphere`} cx="35%" cy="30%" r="70%">
-            <stop offset="0%" stopColor="#fef3c7" />
-            <stop offset="50%" stopColor="#fcd34d" />
+          <radialGradient id={`${id}-s`} cx="35%" cy="28%" r="70%">
+            <stop offset="0%" stopColor="#fef9c3" />
+            <stop offset="45%" stopColor="#facc15" />
             <stop offset="100%" stopColor="#a16207" />
           </radialGradient>
         </defs>
-        <ellipse cx="60" cy="52" rx="56" ry="14" fill="none" stroke="#fde68a" strokeWidth="3.5" opacity="0.55" transform="rotate(-18 60 52)" />
-        <ellipse cx="60" cy="52" rx="48" ry="11" fill="none" stroke="#fbbf24" strokeWidth="2.5" opacity="0.45" transform="rotate(-18 60 52)" />
-        <circle cx="60" cy="50" r="32" fill={`url(#${id}-sphere)`} />
-        <path d="M32 42 Q60 46 88 42" stroke="#ca8a04" strokeWidth="2.5" opacity="0.35" fill="none" />
-        <path d="M30 55 Q60 60 90 55" stroke="#a16207" strokeWidth="2" opacity="0.3" fill="none" />
-        <ellipse cx="60" cy="52" rx="56" ry="14" fill="none" stroke="#fef9c3" strokeWidth="2" opacity="0.7" transform="rotate(-18 60 52)" strokeDasharray="0 40 80 200" />
-        <ellipse cx="48" cy="38" rx="8" ry="5" fill="rgba(255,255,255,0.25)" />
+        <ellipse cx="65" cy="52" rx="60" ry="16" fill="none" stroke="#fde68a" strokeWidth="4" opacity="0.55" transform="rotate(-18 65 52)" />
+        <ellipse cx="65" cy="52" rx="52" ry="12" fill="none" stroke="#fbbf24" strokeWidth="3" opacity="0.5" transform="rotate(-18 65 52)" />
+        <ellipse cx="65" cy="52" rx="44" ry="9" fill="none" stroke="#fef08a" strokeWidth="2" opacity="0.4" transform="rotate(-18 65 52)" />
+        <circle cx="65" cy="50" r="34" fill={`url(#${id}-s)`} />
+        <ellipse cx="65" cy="42" rx="30" ry="4" fill="#ca8a04" opacity="0.3" />
+        <ellipse cx="65" cy="56" rx="28" ry="3.5" fill="#a16207" opacity="0.25" />
+        <ellipse cx="65" cy="52" rx="60" ry="16" fill="none" stroke="#fef9c3" strokeWidth="3" opacity="0.75" transform="rotate(-18 65 52)" strokeDasharray="0 55 90 200" />
+        <ellipse cx="52" cy="36" rx="9" ry="6" fill="rgba(255,255,255,0.28)" />
       </svg>
     );
   }
@@ -120,16 +111,16 @@ function PlanetSvg({ kind, size }: { kind: PlanetKind; size: number }) {
     return (
       <svg width={size} height={size} viewBox="0 0 100 100" className="login-planet-svg" style={{ overflow: 'visible' }}>
         <defs>
-          <radialGradient id={`${id}-sphere`} cx="32%" cy="28%" r="72%">
+          <radialGradient id={`${id}-s`} cx="32%" cy="26%" r="72%">
             <stop offset="0%" stopColor="#93c5fd" />
-            <stop offset="45%" stopColor="#2563eb" />
+            <stop offset="40%" stopColor="#2563eb" />
             <stop offset="100%" stopColor="#1e3a8a" />
           </radialGradient>
         </defs>
-        <circle cx="50" cy="50" r="44" fill={`url(#${id}-sphere)`} />
-        <path d="M18 42 Q50 52 82 40" stroke="#1d4ed8" strokeWidth="5" fill="none" opacity="0.45" />
-        <path d="M20 58 Q50 68 80 56" stroke="#1e40af" strokeWidth="4" fill="none" opacity="0.4" />
-        <ellipse cx="34" cy="32" rx="9" ry="6" fill="rgba(255,255,255,0.25)" />
+        <circle cx="50" cy="50" r="46" fill={`url(#${id}-s)`} />
+        <path d="M12 40 Q50 52 88 38" stroke="#1d4ed8" strokeWidth="6" fill="none" opacity="0.5" strokeLinecap="round" />
+        <path d="M14 58 Q50 70 86 56" stroke="#1e40af" strokeWidth="5" fill="none" opacity="0.45" strokeLinecap="round" />
+        <ellipse cx="32" cy="30" rx="11" ry="7" fill="rgba(255,255,255,0.28)" />
       </svg>
     );
   }
@@ -138,16 +129,16 @@ function PlanetSvg({ kind, size }: { kind: PlanetKind; size: number }) {
     return (
       <svg width={size} height={size} viewBox="0 0 100 100" className="login-planet-svg" style={{ overflow: 'visible' }}>
         <defs>
-          <radialGradient id={`${id}-sphere`} cx="35%" cy="30%" r="70%">
+          <radialGradient id={`${id}-s`} cx="35%" cy="28%" r="70%">
             <stop offset="0%" stopColor="#a5f3fc" />
-            <stop offset="50%" stopColor="#22d3ee" />
+            <stop offset="45%" stopColor="#22d3ee" />
             <stop offset="100%" stopColor="#0e7490" />
           </radialGradient>
         </defs>
-        <ellipse cx="50" cy="50" rx="12" ry="48" fill="none" stroke="#67e8f9" strokeWidth="2.5" opacity="0.55" transform="rotate(15 50 50)" />
-        <ellipse cx="50" cy="50" rx="8" ry="42" fill="none" stroke="#a5f3fc" strokeWidth="1.5" opacity="0.4" transform="rotate(15 50 50)" />
-        <circle cx="50" cy="50" r="36" fill={`url(#${id}-sphere)`} />
-        <ellipse cx="40" cy="38" rx="8" ry="5" fill="rgba(255,255,255,0.28)" />
+        <ellipse cx="50" cy="50" rx="14" ry="52" fill="none" stroke="#67e8f9" strokeWidth="3" opacity="0.6" transform="rotate(12 50 50)" />
+        <ellipse cx="50" cy="50" rx="9" ry="46" fill="none" stroke="#a5f3fc" strokeWidth="2" opacity="0.45" transform="rotate(12 50 50)" />
+        <circle cx="50" cy="50" r="38" fill={`url(#${id}-s)`} />
+        <ellipse cx="40" cy="36" rx="9" ry="6" fill="rgba(255,255,255,0.3)" />
       </svg>
     );
   }
@@ -156,17 +147,17 @@ function PlanetSvg({ kind, size }: { kind: PlanetKind; size: number }) {
     return (
       <svg width={size} height={size} viewBox="0 0 100 100" className="login-planet-svg" style={{ overflow: 'visible' }}>
         <defs>
-          <radialGradient id={`${id}-sphere`} cx="32%" cy="28%" r="72%">
+          <radialGradient id={`${id}-s`} cx="32%" cy="26%" r="72%">
             <stop offset="0%" stopColor="#fef3c7" />
-            <stop offset="40%" stopColor="#e7b56a" />
-            <stop offset="75%" stopColor="#b45309" />
+            <stop offset="35%" stopColor="#e7b56a" />
+            <stop offset="70%" stopColor="#b45309" />
             <stop offset="100%" stopColor="#78350f" />
           </radialGradient>
         </defs>
-        <circle cx="50" cy="50" r="44" fill={`url(#${id}-sphere)`} />
-        <path d="M20 40 Q50 48 80 38" stroke="#a16207" strokeWidth="4" fill="none" opacity="0.35" />
-        <path d="M22 58 Q50 66 78 56" stroke="#92400e" strokeWidth="3.5" fill="none" opacity="0.3" />
-        <ellipse cx="34" cy="32" rx="9" ry="6" fill="rgba(255,255,255,0.22)" />
+        <circle cx="50" cy="50" r="46" fill={`url(#${id}-s)`} />
+        <path d="M14 38 Q50 48 86 36" stroke="#a16207" strokeWidth="5" fill="none" opacity="0.4" strokeLinecap="round" />
+        <path d="M16 56 Q50 66 84 54" stroke="#92400e" strokeWidth="4" fill="none" opacity="0.35" strokeLinecap="round" />
+        <ellipse cx="32" cy="28" rx="11" ry="7" fill="rgba(255,255,255,0.25)" />
       </svg>
     );
   }
@@ -174,18 +165,19 @@ function PlanetSvg({ kind, size }: { kind: PlanetKind; size: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" className="login-planet-svg" style={{ overflow: 'visible' }}>
       <defs>
-        <radialGradient id={`${id}-sphere`} cx="32%" cy="28%" r="72%">
+        <radialGradient id={`${id}-s`} cx="32%" cy="26%" r="72%">
           <stop offset="0%" stopColor="#e7e5e4" />
-          <stop offset="45%" stopColor="#a8a29e" />
-          <stop offset="100%" stopColor="#57534e" />
+          <stop offset="40%" stopColor="#a8a29e" />
+          <stop offset="100%" stopColor="#44403c" />
         </radialGradient>
       </defs>
-      <circle cx="50" cy="50" r="44" fill={`url(#${id}-sphere)`} />
-      <circle cx="38" cy="36" r="6" fill="#78716c" opacity="0.45" />
-      <circle cx="58" cy="48" r="4.5" fill="#78716c" opacity="0.4" />
-      <circle cx="44" cy="62" r="5" fill="#57534e" opacity="0.4" />
-      <circle cx="64" cy="34" r="3.5" fill="#78716c" opacity="0.35" />
-      <ellipse cx="34" cy="30" rx="8" ry="5" fill="rgba(255,255,255,0.25)" />
+      <circle cx="50" cy="50" r="46" fill={`url(#${id}-s)`} />
+      <circle cx="36" cy="34" r="8" fill="#78716c" opacity="0.5" />
+      <circle cx="60" cy="48" r="6" fill="#57534e" opacity="0.45" />
+      <circle cx="42" cy="62" r="7" fill="#78716c" opacity="0.4" />
+      <circle cx="68" cy="32" r="4.5" fill="#57534e" opacity="0.4" />
+      <circle cx="28" cy="54" r="3.5" fill="#78716c" opacity="0.35" />
+      <ellipse cx="32" cy="28" rx="10" ry="6" fill="rgba(255,255,255,0.28)" />
     </svg>
   );
 }
@@ -221,9 +213,9 @@ export default function SpacePlanets() {
       const id = ++idRef.current;
       const kind = PLANET_KINDS[Math.floor(Math.random() * PLANET_KINDS.length)];
       const base =
-        kind === 'jupiter' || kind === 'saturn' ? 88 :
-        kind === 'neptune' || kind === 'earth' || kind === 'uranus' ? 56 : 42;
-      const size = base + Math.random() * (kind === 'jupiter' || kind === 'saturn' ? 40 : 28);
+        kind === 'jupiter' || kind === 'saturn' ? 92 :
+        kind === 'neptune' || kind === 'earth' || kind === 'uranus' ? 60 : 46;
+      const size = base + Math.random() * (kind === 'jupiter' || kind === 'saturn' ? 36 : 24);
       const duration = 16 + Math.random() * 10;
       const left = 6 + Math.random() * 78;
       const drift = (Math.random() < 0.5 ? -1 : 1) * (15 + Math.random() * 50);
@@ -234,11 +226,11 @@ export default function SpacePlanets() {
         setPlanets((prev) => prev.filter((x) => x.id !== id));
       }, duration * 1000 + 400);
 
-      const gaps = [12, 15, 18, 20, 25, 28, 30, 35];
+      const gaps = [10, 14, 18, 22, 26, 30, 35];
       timer = setTimeout(spawn, gaps[Math.floor(Math.random() * gaps.length)] * 1000);
     };
 
-    timer = setTimeout(spawn, 5000 + Math.random() * 3000);
+    timer = setTimeout(spawn, 4000 + Math.random() * 2500);
     return () => {
       cancelled = true;
       clearTimeout(timer);
