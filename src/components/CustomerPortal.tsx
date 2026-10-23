@@ -12,6 +12,7 @@ import PortalLiveChat from './PortalLiveChat';
 import PortalAuthGate from './PortalAuthGate';
 import PortalHome from './PortalHome';
 import PortalCommunityChat from './PortalCommunityChat';
+import ThemeToggle from './ThemeToggle';
 
 interface Props { onBackToAgent?: () => void; }
 type PortalView = 'home' | 'submit' | 'track' | 'success' | 'help' | 'chat' | 'account' | 'mytickets' | 'community';
@@ -257,6 +258,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             Support online
           </div>
+          <ThemeToggle />
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">

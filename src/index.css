@@ -705,73 +705,164 @@ body {
   }
 }
 
-/* Signed-in shells share the login galaxy */
+/* Signed-in shells. Dark/light is html.nexus-dark / html.nexus-light. */
 .app-cosmos {
   position: relative;
-  color: #f5f3ff;
+  min-height: 100vh;
+}
+
+html.nexus-dark {
+  color-scheme: dark;
+  background: #070014;
+}
+html.nexus-light {
+  color-scheme: light;
+  background: #f4f4f5;
+}
+
+html.nexus-dark .app-cosmos {
+  color: #f8fafc;
   background:
     radial-gradient(ellipse 70% 45% at 50% 115%, rgba(109, 40, 217, 0.45) 0%, transparent 62%),
     radial-gradient(ellipse 32% 26% at 8% 10%, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
     radial-gradient(ellipse 28% 24% at 92% 8%, rgba(244, 114, 182, 0.14) 0%, transparent 58%),
     linear-gradient(185deg, #070014 0%, #12042c 46%, #0a011c 100%);
-  min-height: 100vh;
 }
-.app-cosmos aside {
-  background: rgba(10, 4, 24, 0.78) !important;
-  border-color: rgba(167, 139, 250, 0.18) !important;
+html.nexus-light .app-cosmos {
+  color: #18181b;
+  background: #f4f4f5;
+}
+
+html.nexus-dark .app-cosmos aside {
+  background: rgba(10, 4, 24, 0.92) !important;
+  border-color: rgba(167, 139, 250, 0.22) !important;
   backdrop-filter: blur(16px);
-}
-.nexus-topbar {
-  background: rgba(16, 6, 36, 0.72);
-  border-bottom: 1px solid rgba(192, 132, 252, 0.18);
-  backdrop-filter: blur(16px);
-  color: #f5f3ff;
-}
-.nexus-search {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(196, 181, 253, 0.28);
   color: #f8fafc;
 }
-.nexus-search::placeholder { color: rgba(221, 214, 254, 0.45); }
-.nexus-search:focus { border-color: rgba(192, 132, 252, 0.7); outline: none; }
-.app-cosmos .bg-white {
-  background-color: rgba(24, 10, 48, 0.72) !important;
-  color: #f5f3ff;
+html.nexus-light .app-cosmos aside {
+  background: #18181b !important;
+  border-color: #27272a !important;
+  color: #fafafa;
+}
+
+/* Sidebar stays dark in both themes — keep labels light enough to read */
+html.nexus-dark .app-cosmos aside .text-zinc-600,
+html.nexus-dark .app-cosmos aside .text-zinc-500,
+html.nexus-dark .app-cosmos aside .text-zinc-400,
+html.nexus-light .app-cosmos aside .text-zinc-600,
+html.nexus-light .app-cosmos aside .text-zinc-500,
+html.nexus-light .app-cosmos aside .text-zinc-400 {
+  color: #e4e4e7 !important;
+}
+html.nexus-dark .app-cosmos aside .text-zinc-100,
+html.nexus-light .app-cosmos aside .text-zinc-100 {
+  color: #fafafa !important;
+}
+
+html.nexus-dark .nexus-topbar {
+  background: rgba(16, 6, 36, 0.88);
+  border-bottom: 1px solid rgba(192, 132, 252, 0.22);
+  backdrop-filter: blur(16px);
+  color: #f8fafc;
+}
+html.nexus-light .nexus-topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e4e4e7;
+  color: #18181b;
+  backdrop-filter: none;
+}
+
+html.nexus-dark .nexus-search {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(196, 181, 253, 0.35);
+  color: #f8fafc;
+}
+html.nexus-dark .nexus-search::placeholder { color: rgba(237, 233, 254, 0.62); }
+html.nexus-dark .nexus-search:focus { border-color: rgba(192, 132, 252, 0.85); outline: none; }
+
+html.nexus-light .nexus-search {
+  background: #fafafa;
+  border: 1px solid #d4d4d8;
+  color: #18181b;
+}
+html.nexus-light .nexus-search::placeholder { color: #71717a; }
+html.nexus-light .nexus-search:focus { border-color: #7c3aed; outline: none; }
+
+/* Dark surfaces: pages were written for a light desk (slate/zinc text). Lift that text. */
+html.nexus-dark .app-cosmos .bg-white {
+  background-color: rgba(28, 14, 56, 0.88) !important;
+  color: #f8fafc;
   backdrop-filter: blur(12px);
 }
-.app-cosmos .bg-zinc-50,
-.app-cosmos .bg-zinc-100,
-.app-cosmos .hover\:bg-zinc-50:hover,
-.app-cosmos .hover\:bg-zinc-100:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+html.nexus-dark .app-cosmos .bg-zinc-50,
+html.nexus-dark .app-cosmos .bg-zinc-100,
+html.nexus-dark .app-cosmos .bg-slate-50,
+html.nexus-dark .app-cosmos .bg-slate-100,
+html.nexus-dark .app-cosmos .hover\:bg-zinc-50:hover,
+html.nexus-dark .app-cosmos .hover\:bg-zinc-100:hover,
+html.nexus-dark .app-cosmos .hover\:bg-slate-50:hover,
+html.nexus-dark .app-cosmos .hover\:bg-slate-100:hover {
+  background-color: rgba(255, 255, 255, 0.07) !important;
 }
-.app-cosmos .bg-zinc-950 { background-color: rgba(8, 3, 20, 0.9) !important; }
-.app-cosmos .text-zinc-900,
-.app-cosmos .text-zinc-800,
-.app-cosmos .text-zinc-700 { color: #f5f3ff !important; }
-.app-cosmos .text-zinc-600,
-.app-cosmos .text-zinc-500 { color: rgba(221, 214, 254, 0.72) !important; }
-.app-cosmos .text-zinc-400,
-.app-cosmos .text-zinc-300 { color: rgba(221, 214, 254, 0.55) !important; }
-.app-cosmos .border-zinc-200,
-.app-cosmos .border-zinc-100,
-.app-cosmos .border-zinc-300,
-.app-cosmos .border-zinc-800,
-.app-cosmos .border-zinc-800\/80 { border-color: rgba(192, 132, 252, 0.2) !important; }
-.app-cosmos input,
-.app-cosmos textarea,
-.app-cosmos select {
-  background: rgba(255, 255, 255, 0.06);
+html.nexus-dark .app-cosmos .bg-zinc-950 { background-color: rgba(8, 3, 20, 0.94) !important; }
+html.nexus-dark .app-cosmos .text-zinc-900,
+html.nexus-dark .app-cosmos .text-zinc-800,
+html.nexus-dark .app-cosmos .text-zinc-700,
+html.nexus-dark .app-cosmos .text-slate-900,
+html.nexus-dark .app-cosmos .text-slate-800,
+html.nexus-dark .app-cosmos .text-slate-700 { color: #f8fafc !important; }
+html.nexus-dark .app-cosmos .text-zinc-600,
+html.nexus-dark .app-cosmos .text-zinc-500,
+html.nexus-dark .app-cosmos .text-slate-600,
+html.nexus-dark .app-cosmos .text-slate-500 { color: rgba(237, 233, 254, 0.86) !important; }
+html.nexus-dark .app-cosmos .text-zinc-400,
+html.nexus-dark .app-cosmos .text-zinc-300,
+html.nexus-dark .app-cosmos .text-slate-400,
+html.nexus-dark .app-cosmos .text-slate-300 { color: rgba(237, 233, 254, 0.72) !important; }
+html.nexus-dark .app-cosmos .border-zinc-200,
+html.nexus-dark .app-cosmos .border-zinc-100,
+html.nexus-dark .app-cosmos .border-zinc-300,
+html.nexus-dark .app-cosmos .border-zinc-800,
+html.nexus-dark .app-cosmos .border-zinc-800\/80,
+html.nexus-dark .app-cosmos .border-slate-200,
+html.nexus-dark .app-cosmos .border-slate-100,
+html.nexus-dark .app-cosmos .border-slate-300 { border-color: rgba(196, 181, 253, 0.28) !important; }
+html.nexus-dark .app-cosmos tr:hover {
+  background-color: rgba(167, 139, 250, 0.14) !important;
+}
+html.nexus-dark .app-cosmos input,
+html.nexus-dark .app-cosmos textarea,
+html.nexus-dark .app-cosmos select {
+  background: rgba(255, 255, 255, 0.08);
   color: #f8fafc;
-  border-color: rgba(196, 181, 253, 0.28);
+  border-color: rgba(196, 181, 253, 0.35);
 }
-.app-cosmos input::placeholder,
-.app-cosmos textarea::placeholder { color: rgba(221, 214, 254, 0.4); }
-.app-cosmos .shadow-xl,
-.app-cosmos .shadow-lg,
-.app-cosmos .shadow-md { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35); }
-.app-cosmos .rounded-xl.bg-white,
-.app-cosmos .rounded-2xl.bg-white,
-.app-cosmos .rounded-lg.bg-white {
-  border: 1px solid rgba(192, 132, 252, 0.18);
+html.nexus-dark .app-cosmos select option {
+  background: #1a0b33;
+  color: #f8fafc;
 }
+html.nexus-dark .app-cosmos input::placeholder,
+html.nexus-dark .app-cosmos textarea::placeholder { color: rgba(237, 233, 254, 0.55); }
+html.nexus-dark .app-cosmos .shadow-xl,
+html.nexus-dark .app-cosmos .shadow-lg,
+html.nexus-dark .app-cosmos .shadow-md { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35); }
+html.nexus-dark .app-cosmos .rounded-xl.bg-white,
+html.nexus-dark .app-cosmos .rounded-2xl.bg-white,
+html.nexus-dark .app-cosmos .rounded-lg.bg-white {
+  border: 1px solid rgba(196, 181, 253, 0.22);
+}
+
+html.nexus-dark .recharts-cartesian-axis-tick text { fill: #e9d5ff !important; }
+html.nexus-dark .recharts-cartesian-grid line { stroke: rgba(233, 213, 255, 0.22) !important; }
+html.nexus-dark .recharts-legend-item-text { color: #f5f3ff !important; }
+
+html.nexus-light .app-cosmos input,
+html.nexus-light .app-cosmos textarea,
+html.nexus-light .app-cosmos select {
+  background: #fff;
+  color: #18181b;
+  border-color: #d4d4d8;
+}
+html.nexus-light .app-cosmos input::placeholder,
+html.nexus-light .app-cosmos textarea::placeholder { color: #71717a; }
+

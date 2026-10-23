@@ -25,6 +25,7 @@ import { PlatformProvider, usePlatform } from './context/PlatformContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Search, Bell, Settings, ExternalLink } from 'lucide-react';
 import AgentAvatar from './components/AgentAvatar';
+import ThemeToggle from './components/ThemeToggle';
 
 function getModeFromHash(): 'agent' | 'portal' {
   const h = (window.location.hash || '').replace(/^#/, '').toLowerCase();
@@ -163,6 +164,7 @@ function AgentShell() {
             >
               <ExternalLink size={14} /> Portal
             </a>
+            <ThemeToggle />
             <div className="relative" ref={notifRef}>
               <button
                 type="button"
