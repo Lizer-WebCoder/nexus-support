@@ -50,20 +50,35 @@ jobs:
           npm run build
           touch dist/.nojekyll
 
-      - name: Deploy dist to gh-pages
+      - name: Deploy dist to gh-pages (keep existing preview/)
         env:
           TOKEN: ${{ secrets.PAGES_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -e
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
           rm -rf work-gh-pages
           mkdir work-gh-pages
-          cp -a dist/. work-gh-pages/
           cd work-gh-pages
           git init
-          git checkout --orphan gh-pages
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          # Start from current gh-pages so we can keep preview/
+          if git fetch origin gh-pages --depth=1 && git rev-parse origin/gh-pages >/dev/null 2>&1; then
+            git checkout -f origin/gh-pages
+            git checkout -B gh-pages
+            # Remove everything except preview/
+            find . -mindepth 1 -maxdepth 1 ! -name preview ! -name '.git' -exec rm -rf {} +
+          else
+            git checkout --orphan gh-pages
+          fi
+
+          # Copy production build into root
+          cp -a ../dist/. .
+          touch .nojekyll
+
           git add -A
-          git commit -m "deploy ${GITHUB_SHA}"
+          git commit -m "deploy ${GITHUB_SHA}" || echo "No changes"
           git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:gh-pages
-          echo "Pushed to gh-pages"
+          echo "Pushed to gh-pages (preview/ preserved if present)"
