@@ -1,0 +1,3 @@
+-- See artifacts/nexus-support-patches/supabase/schema.sql for the full schema.
+-- This placeholder ensures the path exists; full content was applied in Supabase SQL Editor by the project owner.
+-- Re-copy from nexus-support-patches if you need the full file in-repo.
