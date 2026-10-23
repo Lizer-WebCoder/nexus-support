@@ -1,19 +1,83 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 const MIN_MS = 3000;
-const FADE_MS = 800;
+const FADE_MS = 900;
+const POST_LOGIN_KEY = 'nexus_post_login';
 
-/** Cosmic post-login / route-loading screen — matches login gradient. */
+/** Mark that the user just signed in (call after successful signIn). */
+export function markJustLoggedIn() {
+  try {
+    sessionStorage.setItem(POST_LOGIN_KEY, String(Date.now()));
+  } catch {
+    /* ignore */
+  }
+}
+
+function consumeJustLoggedIn(): boolean {
+  try {
+    const v = sessionStorage.getItem(POST_LOGIN_KEY);
+    if (!v) return false;
+    sessionStorage.removeItem(POST_LOGIN_KEY);
+    return Date.now() - Number(v) < 60_000;
+  } catch {
+    return false;
+  }
+}
+
+/** Simple boot screen (session restore / hard refresh). */
+export function BootLoader({ label = 'Loading…' }: { label?: string }) {
+  return (
+    <div className="relative min-h-screen overflow-hidden flex items-center justify-center bg-[#0b0618]">
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(ellipse 120% 80% at 50% 30%, rgba(88, 28, 135, 0.35), transparent 60%),' +
+            'linear-gradient(180deg, #12082a 0%, #0b0618 100%)',
+        }}
+      />
+      <div className="relative z-10 flex flex-col items-center gap-4">
+        <div className="w-11 h-11 rounded-full border-2 border-fuchsia-300/25 border-t-fuchsia-300 animate-spin" />
+        <p className="text-sm text-fuchsia-100/70">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Post-login ceremony: spinning logo on glass card, status steps, progress line.
+ * No system name / subtitle.
+ */
 export default function PostLoginLoader({
-  label = 'Loading…',
-  subtitle,
+  label,
+  subtitle: _subtitle,
   fading = false,
+  variant = 'agent',
 }: {
   label?: string;
   subtitle?: string;
-  /** When true, fades the whole screen out (used by PostLoginShell). */
   fading?: boolean;
+  variant?: 'agent' | 'customer';
 }) {
+  const steps =
+    variant === 'customer'
+      ? ['Verifying account…', 'Loading your tickets…', 'Preparing live chat…', 'Ready']
+      : ['Verifying session…', 'Loading your desk…', 'Syncing tickets & chat…', 'Ready'];
+
+  const [stepIdx, setStepIdx] = useState(0);
+
+  useEffect(() => {
+    const timers = [
+      window.setTimeout(() => setStepIdx(1), 700),
+      window.setTimeout(() => setStepIdx(2), 1500),
+      window.setTimeout(() => setStepIdx(3), 2400),
+    ];
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, []);
+
+  const status = steps[Math.min(stepIdx, steps.length - 1)];
+  const isReady = stepIdx >= steps.length - 1;
+
   return (
     <div
       className={`relative min-h-screen overflow-hidden flex items-center justify-center bg-[#0b0618] transition-opacity ease-out ${
@@ -25,78 +89,80 @@ export default function PostLoginLoader({
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 120% 80% at 20% 10%, rgba(120, 40, 180, 0.5), transparent 55%),' +
-            'radial-gradient(ellipse 90% 70% at 85% 25%, rgba(60, 20, 140, 0.55), transparent 50%),' +
-            'radial-gradient(ellipse 80% 60% at 50% 95%, rgba(30, 10, 80, 0.65), transparent 55%),' +
+            'radial-gradient(ellipse 120% 80% at 20% 10%, rgba(120, 40, 180, 0.45), transparent 55%),' +
+            'radial-gradient(ellipse 90% 70% at 85% 25%, rgba(60, 20, 140, 0.5), transparent 50%),' +
+            'radial-gradient(ellipse 80% 60% at 50% 95%, rgba(30, 10, 80, 0.6), transparent 55%),' +
             'linear-gradient(180deg, #1a0a3a 0%, #0b0618 45%, #05030e 100%)',
         }}
       />
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute w-72 h-72 rounded-full opacity-30 blur-3xl"
+          className="absolute w-80 h-80 rounded-full opacity-25 blur-3xl"
           style={{
-            left: '10%',
-            top: '20%',
-            background: 'radial-gradient(circle, rgba(192,38,211,0.55), transparent 70%)',
-            animation: 'postlogin-drift 10s ease-in-out infinite alternate',
+            left: '12%',
+            top: '18%',
+            background: 'radial-gradient(circle, rgba(192,38,211,0.5), transparent 70%)',
+            animation: 'pl-drift 11s ease-in-out infinite alternate',
           }}
         />
         <div
-          className="absolute w-96 h-96 rounded-full opacity-25 blur-3xl"
+          className="absolute w-[28rem] h-[28rem] rounded-full opacity-20 blur-3xl"
           style={{
-            right: '5%',
-            bottom: '10%',
-            background: 'radial-gradient(circle, rgba(99,102,241,0.5), transparent 70%)',
-            animation: 'postlogin-drift 14s ease-in-out infinite alternate-reverse',
+            right: '8%',
+            bottom: '12%',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.45), transparent 70%)',
+            animation: 'pl-drift 15s ease-in-out infinite alternate-reverse',
           }}
+        />
+      </div>
+
+      <div className="absolute left-0 right-0 top-1/2 -translate-y-[4.5rem] h-px pointer-events-none overflow-hidden">
+        <div
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-transparent via-fuchsia-400/80 to-violet-400/80"
+          style={{ width: '40%', animation: 'pl-line 2.2s ease-in-out infinite' }}
         />
       </div>
 
       <div className="relative z-10 flex flex-col items-center px-6 text-center">
         <div
-          className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center mb-5 shadow-[0_0_40px_rgba(167,139,250,0.45)]"
-          style={{ animation: 'postlogin-pulse 2.2s ease-in-out infinite' }}
+          className="w-[4.5rem] h-[4.5rem] rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center shadow-[0_0_48px_rgba(167,139,250,0.4)] backdrop-blur-md"
+          style={{ animation: isReady ? 'none' : 'pl-spin-logo 1.15s linear infinite' }}
         >
-          <svg viewBox="0 0 48 48" width={36} height={36} fill="none" aria-hidden>
+          <svg viewBox="0 0 48 48" width={40} height={40} fill="none" aria-hidden>
             <circle cx="24" cy="24" r="5.5" fill="white" />
             <path d="M24 6a18 18 0 0 1 18 18" stroke="white" strokeWidth="3.2" strokeLinecap="round" />
             <path d="M24 42a18 18 0 0 1-18-18" stroke="white" strokeWidth="3.2" strokeLinecap="round" opacity="0.55" />
           </svg>
         </div>
 
-        <div className="text-lg font-semibold text-white tracking-tight">Nexus Ops</div>
-        <div className="mt-1 text-xs text-fuchsia-200/70">Support operations platform</div>
-
-        <div className="mt-8 flex flex-col items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-full border-2 border-fuchsia-300/20 border-t-fuchsia-300 border-r-violet-400"
-            style={{ animation: 'postlogin-spin 0.9s linear infinite' }}
-          />
-          <p className="text-sm text-fuchsia-100/90 font-medium">{label}</p>
-          {subtitle ? <p className="text-xs text-fuchsia-200/55 max-w-xs">{subtitle}</p> : null}
+        <div className="mt-8 min-h-[1.5rem]">
+          <p
+            key={status}
+            className={`text-sm font-medium ${isReady ? 'text-emerald-300/90' : 'text-fuchsia-100/90'}`}
+          >
+            {isReady ? '✓  ' : ''}
+            {status}
+          </p>
         </div>
 
-        <div className="mt-8 w-48 h-1 rounded-full bg-white/10 overflow-hidden">
+        <div className="mt-6 w-52 h-[3px] rounded-full bg-white/10 overflow-hidden">
           <div
-            className="h-full w-1/2 rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-violet-500"
-            style={{ animation: 'postlogin-bar 1.4s ease-in-out infinite' }}
+            className="h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-violet-500 transition-all duration-700 ease-out"
+            style={{ width: `${Math.min(100, ((stepIdx + 1) / steps.length) * 100)}%` }}
           />
         </div>
       </div>
 
       <style>{`
-        @keyframes postlogin-spin { to { transform: rotate(360deg); } }
-        @keyframes postlogin-pulse {
-          0%, 100% { box-shadow: 0 0 28px rgba(167,139,250,0.35); transform: scale(1); }
-          50% { box-shadow: 0 0 48px rgba(217,70,239,0.55); transform: scale(1.04); }
-        }
-        @keyframes postlogin-drift {
+        @keyframes pl-spin-logo { to { transform: rotate(360deg); } }
+        @keyframes pl-drift {
           from { transform: translate3d(0,0,0); }
-          to { transform: translate3d(4%, 3%, 0); }
+          to { transform: translate3d(3%, 2%, 0); }
         }
-        @keyframes postlogin-bar {
-          0% { transform: translateX(-120%); }
-          100% { transform: translateX(220%); }
+        @keyframes pl-line {
+          0% { transform: translateX(-100%); opacity: 0.3; }
+          50% { opacity: 1; }
+          100% { transform: translateX(280%); opacity: 0.3; }
         }
       `}</style>
     </div>
@@ -104,45 +170,64 @@ export default function PostLoginLoader({
 }
 
 /**
- * Holds the cosmic loader for at least MIN_MS after `ready` becomes true,
- * then fades out and reveals children.
+ * After a real sign-in: post-login ceremony ≥3s, fade, then children.
+ * On hard refresh / session restore: skip ceremony (BootLoader only while !ready).
  */
 export function PostLoginShell({
   ready,
   label,
   subtitle,
+  variant = 'agent',
   children,
 }: {
-  /** True when auth is resolved and this shell may show its portal content. */
   ready: boolean;
   label: string;
   subtitle?: string;
+  variant?: 'agent' | 'customer';
   children: ReactNode;
 }) {
-  const [phase, setPhase] = useState<'hold' | 'fading' | 'done'>('hold');
+  const [mode, setMode] = useState<'boot' | 'ceremony' | 'fading' | 'done'>('boot');
   const readySince = useRef<number | null>(null);
+  const ceremony = useRef(false);
 
   useEffect(() => {
     if (!ready) {
       readySince.current = null;
-      setPhase('hold');
+      ceremony.current = false;
+      setMode('boot');
       return;
     }
-    if (readySince.current == null) readySince.current = Date.now();
-    const elapsed = Date.now() - readySince.current;
+    if (readySince.current == null) {
+      readySince.current = Date.now();
+      ceremony.current = consumeJustLoggedIn();
+      if (!ceremony.current) {
+        setMode('done');
+        return;
+      }
+      setMode('ceremony');
+    }
+    if (!ceremony.current) return;
+
+    const elapsed = Date.now() - (readySince.current || Date.now());
     const wait = Math.max(0, MIN_MS - elapsed);
-    const t = window.setTimeout(() => setPhase('fading'), wait);
+    const t = window.setTimeout(() => setMode('fading'), wait);
     return () => window.clearTimeout(t);
   }, [ready]);
 
   useEffect(() => {
-    if (phase !== 'fading') return;
-    const t = window.setTimeout(() => setPhase('done'), FADE_MS);
+    if (mode !== 'fading') return;
+    const t = window.setTimeout(() => setMode('done'), FADE_MS);
     return () => window.clearTimeout(t);
-  }, [phase]);
+  }, [mode]);
 
-  if (!ready || phase !== 'done') {
-    return <PostLoginLoader label={label} subtitle={subtitle} fading={phase === 'fading'} />;
+  if (!ready) {
+    return <BootLoader label={label} />;
+  }
+
+  if (mode === 'ceremony' || mode === 'fading') {
+    return (
+      <PostLoginLoader label={label} subtitle={subtitle} fading={mode === 'fading'} variant={variant} />
+    );
   }
 
   return <>{children}</>;
