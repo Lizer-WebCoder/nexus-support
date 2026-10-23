@@ -135,7 +135,7 @@ function LogoPilotStage() {
       fromX = x; fromY = y; fromScale = scale; toX = nx; toY = ny; toScale = randomIn(0.88, 1.14);
       startT = performance.now();
       const dist = Math.hypot(toX - fromX, toY - fromY);
-      duration = Math.min(4200, Math.max(1400, dist * 2.2 + randomIn(200, 800));
+      duration = Math.min(4200, Math.max(1400, dist * 2.2 + randomIn(200, 800)));
     };
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
