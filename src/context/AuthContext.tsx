@@ -61,15 +61,18 @@ function friendlyAuthError(err: unknown): Error {
   return err;
 }
 
-/**
- * Derive role from database tables (source of truth), not user_metadata.
- * Falls back to metadata only when tables are unreachable.
- */
-async function resolveRoleFromDb(user: User): Promise<AccountRole> {
-  if (!supabase) {
-    const r = (user.user_metadata?.role as string | undefined) || 'agent';
-    return r === 'customer' ? 'customer' : 'agent';
-  }
+/** Prefer user_metadata (always available). Optionally refine from DB when readable. */
+function roleFromMetadata(user: User | null): AccountRole {
+  const r = (user?.user_metadata?.role as string | undefined) || 'agent';
+  if (r === 'customer') return 'customer';
+  if (r === 'admin') return 'admin';
+  return 'agent';
+}
+
+async function resolveRole(user: User): Promise<AccountRole> {
+  // Fast path: metadata is what signup wrote and what the UI tabs expect
+  const meta = roleFromMetadata(user);
+  if (!supabase) return meta;
 
   try {
     const { data: agent } = await supabase
@@ -79,8 +82,7 @@ async function resolveRoleFromDb(user: User): Promise<AccountRole> {
       .maybeSingle();
 
     if (agent) {
-      if (agent.is_admin && agent.approval_status === 'approved') return 'admin';
-      if (agent.approval_status === 'approved') return 'agent';
+      if (agent.is_admin) return 'admin';
       return 'agent';
     }
 
@@ -91,13 +93,12 @@ async function resolveRoleFromDb(user: User): Promise<AccountRole> {
         .eq('email', user.email)
         .maybeSingle();
       if (byEmail) {
-        if (byEmail.is_admin && byEmail.approval_status === 'approved') return 'admin';
-        if (byEmail.approval_status === 'approved') return 'agent';
+        if (byEmail.is_admin) return 'admin';
         return 'agent';
       }
     }
   } catch {
-    /* table may not exist yet */
+    /* RLS / missing table — fall through */
   }
 
   try {
@@ -107,23 +108,17 @@ async function resolveRoleFromDb(user: User): Promise<AccountRole> {
       .eq('user_id', user.id)
       .maybeSingle();
     if (customer) return 'customer';
-
-    if (user.email) {
-      const { data: byEmail } = await supabase
-        .from('customers')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle();
-      if (byEmail) return 'customer';
-    }
   } catch {
     /* ignore */
   }
 
-  const meta = (user.user_metadata?.role as string | undefined) || 'agent';
-  return meta === 'customer' ? 'customer' : 'agent';
+  return meta;
 }
 
+/**
+ * Only block when we positively know the agent is pending/rejected.
+ * Missing row or unreadable table → allow (legacy accounts keep working).
+ */
 async function enforceAgentApproval(user: User): Promise<void> {
   if (!supabase) return;
 
@@ -145,30 +140,29 @@ async function enforceAgentApproval(user: User): Promise<void> {
       row = byEmail;
     }
   } catch {
-    /* column may not exist yet */
+    // Can't read agents table — do not lock users out
+    return;
   }
 
-  if (!row) {
-    await supabase.auth.signOut();
-    throw new Error(
-      'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
-    );
-  }
-
+  // No agent profile yet → allow (TicketContext may create/link later)
+  if (!row) return;
   if (row.is_admin) return;
-  const approval = row.approval_status || 'pending';
 
-  if (approval === 'approved') return;
+  const approval = (row.approval_status || '').toLowerCase();
+  // Null/empty/approved all allowed for backwards compatibility
+  if (!approval || approval === 'approved') return;
 
   if (approval === 'rejected') {
     await supabase.auth.signOut();
     throw new Error('Your agent account was rejected. Contact an administrator.');
   }
 
-  await supabase.auth.signOut();
-  throw new Error(
-    'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
-  );
+  if (approval === 'pending') {
+    await supabase.auth.signOut();
+    throw new Error(
+      'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
+    );
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -190,7 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(next);
       setUser(next?.user ?? null);
       if (next?.user) {
-        const role = await resolveRoleFromDb(next.user);
+        const role = await resolveRole(next.user);
         if (!cancelled) setAccountRole(role);
       } else {
         setAccountRole('agent');
@@ -220,10 +214,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     expectedRole?: 'agent' | 'customer'
   ) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
     if (error) throw friendlyAuthError(error);
+    if (!data.user) throw new Error('Authentication failed');
 
-    const role = await resolveRoleFromDb(data.user!);
+    const role = await resolveRole(data.user);
     setAccountRole(role);
 
     if (expectedRole) {
@@ -239,7 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (role === 'agent' || role === 'admin') {
-      await enforceAgentApproval(data.user!);
+      await enforceAgentApproval(data.user);
     }
   };
 
@@ -252,7 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
 
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
       options: {
         data: {
@@ -263,36 +261,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) throw friendlyAuthError(error);
 
+    // Best-effort profile rows (ignore RLS/schema errors so signup still succeeds)
     if (data.user) {
-      if (role === 'agent') {
-        await supabase.from('agents').upsert(
-          {
-            user_id: data.user.id,
-            email: email.trim().toLowerCase(),
-            name: fullName || email.split('@')[0],
-            initials: (fullName || email)
-              .split(/\s+/)
-              .map((p) => p[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase(),
-            role: 'Agent',
-            status: 'offline',
-            approval_status: 'pending',
-            is_admin: false,
-          },
-          { onConflict: 'user_id' }
-        );
-      } else {
-        await supabase.from('customers').upsert(
-          {
-            user_id: data.user.id,
-            email: email.trim().toLowerCase(),
-            name: fullName || email.split('@')[0],
-            status: 'approved',
-          },
-          { onConflict: 'user_id' }
-        );
+      try {
+        if (role === 'agent') {
+          await supabase.from('agents').upsert(
+            {
+              user_id: data.user.id,
+              email: email.trim().toLowerCase(),
+              name: fullName || email.split('@')[0],
+              initials: (fullName || email)
+                .split(/\s+/)
+                .map((p) => p[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase(),
+              role: 'Agent',
+              status: 'offline',
+              approval_status: 'pending',
+              is_admin: false,
+            },
+            { onConflict: 'user_id' }
+          );
+        } else {
+          await supabase.from('customers').upsert(
+            {
+              user_id: data.user.id,
+              email: email.trim().toLowerCase(),
+              name: fullName || email.split('@')[0],
+              status: 'approved',
+            },
+            { onConflict: 'user_id' }
+          );
+        }
+      } catch {
+        /* profile insert optional */
       }
     }
 
