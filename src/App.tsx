@@ -20,7 +20,7 @@ import ProfilePage from './components/ProfilePage';
 import LoginPage from './components/LoginPage';
 import CustomerPortal from './components/CustomerPortal';
 import PortalAuthGate from './components/PortalAuthGate';
-import PostLoginLoader from './components/PostLoginLoader';
+import PostLoginLoader, { PostLoginShell } from './components/PostLoginLoader';
 import { TicketProvider, useTickets } from './context/TicketContext';
 import { PlatformProvider, usePlatform } from './context/PlatformContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -121,7 +121,14 @@ function AgentShell() {
     );
   }
 
+  const agentReady = !requiresAuth || (!!user && accountRole !== 'customer' && !authLoading);
+
   return (
+    <PostLoginShell
+      ready={agentReady}
+      label="Opening agent workspace…"
+      subtitle="Loading your desk, tickets, and live chat."
+    >
     <div className="flex min-h-screen bg-zinc-50">
       <Sidebar
         active={activeNav}
@@ -260,8 +267,10 @@ function AgentShell() {
         </main>
       </div>
     </div>
+    </PostLoginShell>
   );
 }
+
 
 function Root() {
   const [mode, setMode] = useState<'agent' | 'portal'>(getModeFromHash);
