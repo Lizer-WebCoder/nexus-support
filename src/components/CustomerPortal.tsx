@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import {
   Search, CheckCircle2, Ticket, BookOpen, ArrowLeft, MessageSquare,
-  LogOut, User, Star, Home, ExternalLink,
+  LogOut, User, Star, Home, ExternalLink, Users,
 } from 'lucide-react';
 import { useTickets } from '../context/TicketContext';
 import { useAuth } from '../context/AuthContext';
@@ -11,9 +11,10 @@ import { INITIAL_BRANCHES } from '../data';
 import PortalLiveChat from './PortalLiveChat';
 import PortalAuthGate from './PortalAuthGate';
 import PortalHome from './PortalHome';
+import PortalCommunityChat from './PortalCommunityChat';
 
 interface Props { onBackToAgent?: () => void; }
-type PortalView = 'home' | 'submit' | 'track' | 'success' | 'help' | 'chat' | 'account' | 'mytickets';
+type PortalView = 'home' | 'submit' | 'track' | 'success' | 'help' | 'chat' | 'account' | 'mytickets' | 'community';
 
 const HELP_ARTICLES = [
   { title: 'Reset your password', body: 'Go to Account → Sign in. Use the same email you registered with.' },
@@ -33,6 +34,7 @@ const VIEW_TITLES: Record<PortalView, string> = {
   chat: 'Live chat',
   account: 'Account',
   mytickets: 'My tickets',
+  community: 'Community',
 };
 
 function BrandMark({ className = 'w-8 h-8' }: { className?: string }) {
@@ -159,6 +161,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
 
   const navItems: { id: PortalView; label: string; icon: typeof Home }[] = [
     { id: 'home', label: 'Home', icon: Home },
+    { id: 'community', label: 'Community', icon: Users },
     { id: 'submit', label: 'Submit request', icon: Ticket },
     { id: 'chat', label: 'Live chat', icon: MessageSquare },
     { id: 'track', label: 'Track ticket', icon: Search },
@@ -261,10 +264,15 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
             {view === 'home' && (
               <PortalHome
                 displayName={displayName}
-                myTickets={myTickets}
-                statusColor={statusColor}
                 onNavigate={(v) => setView(v)}
-                onOpenTicket={(id) => { setTrackId(id); setView('track'); }}
+              />
+            )}
+
+            {view === 'community' && (
+              <PortalCommunityChat
+                displayName={displayName}
+                email={user?.email || ''}
+                onBack={() => setView('home')}
               />
             )}
 
