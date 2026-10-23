@@ -154,8 +154,8 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
   will-change: transform, opacity;
   transform: translate3d(-100px, 0, 0);
   backface-visibility: hidden;
@@ -163,70 +163,91 @@ body {
   opacity: 0;
 }
 
+/* Cartoon comet — layered 3D head + ribbon trails + sparks */
 .login-comet-trail {
   position: absolute;
-  right: 10px;
+  right: 12px;
   top: 50%;
-  height: 2px;
   border-radius: 999px;
   transform-origin: right center;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent 0%, rgba(165, 243, 252, 0.08) 18%, rgba(34, 211, 238, 0.75) 70%, #ffffff 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(34, 211, 238, 0.05) 10%,
+    rgba(103, 232, 249, 0.45) 45%,
+    rgba(165, 243, 252, 0.9) 78%,
+    #ffffff 100%
+  );
   box-shadow:
-    0 0 6px 2px rgba(34, 211, 238, 0.55),
-    0 0 14px 4px rgba(6, 182, 212, 0.35);
-  animation: login-comet-shimmer 0.45s ease-in-out infinite alternate;
+    0 0 8px 2px rgba(34, 211, 238, 0.5),
+    0 0 18px 5px rgba(6, 182, 212, 0.35),
+    0 0 28px 8px rgba(8, 145, 178, 0.15);
 }
 .login-comet-trail-a {
-  width: 72px;
-  transform: translateY(-50%) rotate(-1.5deg);
+  width: 90px;
+  height: 4px;
+  transform: translateY(-50%) rotate(-2deg);
   opacity: 1;
-  height: 2.5px;
+  animation: login-comet-ribbon 0.5s ease-in-out infinite alternate;
 }
 .login-comet-trail-b {
-  width: 52px;
-  transform: translateY(-50%) rotate(3deg);
-  opacity: 0.7;
-  height: 1.5px;
-  top: calc(50% - 3px);
-  animation-delay: 0.08s;
+  width: 68px;
+  height: 2.5px;
+  top: calc(50% - 5px);
+  transform: translateY(-50%) rotate(4deg);
+  opacity: 0.75;
+  animation: login-comet-ribbon 0.55s ease-in-out infinite alternate-reverse;
+  animation-delay: 0.05s;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(125, 211, 252, 0.2) 30%,
+    rgba(56, 189, 248, 0.7) 75%,
+    #e0f2fe 100%
+  );
 }
 .login-comet-trail-c {
-  width: 36px;
-  transform: translateY(-50%) rotate(-4deg);
-  opacity: 0.5;
-  height: 1px;
-  top: calc(50% + 3px);
-  animation-delay: 0.16s;
+  width: 48px;
+  height: 2px;
+  top: calc(50% + 5px);
+  transform: translateY(-50%) rotate(-5deg);
+  opacity: 0.55;
+  animation: login-comet-ribbon 0.6s ease-in-out infinite alternate;
+  animation-delay: 0.1s;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(165, 243, 252, 0.15) 35%,
+    rgba(34, 211, 238, 0.6) 80%,
+    #fff 100%
+  );
 }
-@keyframes login-comet-shimmer {
-  from { filter: brightness(0.85) saturate(1); opacity: 0.75; }
-  to { filter: brightness(1.35) saturate(1.4); opacity: 1; }
+@keyframes login-comet-ribbon {
+  from { filter: brightness(0.85) saturate(1.1); }
+  to { filter: brightness(1.3) saturate(1.5); }
 }
 .login-comet-particle {
   position: absolute;
-  width: 3px;
-  height: 3px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: #a5f3fc;
-  box-shadow: 0 0 6px 2px rgba(34, 211, 238, 0.8);
+  background: radial-gradient(circle, #fff 0%, #a5f3fc 40%, transparent 70%);
+  box-shadow: 0 0 8px 2px rgba(34, 211, 238, 0.85);
   pointer-events: none;
-  animation: login-comet-spark 0.55s ease-out infinite;
+  animation: login-comet-spark 0.6s ease-out infinite;
 }
-.login-comet-p1 { right: 28px; top: 40%; animation-delay: 0s; }
-.login-comet-p2 { right: 42px; top: 60%; animation-delay: 0.12s; width: 2px; height: 2px; }
-.login-comet-p3 { right: 56px; top: 35%; animation-delay: 0.24s; width: 2.5px; height: 2.5px; background: #fff; }
-.login-comet-p4 { right: 68px; top: 55%; animation-delay: 0.36s; width: 2px; height: 2px; }
+.login-comet-p1 { right: 30px; top: 30%; animation-delay: 0s; }
+.login-comet-p2 { right: 46px; top: 65%; animation-delay: 0.1s; width: 3px; height: 3px; }
+.login-comet-p3 { right: 60px; top: 25%; animation-delay: 0.2s; width: 3.5px; height: 3.5px; }
+.login-comet-p4 { right: 74px; top: 60%; animation-delay: 0.32s; width: 2.5px; height: 2.5px; }
 @keyframes login-comet-spark {
-  0% { opacity: 0.9; transform: scale(1) translateX(0); }
-  100% { opacity: 0; transform: scale(0.3) translateX(-10px); }
+  0% { opacity: 1; transform: scale(1) translate(0, 0); }
+  100% { opacity: 0; transform: scale(0.2) translate(-14px, 4px); }
 }
+
 .login-flyby-ufo {
   filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.4));
-}
-.login-flyby-chat {
-  font-size: 10px !important;
-  padding: 3px 8px !important;
 }
 
 .login-star-glyph {
@@ -234,16 +255,19 @@ body {
   left: 0;
   top: 0;
   display: block;
-  transform-origin: 8px 8px;
-  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.95)) drop-shadow(0 0 16px rgba(165, 243, 252, 0.65));
+  transform-origin: 11px 11px;
+  filter:
+    drop-shadow(0 0 6px rgba(255, 255, 255, 0.95))
+    drop-shadow(0 0 12px rgba(34, 211, 238, 1))
+    drop-shadow(0 0 24px rgba(6, 182, 212, 0.7));
   z-index: 3;
-  animation: login-star-pulse 0.55s ease-in-out infinite alternate;
+  animation: login-star-pulse 0.4s ease-in-out infinite alternate;
 }
 .login-star-trail { display: none; }
 .login-star-sparkles { position: absolute; left: -4px; top: -4px; width: 24px; height: 24px; pointer-events: none; }
 @keyframes login-star-pulse {
-  from { transform: scale(0.88); opacity: 0.8; }
-  to { transform: scale(1.15); opacity: 1; }
+  from { transform: scale(0.85); opacity: 0.85; }
+  to { transform: scale(1.2); opacity: 1; }
 }
 
 .login-logo-mark { display: inline-flex; align-items: center; justify-content: center; }
@@ -321,8 +345,57 @@ body {
 }
 .login-flyby-craft { position: relative; display: flex; align-items: center; }
 .login-flyby-rtl .login-flyby-craft { transform: scaleX(-1); }
-.login-flyby-rtl .login-flyby-chat { transform: scaleX(-1); }
 .login-flyby-ship { position: relative; }
+
+.login-flyby-chat {
+  position: relative;
+  z-index: 2;
+  background: rgba(20, 12, 40, 0.92);
+  border: 1.5px solid rgba(192, 132, 252, 0.55);
+  color: #fce7f3;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 5px 12px;
+  border-radius: 12px;
+  white-space: nowrap;
+  line-height: 1.2;
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.45),
+    0 0 16px rgba(139, 92, 246, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  margin-bottom: 6px;
+  transform: none !important;
+  direction: ltr;
+  unicode-bidi: plaintext;
+  animation: login-chat-pop 0.35s ease-out;
+}
+.login-flyby-chat::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(192, 132, 252, 0.55);
+}
+.login-flyby-chat::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(20, 12, 40, 0.92);
+  z-index: 1;
+}
+@keyframes login-chat-pop {
+  from { opacity: 0; transform: translateY(4px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .login-ship-exhaust {
   position: absolute;
   left: -4px;
@@ -382,19 +455,6 @@ body {
 @keyframes login-ember-fly {
   0% { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
   100% { opacity: 0; transform: translateY(calc(-50% + var(--ember-y, 0px))) translateX(-16px) scale(0.4); }
-}
-.login-flyby-chat {
-  background: rgba(15, 10, 30, 0.85);
-  border: 1px solid rgba(192, 132, 252, 0.35);
-  color: #f5d0fe;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 999px;
-  white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 12px rgba(139, 92, 246, 0.25);
-  margin-bottom: 2px;
-  position: relative;
 }
 
 @media (prefers-reduced-motion: reduce) {
