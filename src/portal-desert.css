@@ -1,4 +1,4 @@
-/* Customer portal desert scene — reference-inspired light + dark */
+/* Customer portal desert — reference artwork + animated overlays */
 .portal-content { isolation: isolate; }
 
 .portal-desert {
@@ -7,221 +7,181 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  /* Dark defaults (rich night) */
-  --pd-far-top: #6366f1;
-  --pd-far-bot: #4c1d95;
-  --pd-mid-top: #a78bfa;
-  --pd-mid-bot: #7c3aed;
-  --pd-near-top: #c4b5fd;
-  --pd-near-bot: #8b5cf6;
-  --pd-cliff-hi: #c4b5fd;
-  --pd-cliff-lo: #6d28d9;
-  --pd-cliff-edge: #e9d5ff;
-  --pd-rock: #5b21b6;
-  --pd-cactus: #818cf8;
-  --pd-shrub: #7c3aed;
 }
 
-html.nexus-light .portal-desert {
-  --pd-far-top: #a5b4fc;
-  --pd-far-bot: #c4b5fd;
-  --pd-mid-top: #ddd6fe;
-  --pd-mid-bot: #e9d5ff;
-  --pd-near-top: #f5f3ff;
-  --pd-near-bot: #e9d5ff;
-  --pd-cliff-hi: #e9d5ff;
-  --pd-cliff-lo: #a78bfa;
-  --pd-cliff-edge: #faf5ff;
-  --pd-rock: #a78bfa;
-  --pd-cactus: #8b5cf6;
-  --pd-shrub: #a78bfa;
+/* —— Reference photo base (night / day) —— */
+.portal-desert-photo-night,
+.portal-desert-photo-day {
+  position: absolute;
+  inset: 0;
+  background-position: center bottom;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transition: opacity 0.55s ease;
 }
+.portal-desert-photo-night {
+  background-image: url('/nexus-support/portal-desert-night.jpg');
+  opacity: 1;
+}
+.portal-desert-photo-day {
+  background-image: url('/nexus-support/portal-desert-day.jpg');
+  opacity: 0;
+}
+html.nexus-light .portal-desert-photo-night { opacity: 0; }
+html.nexus-light .portal-desert-photo-day { opacity: 1; }
+html.nexus-dark .portal-desert-photo-night { opacity: 1; }
+html.nexus-dark .portal-desert-photo-day { opacity: 0; }
 
-.portal-desert-sky {
+/* Soft color grade so cards stay readable */
+.portal-desert-photo::after {
+  content: '';
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 55% 42% at 78% 14%, rgba(255, 255, 255, 0.5), transparent 55%),
-    radial-gradient(ellipse 40% 30% at 20% 8%, rgba(96, 165, 250, 0.25), transparent 50%),
-    linear-gradient(180deg,
-      #0f172a 0%,
-      #1e1b4b 18%,
-      #312e81 38%,
-      #4c1d95 58%,
-      #6d28d9 75%,
-      #a78bfa 100%);
+    linear-gradient(180deg, rgba(15, 10, 40, 0.15) 0%, transparent 35%, rgba(15, 10, 40, 0.2) 100%);
+  pointer-events: none;
 }
-html.nexus-light .portal-desert-sky {
+html.nexus-light .portal-desert-photo::after {
   background:
-    radial-gradient(ellipse 50% 38% at 78% 12%, rgba(255, 255, 255, 0.9), transparent 55%),
-    radial-gradient(ellipse 55% 35% at 30% 5%, rgba(147, 197, 253, 0.55), transparent 55%),
-    linear-gradient(180deg,
-      #60a5fa 0%,
-      #818cf8 22%,
-      #a5b4fc 45%,
-      #c4b5fd 68%,
-      #e9d5ff 88%,
-      #faf5ff 100%);
-}
-html.nexus-dark .portal-desert-sky {
-  background:
-    radial-gradient(ellipse 48% 36% at 78% 12%, rgba(255, 255, 255, 0.38), transparent 52%),
-    radial-gradient(ellipse 50% 32% at 25% 6%, rgba(59, 130, 246, 0.22), transparent 55%),
-    linear-gradient(180deg,
-      #020617 0%,
-      #0f172a 15%,
-      #1e1b4b 35%,
-      #312e81 55%,
-      #4c1d95 75%,
-      #5b21b6 100%);
+    linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 40%, rgba(255, 255, 255, 0.15) 100%);
 }
 
-.portal-desert-sky-glow {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 70% 45% at 50% 100%, rgba(167, 139, 250, 0.35), transparent 55%);
-  mix-blend-mode: screen;
-  opacity: 0.7;
-}
-html.nexus-light .portal-desert-sky-glow {
-  background:
-    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(233, 213, 255, 0.5), transparent 55%);
-  mix-blend-mode: normal;
-  opacity: 0.85;
-}
-
+/* —— Stars (extra twinkles over art) —— */
 .portal-desert-stars { position: absolute; inset: 0 0 45% 0; }
 .portal-desert-star {
   position: absolute;
   border-radius: 999px;
   background: #fff;
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.95);
   animation: portal-desert-twinkle ease-in-out infinite;
 }
 .portal-desert-star-bright {
-  box-shadow:
-    0 0 6px #fff,
-    0 0 14px rgba(191, 219, 254, 0.9);
+  box-shadow: 0 0 6px #fff, 0 0 14px rgba(191, 219, 254, 0.95);
 }
 @keyframes portal-desert-twinkle {
-  0%, 100% { opacity: 0.2; transform: scale(0.85); }
-  50% { opacity: 1; transform: scale(1.25); }
+  0%, 100% { opacity: 0.15; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.3); }
 }
 
-.portal-desert-shoot {
+/* —— Shooting stars (head + long tail) —— */
+.portal-desert-meteors {
   position: absolute;
+  inset: 0 0 40% 0;
+  overflow: hidden;
+}
+.portal-meteor {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.portal-meteor-tail {
+  width: 110px;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent 0%, #bae6fd 35%, #fff 100%);
-  box-shadow: 0 0 10px 2px rgba(125, 211, 252, 0.65);
-  opacity: 0;
-  animation: portal-desert-meteor 11s linear infinite;
-}
-.portal-desert-shoot-a { top: 10%; left: 8%; width: 120px; }
-.portal-desert-shoot-b { top: 18%; left: 42%; width: 90px; animation-delay: 3.5s; animation-duration: 13s; }
-.portal-desert-shoot-c { top: 7%; left: 58%; width: 140px; animation-delay: 7s; animation-duration: 12s; }
-@keyframes portal-desert-meteor {
-  0% { opacity: 0; transform: translate(0, 0) rotate(-34deg); }
-  3% { opacity: 1; }
-  16% { opacity: 0; transform: translate(320px, 180px) rotate(-34deg); }
-  100% { opacity: 0; transform: translate(320px, 180px) rotate(-34deg); }
-}
-
-.portal-desert-moon-wrap {
-  position: absolute;
-  top: 7%;
-  right: 11%;
-  width: 100px;
-  height: 100px;
-}
-.portal-desert-moon-halo {
-  position: absolute;
-  inset: -28%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.55) 0%, rgba(147, 197, 253, 0.2) 40%, transparent 70%);
-  animation: portal-desert-moon-pulse 7s ease-in-out infinite alternate;
-}
-.portal-desert-moon {
-  position: absolute;
-  inset: 18%;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 30%, #fff 0%, #e0f2fe 42%, #93c5fd 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(125, 211, 252, 0.15) 25%,
+    rgba(186, 230, 253, 0.7) 70%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
   box-shadow:
-    0 0 30px 8px rgba(255, 255, 255, 0.5),
-    0 0 60px 18px rgba(147, 197, 253, 0.35);
+    0 0 6px 1px rgba(125, 211, 252, 0.45),
+    0 0 14px 2px rgba(56, 189, 248, 0.25);
 }
-html.nexus-light .portal-desert-moon {
-  background: radial-gradient(circle at 32% 30%, #fff 0%, #fef9c3 50%, #fde68a 100%);
-  box-shadow: 0 0 36px 12px rgba(253, 224, 71, 0.45);
+.portal-meteor-head {
+  width: 5px;
+  height: 5px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #e0f2fe 50%, transparent 70%);
+  box-shadow:
+    0 0 8px 3px rgba(255, 255, 255, 0.9),
+    0 0 16px 6px rgba(125, 211, 252, 0.55);
 }
-html.nexus-light .portal-desert-moon-halo {
-  background: radial-gradient(circle, rgba(254, 243, 199, 0.7) 0%, transparent 70%);
+.portal-meteor-a {
+  top: 12%;
+  left: -5%;
+  transform: rotate(-32deg);
+  animation: portal-meteor-fly 9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
-html.nexus-dark .portal-desert-moon-wrap {
-  width: 110px;
-  height: 110px;
+.portal-meteor-b {
+  top: 22%;
+  left: 25%;
+  transform: rotate(-28deg);
+  animation: portal-meteor-fly 12s cubic-bezier(0.4, 0, 0.2, 1) 3.5s infinite;
 }
-@keyframes portal-desert-moon-pulse {
-  from { transform: scale(1); opacity: 0.85; }
-  to { transform: scale(1.08); opacity: 1; }
+.portal-meteor-b .portal-meteor-tail { width: 80px; }
+.portal-meteor-c {
+  top: 8%;
+  left: 45%;
+  transform: rotate(-36deg);
+  animation: portal-meteor-fly 11s cubic-bezier(0.4, 0, 0.2, 1) 7s infinite;
 }
-
-.portal-desert-cloud {
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(12px);
-  background: rgba(255, 255, 255, 0.14);
-  animation: portal-desert-cloud-drift 48s linear infinite;
-}
-.portal-desert-cloud-a { width: 220px; height: 42px; top: 26%; left: -12%; }
-.portal-desert-cloud-b { width: 160px; height: 32px; top: 34%; left: 35%; animation-duration: 62s; animation-direction: reverse; opacity: 0.65; }
-.portal-desert-cloud-c { width: 190px; height: 36px; top: 22%; left: 55%; animation-duration: 70s; opacity: 0.5; }
-html.nexus-light .portal-desert-cloud {
-  background: rgba(255, 255, 255, 0.55);
-  filter: blur(14px);
-}
-@keyframes portal-desert-cloud-drift {
-  from { transform: translateX(0); }
-  to { transform: translateX(130vw); }
-}
-
-.portal-desert-land {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: min(48%, 360px);
-}
-.portal-desert-cactus-g {
-  filter: drop-shadow(0 4px 8px rgba(49, 46, 129, 0.25));
+.portal-meteor-c .portal-meteor-tail { width: 130px; height: 2.5px; }
+@keyframes portal-meteor-fly {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-32deg) scaleX(0.6); }
+  4% { opacity: 1; }
+  18% { opacity: 0; transform: translate3d(55vw, 32vh, 0) rotate(-32deg) scaleX(1); }
+  100% { opacity: 0; transform: translate3d(55vw, 32vh, 0) rotate(-32deg) scaleX(1); }
 }
 
-.portal-desert-haze {
+/* —— Soft cloud veils drifting over the art —— */
+.portal-cloud-veil {
   position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 28%;
-  background: linear-gradient(180deg, transparent, rgba(91, 33, 182, 0.18));
+  border-radius: 50%;
+  filter: blur(28px);
+  background: rgba(255, 255, 255, 0.12);
   pointer-events: none;
+  will-change: transform;
 }
-html.nexus-light .portal-desert-haze {
-  background: linear-gradient(180deg, transparent, rgba(237, 233, 254, 0.45));
+.portal-cloud-veil-a {
+  width: 280px;
+  height: 70px;
+  top: 24%;
+  left: -15%;
+  animation: portal-cloud-drift 55s linear infinite;
 }
+.portal-cloud-veil-b {
+  width: 200px;
+  height: 55px;
+  top: 32%;
+  left: 20%;
+  opacity: 0.7;
+  animation: portal-cloud-drift 70s linear infinite reverse;
+}
+.portal-cloud-veil-c {
+  width: 240px;
+  height: 60px;
+  top: 18%;
+  left: 50%;
+  opacity: 0.55;
+  animation: portal-cloud-drift 85s linear infinite;
+}
+html.nexus-light .portal-cloud-veil {
+  background: rgba(255, 255, 255, 0.35);
+  filter: blur(32px);
+}
+@keyframes portal-cloud-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(110vw, 4vh, 0); }
+}
+
 .portal-desert-vignette {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 70% at 50% 40%, transparent 40%, rgba(15, 10, 40, 0.35) 100%);
+    radial-gradient(ellipse 85% 75% at 50% 40%, transparent 35%, rgba(10, 6, 30, 0.28) 100%);
   pointer-events: none;
 }
 html.nexus-light .portal-desert-vignette {
   background:
-    radial-gradient(ellipse 85% 75% at 50% 40%, transparent 45%, rgba(99, 102, 241, 0.12) 100%);
+    radial-gradient(ellipse 90% 80% at 50% 40%, transparent 40%, rgba(99, 102, 241, 0.1) 100%);
 }
 
-/* Glass cards */
+/* Glass cards (unchanged intent, slightly clearer over photo) */
 .portal-glass-card {
   background: rgba(255, 255, 255, 0.52);
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -232,14 +192,14 @@ html.nexus-light .portal-desert-vignette {
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 html.nexus-dark .portal-glass-card {
-  background: rgba(20, 12, 48, 0.48);
+  background: rgba(20, 12, 48, 0.5);
   border-color: rgba(196, 181, 253, 0.2);
   box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 html.nexus-light .portal-glass-card {
-  background: rgba(255, 255, 255, 0.58);
+  background: rgba(255, 255, 255, 0.6);
   border-color: rgba(139, 92, 246, 0.16);
 }
 
@@ -250,7 +210,7 @@ html.nexus-light .portal-glass-card {
   box-shadow: 0 6px 24px rgba(49, 46, 129, 0.08);
 }
 html.nexus-dark .portal-home-card {
-  background: rgba(24, 14, 55, 0.48) !important;
+  background: rgba(24, 14, 55, 0.5) !important;
   border-color: rgba(196, 181, 253, 0.18) !important;
 }
 .portal-home-hero {
@@ -260,7 +220,17 @@ html.nexus-dark .portal-home-card {
   box-shadow: 0 10px 36px rgba(49, 46, 129, 0.1);
 }
 html.nexus-dark .portal-home-hero {
-  background: rgba(40, 18, 90, 0.42) !important;
+  background: rgba(40, 18, 90, 0.45) !important;
   border-color: rgba(196, 181, 253, 0.2);
 }
 .portal-content .portal-home-ambient { display: none; }
+
+/* Hide old procedural land when photo mode is active */
+.portal-desert-photo .portal-desert-sky,
+.portal-desert-photo .portal-desert-sky-glow,
+.portal-desert-photo .portal-desert-land,
+.portal-desert-photo .portal-desert-moon-wrap,
+.portal-desert-photo .portal-desert-haze,
+.portal-desert-photo .portal-desert-cloud {
+  display: none !important;
+}
