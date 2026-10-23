@@ -106,8 +106,6 @@ export default function PortalHome({ displayName, onNavigate }: Props) {
 
   return (
     <div className="portal-home relative">
-      <AmbientField />
-
       <div className="relative z-10 space-y-4 max-w-4xl">
         {/* Hero */}
         <div className="portal-home-hero rounded-2xl px-5 py-4 sm:px-6 sm:py-5">
@@ -145,7 +143,7 @@ export default function PortalHome({ displayName, onNavigate }: Props) {
                 key={q.id}
                 type="button"
                 onClick={() => onNavigate(q.id)}
-                className="portal-home-card group text-left rounded-xl border border-zinc-200/80 bg-white/90 backdrop-blur-sm p-3.5 hover:border-violet-300/80 hover:shadow-md transition-all"
+                className="portal-home-card group text-left rounded-xl border border-zinc-200/80 bg-white/55 backdrop-blur-sm p-3.5 hover:border-violet-300/80 hover:shadow-md transition-all"
               >
                 <div
                   className={`w-9 h-9 rounded-lg bg-gradient-to-br ${q.accent} flex items-center justify-center mb-2.5`}
@@ -162,7 +160,7 @@ export default function PortalHome({ displayName, onNavigate }: Props) {
         </div>
 
         {/* Community spotlight */}
-        <div className="portal-home-card rounded-xl border border-violet-200/60 bg-gradient-to-br from-violet-50/90 via-white/90 to-white/90 backdrop-blur-sm p-4 sm:p-5">
+        <div className="portal-home-card rounded-xl border border-violet-200/60 bg-gradient-to-br from-violet-50/50 via-white/45 to-white/40 backdrop-blur-sm p-4 sm:p-5">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
               <Users size={18} />
@@ -188,7 +186,7 @@ export default function PortalHome({ displayName, onNavigate }: Props) {
           <button
             type="button"
             onClick={() => onNavigate('help')}
-            className="portal-home-card text-left rounded-xl border border-zinc-200/80 bg-white/90 backdrop-blur-sm p-4 hover:border-violet-300 transition-colors"
+            className="portal-home-card text-left rounded-xl border border-zinc-200/80 bg-white/55 backdrop-blur-sm p-4 hover:border-violet-300 transition-colors"
           >
             <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-600 flex items-center justify-center mb-2">
               <BookOpen size={16} />
@@ -198,7 +196,7 @@ export default function PortalHome({ displayName, onNavigate }: Props) {
               Guides and FAQs you can use without waiting on an agent.
             </p>
           </button>
-          <div className="portal-home-card rounded-xl border border-zinc-200/80 bg-white/90 backdrop-blur-sm p-4">
+          <div className="portal-home-card rounded-xl border border-zinc-200/80 bg-white/55 backdrop-blur-sm p-4">
             <div className="w-8 h-8 rounded-lg bg-zinc-100 text-zinc-600 flex items-center justify-center mb-2">
               <LifeBuoy size={16} />
             </div>
@@ -211,7 +209,7 @@ export default function PortalHome({ displayName, onNavigate }: Props) {
         </div>
 
         {/* Helpful to know — tighter rows */}
-        <div className="portal-home-card rounded-xl border border-zinc-200/80 bg-white/90 backdrop-blur-sm overflow-hidden">
+        <div className="portal-home-card rounded-xl border border-zinc-200/80 bg-white/55 backdrop-blur-sm overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-2.5 border-b border-zinc-100/80">
             <Megaphone size={15} className="text-zinc-400" />
             <h2 className="text-sm font-semibold text-zinc-900">Helpful to know</h2>
