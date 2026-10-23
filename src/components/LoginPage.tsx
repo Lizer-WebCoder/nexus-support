@@ -100,23 +100,24 @@ function ShootingStars() {
   return (
     <div ref={layerRef} className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden>
       <div ref={starRef} className="login-shooting-star" style={{ opacity: visible ? undefined : 0, visibility: visible ? 'visible' : 'hidden' }}>
-        {/* Comet-style trails (cyan light beams) */}
         <span className="login-comet-trail login-comet-trail-a" />
         <span className="login-comet-trail login-comet-trail-b" />
         <span className="login-comet-trail login-comet-trail-c" />
-        <span className="login-star-sparkles" />
-        {/* Bright glowing head */}
-        <svg className="login-star-glyph" width="28" height="28" viewBox="0 0 28 28" aria-hidden>
+        <span className="login-comet-particle login-comet-p1" />
+        <span className="login-comet-particle login-comet-p2" />
+        <span className="login-comet-particle login-comet-p3" />
+        <span className="login-comet-particle login-comet-p4" />
+        <svg className="login-star-glyph" width="16" height="16" viewBox="0 0 16 16" aria-hidden>
           <defs>
             <radialGradient id="cometHead" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="35%" stopColor="#a5f3fc" />
-              <stop offset="70%" stopColor="#22d3ee" />
+              <stop offset="40%" stopColor="#a5f3fc" />
+              <stop offset="75%" stopColor="#22d3ee" />
               <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
             </radialGradient>
           </defs>
-          <circle cx="14" cy="14" r="12" fill="url(#cometHead)" />
-          <circle cx="14" cy="14" r="5" fill="#ffffff" opacity="0.95" />
+          <circle cx="8" cy="8" r="7" fill="url(#cometHead)" />
+          <circle cx="8" cy="8" r="3" fill="#ffffff" opacity="0.95" />
         </svg>
       </div>
     </div>
