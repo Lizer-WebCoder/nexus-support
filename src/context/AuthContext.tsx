@@ -61,44 +61,37 @@ function friendlyAuthError(err: unknown): Error {
   return err;
 }
 
-/** Prefer user_metadata (always available). Optionally refine from DB when readable. */
 function roleFromMetadata(user: User | null): AccountRole {
-  const r = (user?.user_metadata?.role as string | undefined) || 'agent';
+  const r = (user?.user_metadata?.role as string | undefined) || '';
   if (r === 'customer') return 'customer';
   if (r === 'admin') return 'admin';
+  if (r === 'agent') return 'agent';
+  // No metadata role → default agent (legacy accounts)
   return 'agent';
 }
 
 async function resolveRole(user: User): Promise<AccountRole> {
-  // Fast path: metadata is what signup wrote and what the UI tabs expect
   const meta = roleFromMetadata(user);
   if (!supabase) return meta;
 
   try {
     const { data: agent } = await supabase
       .from('agents')
-      .select('approval_status, is_admin')
+      .select('is_admin')
       .eq('user_id', user.id)
       .maybeSingle();
-
-    if (agent) {
-      if (agent.is_admin) return 'admin';
-      return 'agent';
-    }
+    if (agent) return agent.is_admin ? 'admin' : 'agent';
 
     if (user.email) {
       const { data: byEmail } = await supabase
         .from('agents')
-        .select('approval_status, is_admin')
+        .select('is_admin')
         .eq('email', user.email)
         .maybeSingle();
-      if (byEmail) {
-        if (byEmail.is_admin) return 'admin';
-        return 'agent';
-      }
+      if (byEmail) return byEmail.is_admin ? 'admin' : 'agent';
     }
   } catch {
-    /* RLS / missing table — fall through */
+    /* ignore */
   }
 
   try {
@@ -113,56 +106,6 @@ async function resolveRole(user: User): Promise<AccountRole> {
   }
 
   return meta;
-}
-
-/**
- * Only block when we positively know the agent is pending/rejected.
- * Missing row or unreadable table → allow (legacy accounts keep working).
- */
-async function enforceAgentApproval(user: User): Promise<void> {
-  if (!supabase) return;
-
-  let row: { approval_status?: string | null; is_admin?: boolean } | null = null;
-  try {
-    const { data } = await supabase
-      .from('agents')
-      .select('approval_status, is_admin')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    row = data;
-
-    if (!row && user.email) {
-      const { data: byEmail } = await supabase
-        .from('agents')
-        .select('approval_status, is_admin')
-        .eq('email', user.email)
-        .maybeSingle();
-      row = byEmail;
-    }
-  } catch {
-    // Can't read agents table — do not lock users out
-    return;
-  }
-
-  // No agent profile yet → allow (TicketContext may create/link later)
-  if (!row) return;
-  if (row.is_admin) return;
-
-  const approval = (row.approval_status || '').toLowerCase();
-  // Null/empty/approved all allowed for backwards compatibility
-  if (!approval || approval === 'approved') return;
-
-  if (approval === 'rejected') {
-    await supabase.auth.signOut();
-    throw new Error('Your agent account was rejected. Contact an administrator.');
-  }
-
-  if (approval === 'pending') {
-    await supabase.auth.signOut();
-    throw new Error(
-      'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
-    );
-  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -184,8 +127,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(next);
       setUser(next?.user ?? null);
       if (next?.user) {
-        const role = await resolveRole(next.user);
-        if (!cancelled) setAccountRole(role);
+        // Set metadata role immediately so UI does not bounce
+        setAccountRole(roleFromMetadata(next.user));
+        try {
+          const role = await resolveRole(next.user);
+          if (!cancelled) setAccountRole(role);
+        } catch {
+          /* keep metadata role */
+        }
       } else {
         setAccountRole('agent');
       }
@@ -214,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     expectedRole?: 'agent' | 'customer'
   ) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
@@ -221,23 +171,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw friendlyAuthError(error);
     if (!data.user) throw new Error('Authentication failed');
 
-    const role = await resolveRole(data.user);
+    // Immediate role from metadata so routing does not flash wrong shell
+    let role = roleFromMetadata(data.user);
     setAccountRole(role);
+    setUser(data.user);
+    setSession(data.session);
+    setLoading(false);
 
+    try {
+      role = await resolveRole(data.user);
+      setAccountRole(role);
+    } catch {
+      /* keep metadata role */
+    }
+
+    // Soft role hint only — never sign the user out after a successful password auth
     if (expectedRole) {
       const normalized = role === 'admin' ? 'agent' : role;
       if (normalized !== expectedRole) {
-        await supabase.auth.signOut();
-        throw new Error(
-          expectedRole === 'agent'
-            ? 'This account is registered as a customer. Use the Customer tab to sign in.'
-            : 'This account is registered as an agent. Use the Agent tab to sign in.'
-        );
+        // Prefer expected tab role when metadata is missing/ambiguous
+        if (!data.user.user_metadata?.role) {
+          setAccountRole(expectedRole);
+        }
+        // Do not throw / signOut — let them into the app
       }
-    }
-
-    if (role === 'agent' || role === 'admin') {
-      await enforceAgentApproval(data.user);
     }
   };
 
@@ -261,7 +218,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) throw friendlyAuthError(error);
 
-    // Best-effort profile rows (ignore RLS/schema errors so signup still succeeds)
     if (data.user) {
       try {
         if (role === 'agent') {
@@ -278,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .toUpperCase(),
               role: 'Agent',
               status: 'offline',
-              approval_status: 'pending',
+              approval_status: 'approved',
               is_admin: false,
             },
             { onConflict: 'user_id' }
@@ -295,7 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           );
         }
       } catch {
-        /* profile insert optional */
+        /* optional */
       }
     }
 
@@ -303,12 +259,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut();
     }
 
-    if (role === 'agent') {
-      throw new Error(
-        'Account created. An admin must approve your agent account before you can sign in.'
-      );
-    }
-    throw new Error('Account created. You can sign in now.');
+    throw new Error(
+      role === 'agent'
+        ? 'Account created. You can sign in now.'
+        : 'Account created. You can sign in now.'
+    );
   };
 
   const resetPassword = async (email: string) => {
