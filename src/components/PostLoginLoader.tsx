@@ -449,17 +449,6 @@ export function PostLoginShell({
           }}
         >
           <PostLoginLoader label={label} fading={false} variant={variant} />
-          {overlayFading && (
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  'radial-gradient(ellipse 90% 60% at 50% 40%, rgba(255,255,255,0.12), transparent 55%),' +
-                  'radial-gradient(ellipse 70% 50% at 50% 70%, rgba(196,181,253,0.15), transparent 60%)',
-                animation: 'pl-mist 1.4s ease-out both',
-              }}
-            />
-          )}
         </div>
       )}
 
@@ -467,11 +456,6 @@ export function PostLoginShell({
         @keyframes pl-portal-in {
           from { opacity: 0.85; filter: blur(6px); transform: scale(1.01); }
           to { opacity: 1; filter: blur(0); transform: scale(1); }
-        }
-        @keyframes pl-mist {
-          0% { opacity: 0.5; }
-          40% { opacity: 0.85; }
-          100% { opacity: 0; }
         }
       `}</style>
     </div>
