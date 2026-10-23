@@ -14,6 +14,8 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  /** True while signIn/signUp is validating — gates must keep the login form mounted */
+  authBusy: boolean;
   requiresAuth: boolean;
   configError: string | null;
   accountRole: AccountRole;
@@ -69,7 +71,6 @@ function roleFromMetadata(user: User | null): AccountRole {
   return 'agent';
 }
 
-/** Prefer the login-tab role when the same email exists as both agent and customer. */
 async function resolveRole(
   user: User,
   preferred?: 'agent' | 'customer'
@@ -137,7 +138,6 @@ async function resolveRole(
     return meta === 'customer' ? 'customer' : 'agent';
   }
 
-  // No preference: agent profile wins, then customer, then metadata
   const agent = await loadAgent();
   if (agent) return agent.is_admin ? 'admin' : 'agent';
   const customer = await loadCustomer();
@@ -145,10 +145,7 @@ async function resolveRole(
   return meta;
 }
 
-async function assertApproved(
-  user: User,
-  role: AccountRole
-): Promise<void> {
+async function assertApproved(user: User, role: AccountRole): Promise<void> {
   if (!supabase) return;
 
   if (role === 'customer') {
@@ -168,7 +165,6 @@ async function assertApproved(
           .maybeSingle();
         row = byEmail;
       }
-      // No profile row yet → treat as pending (new account)
       if (!row) {
         await supabase.auth.signOut();
         throw new Error(
@@ -189,12 +185,10 @@ async function assertApproved(
       }
     } catch (e) {
       if (e instanceof Error && /pending|rejected/i.test(e.message)) throw e;
-      // Column/table missing → allow (legacy projects)
     }
     return;
   }
 
-  // agent / admin
   try {
     let row: { approval_status?: string | null; is_admin?: boolean } | null = null;
     const { data } = await supabase
@@ -234,7 +228,6 @@ async function assertApproved(
     }
   } catch (e) {
     if (e instanceof Error && /pending|rejected/i.test(e.message)) throw e;
-    // Column/table missing → allow
   }
 }
 
@@ -242,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [authBusy, setAuthBusy] = useState(false);
   const [accountRole, setAccountRole] = useState<AccountRole>('agent');
   const configError = getSupabaseConfigError();
 
@@ -293,34 +287,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-    if (error) throw friendlyAuthError(error);
-    if (!data.user) throw new Error('Authentication failed');
+    setAuthBusy(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) throw friendlyAuthError(error);
+      if (!data.user) throw new Error('Authentication failed');
 
-    // Resolve role preferring the tab the user used
-    const role = await resolveRole(data.user, expectedRole);
-    const normalized = role === 'admin' ? 'agent' : role;
+      const role = await resolveRole(data.user, expectedRole);
+      const normalized = role === 'admin' ? 'agent' : role;
 
-    // Agents may only use Agent tab; customers may only use Customer tab
-    if (expectedRole && normalized !== expectedRole) {
-      await supabase.auth.signOut();
-      throw new Error(
-        expectedRole === 'agent'
-          ? 'This account is registered as a customer. Use the Customer tab to sign in.'
-          : 'This account is registered as an agent. Use the Agent tab to sign in.'
-      );
+      if (expectedRole && normalized !== expectedRole) {
+        await supabase.auth.signOut();
+        throw new Error(
+          expectedRole === 'agent'
+            ? 'This account is registered as a customer. Use the Customer tab to sign in.'
+            : 'This account is registered as an agent. Use the Agent tab to sign in.'
+        );
+      }
+
+      await assertApproved(data.user, role);
+
+      setAccountRole(role);
+      setUser(data.user);
+      setSession(data.session);
+      setLoading(false);
+    } finally {
+      setAuthBusy(false);
     }
-
-    // New / unapproved accounts cannot enter until Users → Pending approval
-    await assertApproved(data.user, role);
-
-    setAccountRole(role);
-    setUser(data.user);
-    setSession(data.session);
-    setLoading(false);
   };
 
   const signUp = async (
@@ -331,63 +327,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
 
-    const { data, error } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        data: {
-          full_name: fullName || '',
-          role,
+    setAuthBusy(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            full_name: fullName || '',
+            role,
+          },
         },
-      },
-    });
-    if (error) throw friendlyAuthError(error);
+      });
+      if (error) throw friendlyAuthError(error);
 
-    // Create profile as PENDING — admin must approve under Users → Pending
-    if (data.user) {
-      try {
-        if (role === 'agent') {
-          await supabase.from('agents').upsert(
-            {
-              user_id: data.user.id,
-              email: email.trim().toLowerCase(),
-              name: fullName || email.split('@')[0],
-              initials: (fullName || email)
-                .split(/\s+/)
-                .map((p) => p[0])
-                .join('')
-                .slice(0, 2)
-                .toUpperCase(),
-              role: 'Agent',
-              status: 'offline',
-              approval_status: 'pending',
-              is_admin: false,
-            },
-            { onConflict: 'user_id' }
-          );
-        } else {
-          await supabase.from('customers').upsert(
-            {
-              user_id: data.user.id,
-              email: email.trim().toLowerCase(),
-              name: fullName || email.split('@')[0],
-              status: 'pending',
-            },
-            { onConflict: 'user_id' }
-          );
+      if (data.user) {
+        try {
+          if (role === 'agent') {
+            await supabase.from('agents').upsert(
+              {
+                user_id: data.user.id,
+                email: email.trim().toLowerCase(),
+                name: fullName || email.split('@')[0],
+                initials: (fullName || email)
+                  .split(/\s+/)
+                  .map((p) => p[0])
+                  .join('')
+                  .slice(0, 2)
+                  .toUpperCase(),
+                role: 'Agent',
+                status: 'offline',
+                approval_status: 'pending',
+                is_admin: false,
+              },
+              { onConflict: 'user_id' }
+            );
+          } else {
+            await supabase.from('customers').upsert(
+              {
+                user_id: data.user.id,
+                email: email.trim().toLowerCase(),
+                name: fullName || email.split('@')[0],
+                status: 'pending',
+              },
+              { onConflict: 'user_id' }
+            );
+          }
+        } catch {
+          /* optional */
         }
-      } catch {
-        /* profile insert may fail under RLS; admin can still add them */
       }
-    }
 
-    if (data.session) {
-      await supabase.auth.signOut();
-    }
+      if (data.session) {
+        await supabase.auth.signOut();
+      }
 
-    throw new Error(
-      'Account created. An admin must approve your account under Users → Pending before you can sign in.'
-    );
+      throw new Error(
+        'Account created. An admin must approve your account under Users → Pending before you can sign in.'
+      );
+    } finally {
+      setAuthBusy(false);
+    }
   };
 
   const resetPassword = async (email: string) => {
@@ -414,6 +414,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         user,
         loading,
+        authBusy,
         requiresAuth: isSupabaseConfigured,
         configError,
         accountRole,
