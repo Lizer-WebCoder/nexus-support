@@ -2,20 +2,14 @@ import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import LoginPage from './LoginPage';
-import PostLoginLoader, { PostLoginShell } from './PostLoginLoader';
+import { PostLoginShell, BootLoader } from './PostLoginLoader';
 
 interface Props {
   children: ReactNode;
   onOpenAgent?: () => void;
-  /** @deprecated use onOpenAgent */
   onBackToAgent?: () => void;
 }
 
-/**
- * Customer portal gate: cosmic login until a customer session exists.
- * Agents are auto-sent to the agent workspace.
- * After auth, a minimum post-login loader is shown before the portal.
- */
 export default function PortalAuthGate({ children, onOpenAgent, onBackToAgent }: Props) {
   const { user, loading, requiresAuth, accountRole, configError } = useAuth();
   const goAgent = onOpenAgent || onBackToAgent;
@@ -28,7 +22,7 @@ export default function PortalAuthGate({ children, onOpenAgent, onBackToAgent }:
   }, [requiresAuth, user, accountRole, goAgent]);
 
   if (requiresAuth && loading) {
-    return <PostLoginLoader label="Opening customer portal…" subtitle="Preparing your tickets and chat." />;
+    return <BootLoader label="Loading portal…" />;
   }
 
   if (requiresAuth && configError) {
@@ -49,19 +43,14 @@ export default function PortalAuthGate({ children, onOpenAgent, onBackToAgent }:
   }
 
   if (requiresAuth && user && accountRole === 'agent') {
-    return (
-      <PostLoginLoader
-        label="Opening agent workspace…"
-        subtitle="This account is for the agent desk — redirecting you now."
-      />
-    );
+    return <BootLoader label="Opening agent workspace…" />;
   }
 
   return (
     <PostLoginShell
       ready={!requiresAuth || (!!user && accountRole !== 'agent')}
       label="Opening customer portal…"
-      subtitle="Loading your tickets, chat, and account."
+      variant="customer"
     >
       {children}
     </PostLoginShell>
