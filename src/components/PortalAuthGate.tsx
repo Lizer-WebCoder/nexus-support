@@ -11,18 +11,18 @@ interface Props {
 }
 
 export default function PortalAuthGate({ children, onOpenAgent, onBackToAgent }: Props) {
-  const { user, loading, requiresAuth, accountRole, configError } = useAuth();
+  const { user, loading, authBusy, requiresAuth, accountRole, configError } = useAuth();
   const goAgent = onOpenAgent || onBackToAgent;
   const isAgentSide = accountRole === 'agent' || accountRole === 'admin';
 
-  // Only bounce agents away from the portal after auth has finished resolving
+  // Only bounce approved agents away after validation has finished
   useEffect(() => {
-    if (loading || !requiresAuth || !user || !isAgentSide) return;
+    if (loading || authBusy || !requiresAuth || !user || !isAgentSide) return;
     if (goAgent) goAgent();
     else window.location.hash = '';
-  }, [loading, requiresAuth, user, isAgentSide, goAgent]);
+  }, [loading, authBusy, requiresAuth, user, isAgentSide, goAgent]);
 
-  if (requiresAuth && loading) {
+  if (requiresAuth && loading && !authBusy) {
     return <BootLoader label="Loading portal…" />;
   }
 
@@ -39,7 +39,8 @@ export default function PortalAuthGate({ children, onOpenAgent, onBackToAgent }:
     );
   }
 
-  if (requiresAuth && !user) {
+  // Keep login form mounted while validating so wrong-tab / pending errors can show
+  if (requiresAuth && (!user || authBusy)) {
     return <LoginPage audience="customer" onOpenAgent={goAgent} />;
   }
 
