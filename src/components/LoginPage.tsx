@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import SpacePlanets from './SpacePlanets';
 import { SpaceFlybys } from './LoginFlybys';
 
 interface Props {
@@ -35,98 +34,6 @@ function NexusLogoMark({ size = 56 }: { size?: number }) {
           <path d="M24 42a18 18 0 0 1-18-18" stroke="white" strokeWidth="3.2" strokeLinecap="round" opacity="0.55" />
         </g>
       </svg>
-    </div>
-  );
-}
-
-function ShootingStars() {
-  const layerRef = useRef<HTMLDivElement>(null);
-  const starRef = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    let raf = 0;
-    let spawnTimer: ReturnType<typeof setTimeout>;
-    let running = false;
-    const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-    const flyOnce = () => {
-      if (cancelled || running) return;
-      const layer = layerRef.current;
-      const el = starRef.current;
-      if (!layer || !el) return;
-      const w = layer.clientWidth || window.innerWidth;
-      const h = layer.clientHeight || window.innerHeight;
-      if (w < 20 || h < 20) return;
-      running = true;
-      const startX = -40;
-      const startY = h * (0.08 + Math.random() * 0.18);
-      const endX = w + 40;
-      const endY = startY + h * (0.08 + Math.random() * 0.12);
-      const ctrlX = w * (0.42 + Math.random() * 0.16);
-      const ctrlY = startY - h * (0.06 + Math.random() * 0.08);
-      const duration = 4800 + Math.random() * 1600;
-      const t0 = performance.now();
-      setVisible(true);
-      const tick = (now: number) => {
-        if (cancelled) return;
-        const raw = Math.min(1, (now - t0) / duration);
-        const t = ease(raw);
-        const inv = 1 - t;
-        const x = inv * inv * startX + 2 * inv * t * ctrlX + t * t * endX;
-        const y = inv * inv * startY + 2 * inv * t * ctrlY + t * t * endY;
-        const dx = 2 * inv * (ctrlX - startX) + 2 * t * (endX - ctrlX);
-        const dy = 2 * inv * (ctrlY - startY) + 2 * t * (endY - ctrlY);
-        const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-        let opacity = 1;
-        if (raw < 0.08) opacity = raw / 0.08;
-        else if (raw > 0.88) opacity = (1 - raw) / 0.12;
-        el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${angle}deg)`;
-        el.style.opacity = String(Math.max(0, Math.min(1, opacity)));
-        if (raw < 1) raf = requestAnimationFrame(tick);
-        else {
-          el.style.opacity = '0';
-          setVisible(false);
-          running = false;
-          if (!cancelled) spawnTimer = setTimeout(flyOnce, 26000 + Math.random() * 14000);
-        }
-      };
-      el.style.opacity = '0';
-      el.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
-      raf = requestAnimationFrame(tick);
-    };
-    spawnTimer = setTimeout(flyOnce, 7000 + Math.random() * 3000);
-    return () => { cancelled = true; cancelAnimationFrame(raf); clearTimeout(spawnTimer); };
-  }, []);
-  return (
-    <div ref={layerRef} className="login-shooting-layer absolute inset-0 pointer-events-none z-[3] overflow-hidden" aria-hidden>
-      <div ref={starRef} className="login-shooting-star" style={{ opacity: visible ? undefined : 0, visibility: visible ? 'visible' : 'hidden' }}>
-        <span className="login-comet-trail login-comet-trail-a" />
-        <span className="login-comet-trail login-comet-trail-b" />
-        <span className="login-comet-trail login-comet-trail-c" />
-        <span className="login-comet-particle login-comet-p1" />
-        <span className="login-comet-particle login-comet-p2" />
-        <span className="login-comet-particle login-comet-p3" />
-        <span className="login-comet-particle login-comet-p4" />
-        <svg className="login-star-glyph" width="22" height="22" viewBox="0 0 22 22" aria-hidden>
-          <defs>
-            <radialGradient id="cometAura" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.5" />
-              <stop offset="55%" stopColor="#22d3ee" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
-            </radialGradient>
-            <radialGradient id="cometHead" cx="40%" cy="35%" r="55%">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="35%" stopColor="#e0f2fe" />
-              <stop offset="65%" stopColor="#67e8f9" />
-              <stop offset="100%" stopColor="#0891b2" />
-            </radialGradient>
-          </defs>
-          <circle cx="11" cy="11" r="10.5" fill="url(#cometAura)" />
-          <circle cx="11" cy="11" r="7" fill="url(#cometHead)" />
-          <circle cx="11" cy="11" r="3.2" fill="#ffffff" />
-          <ellipse cx="9" cy="8.5" rx="2" ry="1.4" fill="#ffffff" opacity="0.85" />
-        </svg>
-      </div>
     </div>
   );
 }
@@ -242,8 +149,6 @@ function CosmicFallBackground() {
       <div className="login-cosmos-sky absolute inset-0" />
       <div className="login-nebula login-nebula-a absolute inset-0" />
       <div className="login-nebula login-nebula-b absolute inset-0" />
-      <SpacePlanets />
-      <ShootingStars />
       <div className="login-starfield absolute inset-0">
         {stars.map((s) => (
           <span key={s.id} className="login-star absolute rounded-full" style={{ left: s.left, width: s.size, height: s.size, background: s.color, opacity: s.opacity, boxShadow: `0 0 ${s.size * 3}px ${s.color}`, animationDelay: `${s.delay}s`, animationDuration: `${s.duration}s` }} />
