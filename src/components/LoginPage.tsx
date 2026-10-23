@@ -351,8 +351,10 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
     }
     setLoading(true);
     try {
-      if (mode === 'signin') await signIn(email.trim(), password, isAgent ? 'agent' : 'customer');
-      else {
+      if (mode === 'signin') {
+        await signIn(email.trim(), password, isAgent ? 'agent' : 'customer');
+        window.location.hash = isAgent ? '' : 'portal';
+      } else {
         await signUp(email.trim(), password, name.trim() || undefined, isAgent ? 'agent' : 'customer');
         setInfo('Account created. You can sign in now.');
         setMode('signin');
