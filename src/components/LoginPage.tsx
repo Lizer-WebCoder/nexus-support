@@ -135,7 +135,7 @@ function LogoPilotStage() {
       fromX = x; fromY = y; fromScale = scale; toX = nx; toY = ny; toScale = randomIn(0.88, 1.14);
       startT = performance.now();
       const dist = Math.hypot(toX - fromX, toY - fromY);
-      duration = Math.min(4200, Math.max(1400, dist * 2.2 + randomIn(200, 800)));
+      duration = Math.min(4200, Math.max(1400, dist * 2.2 + randomIn(200, 800));
     };
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
@@ -242,7 +242,7 @@ const CAPABILITIES = [
 export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenAgent }: Props) {
   const { signIn, signUp, resetPassword, configError } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [audienceTab, setAudienceTab] = useState<'agent' | 'customer'>('customer');
+  const [audienceTab, setAudienceTab] = useState<'agent' | 'customer'>(audience === 'agent' ? 'agent' : 'customer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -314,95 +314,127 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
         { title: 'Live chat', blurb: 'Reach an agent when you need a quick answer.' },
         { title: 'Community', blurb: 'Ask other customers before opening a ticket.' },
       ];
+  const cardSub = isAgent ? 'Sign in to Agent Workspace' : 'Sign in to Customer Portal';
+  const footerCredit = isAgent
+    ? 'NexusOps Agent Workspace · © 2026 Lizer & Kirzhian'
+    : 'NexusOps Customer Portal · © 2026 Lizer & Kirzhian';
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#050012] text-white">
+    <div className="relative min-h-screen overflow-hidden">
       <CosmicFallBackground />
-      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-md">
-          <div className="login-glass-card rounded-2xl p-6 sm:p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <NexusLogoMark size={40} />
+      <div className="relative z-10 min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] gap-10 lg:gap-14 xl:gap-20 2xl:gap-28 px-5 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8 lg:py-12 items-center">
+          <div className="flex flex-col relative z-10 order-2 lg:order-1">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 backdrop-blur flex items-center justify-center overflow-hidden">
+                <NexusLogoMark size={22} />
+              </div>
               <div>
-                <div className="text-lg font-semibold tracking-tight">Nexus Ops</div>
-                <div className="text-xs text-violet-200/70">{isAgent ? 'Agent sign in' : 'Customer portal'}</div>
+                <div className="text-sm font-semibold text-white tracking-tight">Nexus Ops</div>
+                <div className="text-[11px] text-fuchsia-200/70">{isAgent ? 'Support operations platform' : 'Customer support portal'}</div>
               </div>
             </div>
-
-            <div className="flex rounded-lg bg-white/5 p-1 mb-5 text-sm">
-              <button type="button" onClick={() => setAudienceTab('customer')} className={`flex-1 py-1.5 rounded-md transition ${audienceTab === 'customer' ? 'bg-violet-600 text-white' : 'text-violet-200/70 hover:text-white'}`}>Customer</button>
-              <button type="button" onClick={() => setAudienceTab('agent')} className={`flex-1 py-1.5 rounded-md transition ${audienceTab === 'agent' ? 'bg-violet-600 text-white' : 'text-violet-200/70 hover:text-white'}`}>Agent</button>
+            <div className="mt-8 lg:mt-12 max-w-lg">
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-fuchsia-300/80 mb-3">{isAgent ? 'Built for agent teams' : 'Built for customers'}</p>
+              <h1 className="text-3xl sm:text-4xl xl:text-[2.75rem] font-semibold text-white leading-tight tracking-tight">
+                {leftTitle}<span className="block text-fuchsia-200/90 font-normal mt-1">{leftSub}</span>
+              </h1>
+              <p className="mt-5 text-sm sm:text-[15px] text-fuchsia-100/75 leading-relaxed max-w-md">{leftBlurb}</p>
+              <ul className="mt-8 space-y-3">
+                {caps.map((c) => (
+                  <li key={c.title} className="flex gap-3 items-start">
+                    <span className="login-feature-dot mt-1.5 w-1.5 h-1.5 rounded-full bg-fuchsia-400 shrink-0" />
+                    <div>
+                      <div className="text-sm font-medium text-white">{c.title}</div>
+                      <div className="text-xs text-fuchsia-100/60">{c.blurb}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
+            <div className="mt-10 lg:mt-14 text-[11px] text-fuchsia-200/35 hidden lg:block tracking-wide">{footerCredit}</div>
+          </div>
 
-            <div className="mb-5">
-              <h1 className="text-xl font-semibold tracking-tight">{leftTitle}</h1>
-              <p className="text-sm text-violet-200/70 mt-1">{leftSub}</p>
-            </div>
-
-            {configError && <div className="mb-4 text-sm text-amber-200 bg-amber-500/10 border border-amber-400/30 rounded-lg px-3 py-2">{configError}</div>}
-            {error && <div className="mb-4 text-sm text-rose-200 bg-rose-500/10 border border-rose-400/30 rounded-lg px-3 py-2">{error}</div>}
-            {info && <div className="mb-4 text-sm text-emerald-200 bg-emerald-500/10 border border-emerald-400/30 rounded-lg px-3 py-2">{info}</div>}
-
-            <form onSubmit={submit} className="space-y-3.5">
-              {mode === 'signup' && (
+          <div className="flex items-center justify-center lg:justify-end order-1 lg:order-2 w-full lg:w-auto">
+            {mode === 'signin' ? (
+            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-2xl p-5 sm:p-7">
+              <div className="flex rounded-lg bg-white/5 p-1 mb-5 text-sm">
+                <button type="button" onClick={() => setAudienceTab('customer')} className={`flex-1 py-1.5 rounded-md transition ${audienceTab === 'customer' ? 'bg-violet-600 text-white' : 'text-violet-200/70 hover:text-white'}`}>Customer</button>
+                <button type="button" onClick={() => setAudienceTab('agent')} className={`flex-1 py-1.5 rounded-md transition ${audienceTab === 'agent' ? 'bg-violet-600 text-white' : 'text-violet-200/70 hover:text-white'}`}>Agent</button>
+              </div>
+              <div className="mb-1 text-lg font-semibold text-white tracking-tight">Welcome back</div>
+              <div className="text-xs text-fuchsia-200/70 mb-4">{cardSub}</div>
+              {configError && <div className="mb-3 text-sm text-amber-200 bg-amber-500/10 border border-amber-400/30 rounded-lg px-3 py-2">{configError}</div>}
+              {error && <div className="mb-3 text-sm text-rose-200 bg-rose-500/10 border border-rose-400/30 rounded-lg px-3 py-2">{error}</div>}
+              {info && <div className="mb-3 text-sm text-emerald-200 bg-emerald-500/10 border border-emerald-400/30 rounded-lg px-3 py-2">{info}</div>}
+              <form onSubmit={submit} className="space-y-3.5">
                 <div>
-                  <label className="block text-xs text-violet-200/80 mb-1">Full name</label>
-                  <input value={name} onChange={(e) => setName(e.target.value)} className="login-glass-input w-full rounded-lg px-3 py-2.5 text-sm outline-none" placeholder="Your name" />
+                  <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Email</label>
+                  <input type="email" required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} name="nexus_email_manual" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" />
                 </div>
-              )}
-              <div>
-                <label className="block text-xs text-violet-200/80 mb-1">Email</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="login-glass-input w-full rounded-lg px-3 py-2.5 text-sm outline-none" placeholder="you@company.com" />
-              </div>
-              <div>
-                <label className="block text-xs text-violet-200/80 mb-1">Password</label>
-                <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required className="login-glass-input w-full rounded-lg px-3 py-2.5 text-sm outline-none pr-16" placeholder="••••••••" />
-                  <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-violet-200/70 hover:text-white px-2">{showPassword ? 'Hide' : 'Show'}</button>
-                </div>
-              </div>
-              {mode === 'signup' && (
                 <div>
-                  <label className="block text-xs text-violet-200/80 mb-1">Confirm password</label>
+                  <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Password</label>
                   <div className="relative">
-                    <input type={showConfirm ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="login-glass-input w-full rounded-lg px-3 py-2.5 text-sm outline-none pr-16" placeholder="••••••••" />
-                    <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-violet-200/70 hover:text-white px-2">{showConfirm ? 'Hide' : 'Show'}</button>
+                    <input type={showPassword ? 'text' : 'password'} required minLength={6} className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none pr-12" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="new-password" name="nexus_password_manual" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" />
+                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-fuchsia-100/90 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
                   </div>
                 </div>
-              )}
-              {mode === 'signin' && (
                 <div className="text-right">
-                  <button type="button" onClick={() => void handleForgotPassword()} className="text-xs text-violet-300 hover:text-white">Forgot password?</button>
+                  <button type="button" onClick={() => void handleForgotPassword()} className="text-xs text-fuchsia-200/80 hover:text-white">Forgot password?</button>
                 </div>
-              )}
-              <button type="submit" disabled={loading} className="login-submit-btn w-full py-2.5 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-600 text-sm font-semibold disabled:opacity-50">
-                {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
-              </button>
-            </form>
-
-            <div className="mt-4 text-center text-xs text-violet-200/70">
-              {mode === 'signin' ? (
-                <>
+                <button type="submit" disabled={loading} className="login-submit-btn w-full rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-violet-600 bg-[length:160%_100%] hover:from-violet-500 hover:via-fuchsia-500 hover:to-violet-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 shadow-lg shadow-violet-600/40">
+                  {loading ? 'Signing in…' : 'Sign in'}
+                </button>
+                <p className="text-center text-xs text-fuchsia-200/70 pt-1">
                   No account?{' '}
-                  <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); }} className="text-violet-300 hover:text-white font-medium">Sign up</button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{' '}
-                  <button type="button" onClick={() => { setMode('signin'); setError(''); setInfo(''); }} className="text-violet-300 hover:text-white font-medium">Sign in</button>
-                </>
-              )}
+                  <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); }} className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline">Sign up</button>
+                </p>
+              </form>
             </div>
-
-            <p className="mt-5 text-[11px] text-violet-200/50 leading-relaxed">{leftBlurb}</p>
-            <ul className="mt-3 space-y-1.5">
-              {caps.map((c) => (
-                <li key={c.title} className="flex items-start gap-2 text-[11px] text-violet-100/80">
-                  <span className="login-feature-dot mt-1.5 w-1.5 h-1.5 rounded-full bg-fuchsia-400 shrink-0" />
-                  <span><span className="font-medium text-violet-100">{c.title}</span> — {c.blurb}</span>
-                </li>
-              ))}
-            </ul>
+            ) : (
+            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-2xl p-5 sm:p-7 border border-fuchsia-300/15">
+              <div className="flex rounded-lg bg-white/5 p-1 mb-5 text-sm">
+                <button type="button" onClick={() => setAudienceTab('customer')} className={`flex-1 py-1.5 rounded-md transition ${audienceTab === 'customer' ? 'bg-violet-600 text-white' : 'text-violet-200/70 hover:text-white'}`}>Customer</button>
+                <button type="button" onClick={() => setAudienceTab('agent')} className={`flex-1 py-1.5 rounded-md transition ${audienceTab === 'agent' ? 'bg-violet-600 text-white' : 'text-violet-200/70 hover:text-white'}`}>Agent</button>
+              </div>
+              <div className="mb-1 text-lg font-semibold text-white tracking-tight">Create account</div>
+              <div className="text-xs text-fuchsia-200/70 mb-4">{isAgent ? 'Request agent access' : 'Join the customer portal'}</div>
+              {configError && <div className="mb-3 text-sm text-amber-200 bg-amber-500/10 border border-amber-400/30 rounded-lg px-3 py-2">{configError}</div>}
+              {error && <div className="mb-3 text-sm text-rose-200 bg-rose-500/10 border border-rose-400/30 rounded-lg px-3 py-2">{error}</div>}
+              {info && <div className="mb-3 text-sm text-emerald-200 bg-emerald-500/10 border border-emerald-400/30 rounded-lg px-3 py-2">{info}</div>}
+              <form onSubmit={submit} className="space-y-3.5">
+                <div>
+                  <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Full name</label>
+                  <input required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Doe" autoComplete="off" name="nexus_name_manual" data-lpignore="true" data-1p-ignore="true" data-form-type="other" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Email</label>
+                  <input type="email" required className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} name="nexus_email_manual" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Password</label>
+                  <div className="relative">
+                    <input type={showPassword ? 'text' : 'password'} required minLength={6} className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none pr-12" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" autoComplete="new-password" name="nexus_password_manual" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" />
+                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-fuchsia-100/90 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-fuchsia-100/90 mb-1">Confirm password</label>
+                  <div className="relative">
+                    <input type={showConfirm ? 'text' : 'password'} required minLength={6} className="login-glass-input w-full rounded-xl px-3 py-2.5 text-sm outline-none pr-12" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter password" autoComplete="new-password" name="nexus_confirm_manual" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" />
+                    <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-fuchsia-100/90 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition" onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? 'Hide' : 'Show'}</button>
+                  </div>
+                </div>
+                <button type="submit" disabled={loading} className="login-submit-btn w-full rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-violet-600 bg-[length:160%_100%] hover:from-violet-500 hover:via-fuchsia-500 hover:to-violet-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 shadow-lg shadow-violet-600/40 mt-1">
+                  {loading ? 'Creating account…' : 'Create account'}
+                </button>
+                <p className="text-center text-xs text-fuchsia-200/70 pt-1">
+                  Already have an account?{' '}
+                  <button type="button" onClick={() => { setMode('signin'); setError(''); setInfo(''); setConfirmPassword(''); }} className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline">{isAgent ? 'Back to agent sign in' : 'Back to customer sign in'}</button>
+                </p>
+              </form>
+            </div>
+            )}
           </div>
         </div>
       </div>
