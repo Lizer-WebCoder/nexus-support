@@ -7,14 +7,13 @@ jobs:
   restore:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           ref: main
           fetch-depth: 0
       - name: Restore index.css from commit before truncation
         run: |
           git show 3f387938d91fce95577d7392a0072e37ec6e4fc1:src/index.css > src/index.css
-          # Optionally strip only the duplicate desert block (portal-desert.css is source of truth)
           python3 - <<'PY'
           from pathlib import Path
           p = Path('src/index.css')
