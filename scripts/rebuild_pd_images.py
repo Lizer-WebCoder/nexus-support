@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 import base64
 from pathlib import Path
+
 Path('public').mkdir(exist_ok=True)
-for tag, out in [('n', 'public/portal-desert-night.jpg'), ('d', 'public/portal-desert-day.jpg')]:
-    files = sorted(Path('scripts/pd_b64').glob(f'{tag}*.txt'), key=lambda p: int(p.stem[1:]))
-    data = ''.join(f.read_text().strip() for f in files)
-    Path(out).write_bytes(base64.b64decode(data))
-    print(out, Path(out).stat().st_size)
+root = Path('scripts/pd_b64')
+for tag, name in [('n', 'portal-desert-night.webp'), ('d', 'portal-desert-day.webp')]:
+    parts = sorted(root.glob(f'{tag}*.txt'), key=lambda p: int(''.join(c for c in p.stem if c.isdigit()) or 0))
+    if not parts:
+        print('skip', tag)
+        continue
+    data = ''.join(p.read_text().strip() for p in parts)
+    out = Path('public') / name
+    out.write_bytes(base64.b64decode(data))
+    print(out, out.stat().st_size)

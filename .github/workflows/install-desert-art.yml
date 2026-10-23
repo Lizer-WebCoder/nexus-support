@@ -1,0 +1,20 @@
+name: Install desert art assets
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - run: python3 scripts/rebuild_pd_images.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/portal-desert-night.webp public/portal-desert-day.webp
+          if git diff --cached --quiet; then echo No changes; exit 0; fi
+          git commit -m "Add reference desert artwork (night + day)"
+          git push origin HEAD:main
