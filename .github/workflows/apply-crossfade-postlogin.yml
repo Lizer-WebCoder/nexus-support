@@ -1,0 +1,25 @@
+name: Apply crossfade postlogin on kirzhian
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+        with:
+          ref: kirzhian
+          fetch-depth: 0
+      - run: git fetch --depth=1 origin 43ede7c4024c9079ab7bb7c7149e37779188350b || git fetch origin kirzhian
+      - run: python3 scripts/apply_crossfade_postlogin.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/PostLoginLoader.tsx
+          if git diff --cached --quiet; then echo No changes; exit 0; fi
+          git commit -m "Post-login: crossfade into portal — no white flash; soft mist handoff"
+          git push origin HEAD:kirzhian
