@@ -411,11 +411,38 @@ body {
   z-index: 1;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
 }
-.login-ship-flame-core { animation: login-flame-pulse 0.35s ease-in-out infinite alternate; }
-.login-ship-flame-hot { animation: login-flame-pulse 0.28s ease-in-out infinite alternate-reverse; }
+.login-ship-flame-core,
+.login-ship-flame-mid,
+.login-ship-flame-hot {
+  transform-box: fill-box;
+  transform-origin: 100% 50%;
+}
+.login-ship-flame-core { animation: login-flame-pulse 0.22s ease-in-out infinite alternate; }
+.login-ship-flame-mid { animation: login-flame-pulse 0.16s ease-in-out infinite alternate-reverse; }
+.login-ship-flame-hot { animation: login-flame-flicker 0.11s ease-in-out infinite alternate; }
 @keyframes login-flame-pulse {
-  from { opacity: 0.75; transform: scaleX(0.9); }
-  to { opacity: 1; transform: scaleX(1.08); }
+  from { opacity: 0.7; transform: scaleX(0.78) scaleY(0.88); }
+  to { opacity: 1; transform: scaleX(1.14) scaleY(1.08); }
+}
+@keyframes login-flame-flicker {
+  from { opacity: 0.55; transform: scaleX(0.65); }
+  to { opacity: 1; transform: scaleX(1.2); }
+}
+.login-ufo-beam {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  animation: login-ufo-beam 0.65s ease-in-out infinite alternate;
+}
+@keyframes login-ufo-beam {
+  from { opacity: 0.4; transform: scaleY(0.8); }
+  to { opacity: 0.95; transform: scaleY(1.06); }
+}
+.login-ufo-light { animation: login-ufo-blink 0.85s ease-in-out infinite alternate; }
+.login-ufo-light-b { animation-delay: 0.28s; }
+.login-ufo-light-c { animation-delay: 0.5s; }
+@keyframes login-ufo-blink {
+  from { opacity: 0.25; }
+  to { opacity: 1; }
 }
 .login-ship-smoke {
   position: absolute;
@@ -462,7 +489,10 @@ body {
   .login-flyby-ltr,
   .login-flyby-rtl,
   .login-ship-flame-core,
+  .login-ship-flame-mid,
   .login-ship-flame-hot,
+  .login-ufo-beam,
+  .login-ufo-light,
   .login-ship-smoke,
   .login-ship-ember,
   .login-shooting-star,
