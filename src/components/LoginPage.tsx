@@ -30,10 +30,13 @@ function NexusLogoMark({ size = 56 }: { size?: number }) {
   return (
     <div className="login-logo-mark" style={{ width: size, height: size }}>
       <svg viewBox="0 0 48 48" width={size} height={size} fill="none" aria-hidden>
-        <circle cx="24" cy="24" r="5.5" fill="white" className="login-logo-core" />
+        <circle cx="24" cy="24" r="5.2" fill="#e9d5ff" className="login-logo-core" />
         <g className="login-logo-arcs">
-          <path d="M24 6a18 18 0 0 1 18 18" stroke="white" strokeWidth="3.2" strokeLinecap="round" />
-          <path d="M24 42a18 18 0 0 1-18-18" stroke="white" strokeWidth="3.2" strokeLinecap="round" opacity="0.55" />
+          <path d="M24 7a17 17 0 0 1 17 17" stroke="#c4b5fd" strokeWidth="3" strokeLinecap="round" />
+          <path d="M24 41a17 17 0 0 1-17-17" stroke="#a78bfa" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
+        </g>
+        <g className="login-logo-arcs-rev">
+          <path d="M10 30a16 16 0 0 1 4-14" stroke="#f0abfc" strokeWidth="1.6" strokeLinecap="round" opacity="0.8" />
         </g>
       </svg>
     </div>
@@ -138,7 +141,7 @@ function LogoPilotStage() {
         return <span key={`spark-${i}-${Math.round(p.x)}`} className="login-trail-spark" style={{ left: p.x + ((i % 3) - 1) * 5, top: p.y + ((i % 2) * 3 - 1), opacity: Math.max(0, 0.55 * (1 - t)), width: 2 + (1 - t) * 3, height: 2 + (1 - t) * 3 }} />;
       })}
       <div ref={pilotRef} className="login-pilot login-pilot-js" style={{ left: 0, top: 0, transform: 'translate(-50%, -50%)' }}>
-        <div className="login-pilot-glow" /><NexusLogoMark size={64} />
+        <div className="login-pilot-glow" /><NexusLogoMark size={40} />
       </div>
     </div>
   );
@@ -264,8 +267,8 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
         <div className="w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] gap-10 lg:gap-14 xl:gap-20 2xl:gap-28 px-5 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8 lg:py-12 items-center">
           <div className="flex flex-col relative z-10 order-2 lg:order-1">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 backdrop-blur flex items-center justify-center overflow-hidden">
-                <NexusLogoMark size={22} />
+              <div className="login-brand-badge">
+                <NexusLogoMark size={20} />
               </div>
               <div>
                 <div className="text-sm font-semibold text-white tracking-tight">Nexus Ops</div>
@@ -296,13 +299,16 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
 
           <div className="flex items-center justify-center lg:justify-end order-1 lg:order-2 w-full lg:w-auto">
             {mode === 'signin' ? (
-            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-2xl p-5 sm:p-7">
-              <div className="flex rounded-lg bg-white/5 p-1 mb-5 text-sm">
-                <button type="button" onClick={() => setAudienceTab('customer')} className={`flex-1 py-1.5 rounded-md transition ${audienceTab === 'customer' ? 'bg-violet-600 text-white' : 'text-violet-200/70 hover:text-white'}`}>Customer</button>
-                <button type="button" onClick={() => setAudienceTab('agent')} className={`flex-1 py-1.5 rounded-md transition ${audienceTab === 'agent' ? 'bg-violet-600 text-white' : 'text-violet-200/70 hover:text-white'}`}>Agent</button>
+            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-[22px] px-6 py-7 sm:px-7">
+              <div className="flex flex-col items-center text-center mb-5">
+                <div className="login-card-logo"><NexusLogoMark size={28} /></div>
+                <div className="mt-3 text-[22px] font-semibold text-white tracking-tight">Nexus Ops</div>
+                <div className="text-[13px] text-violet-200/75 mt-1">{cardSub}</div>
               </div>
-              <div className="mb-1 text-lg font-semibold text-white tracking-tight">Welcome back</div>
-              <div className="text-xs text-fuchsia-200/70 mb-4">{cardSub}</div>
+              <div className="flex gap-2 mb-4 text-sm">
+                <button type="button" onClick={() => setAudienceTab('customer')} className={`login-tab ${audienceTab === 'customer' ? 'login-tab-on' : ''}`}>Customer</button>
+                <button type="button" onClick={() => setAudienceTab('agent')} className={`login-tab ${audienceTab === 'agent' ? 'login-tab-on' : ''}`}>Agent</button>
+              </div>
               {configError && <div className="mb-3 text-sm text-amber-200 bg-amber-500/10 border border-amber-400/30 rounded-lg px-3 py-2">{configError}</div>}
               {error && <div className="mb-3 text-sm text-rose-200 bg-rose-500/10 border border-rose-400/30 rounded-lg px-3 py-2">{error}</div>}
               {info && <div className="mb-3 text-sm text-emerald-200 bg-emerald-500/10 border border-emerald-400/30 rounded-lg px-3 py-2">{info}</div>}
@@ -318,26 +324,26 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-fuchsia-100/90 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition" onClick={() => setShowPassword((v) => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
                   </div>
                 </div>
-                <div className="text-right">
-                  <button type="button" onClick={() => void handleForgotPassword()} className="text-xs text-fuchsia-200/80 hover:text-white">Forgot password?</button>
-                </div>
-                <button type="submit" disabled={loading} className="login-submit-btn w-full rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-violet-600 bg-[length:160%_100%] hover:from-violet-500 hover:via-fuchsia-500 hover:to-violet-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 shadow-lg shadow-violet-600/40">
+                <button type="submit" disabled={loading} className="login-submit-btn w-full rounded-xl bg-gradient-to-r from-violet-500 via-fuchsia-500 to-violet-500 hover:from-violet-400 hover:via-fuchsia-400 hover:to-violet-400 disabled:opacity-60 text-white font-semibold text-sm py-2.5 shadow-lg shadow-fuchsia-600/30">
                   {loading ? 'Signing in…' : 'Sign in'}
                 </button>
-                <p className="text-center text-xs text-fuchsia-200/70 pt-1">
-                  No account?{' '}
-                  <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); }} className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline">Sign up</button>
+                <p className="text-center text-xs text-violet-200/70 pt-1">
+                  New here?{' '}
+                  <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); }} className="text-white font-semibold hover:text-fuchsia-100">{isAgent ? 'Create an agent account' : 'Create a customer account'}</button>
                 </p>
+                <div className="text-center">
+                  <button type="button" onClick={() => void handleForgotPassword()} className="text-xs font-medium text-violet-100/80 hover:text-white">Forgot Password?</button>
+                </div>
               </form>
             </div>
             ) : (
-            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-2xl p-5 sm:p-7 border border-fuchsia-300/15">
-              <div className="flex rounded-lg bg-white/5 p-1 mb-5 text-sm">
-                <button type="button" onClick={() => setAudienceTab('customer')} className={`flex-1 py-1.5 rounded-md transition ${audienceTab === 'customer' ? 'bg-violet-600 text-white' : 'text-violet-200/70 hover:text-white'}`}>Customer</button>
-                <button type="button" onClick={() => setAudienceTab('agent')} className={`flex-1 py-1.5 rounded-md transition ${audienceTab === 'agent' ? 'bg-violet-600 text-white' : 'text-violet-200/70 hover:text-white'}`}>Agent</button>
+            <div className="login-glass-card w-full max-w-[360px] sm:max-w-[380px] rounded-[22px] px-6 py-7 sm:px-7">
+              <div className="flex flex-col items-center text-center mb-4">
+                <div className="login-card-logo"><NexusLogoMark size={28} /></div>
+                <div className="mt-3 text-[22px] font-semibold text-white tracking-tight">Create your account</div>
+                <div className="text-[13px] text-violet-200/75 mt-1">{isAgent ? 'Register for Agent Workspace' : 'Register for Customer Portal'}</div>
+                <div className="login-role-chip mt-3"><span className="login-status-dot" style={{ width: 6, height: 6 }} />{isAgent ? 'Agent registration' : 'Customer registration'}</div>
               </div>
-              <div className="mb-1 text-lg font-semibold text-white tracking-tight">Create account</div>
-              <div className="text-xs text-fuchsia-200/70 mb-4">{isAgent ? 'Request agent access' : 'Join the customer portal'}</div>
               {configError && <div className="mb-3 text-sm text-amber-200 bg-amber-500/10 border border-amber-400/30 rounded-lg px-3 py-2">{configError}</div>}
               {error && <div className="mb-3 text-sm text-rose-200 bg-rose-500/10 border border-rose-400/30 rounded-lg px-3 py-2">{error}</div>}
               {info && <div className="mb-3 text-sm text-emerald-200 bg-emerald-500/10 border border-emerald-400/30 rounded-lg px-3 py-2">{info}</div>}
