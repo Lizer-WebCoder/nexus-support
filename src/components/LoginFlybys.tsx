@@ -9,41 +9,31 @@ const CHAT_LINES = [
 
 type Flyby = { id: number; kind: 'ufo' | 'ship'; top: number; duration: number; fromLeft: boolean; chat: string | null };
 
-/** Cartoon green alien in classic flying saucer (matches reference) */
+/** Compact cartoon UFO with green alien */
 export function UfoIcon() {
   return (
-    <svg width="96" height="64" viewBox="0 0 96 64" fill="none" aria-hidden className="login-ufo-svg">
-      {/* Dome glass */}
+    <svg width="52" height="36" viewBox="0 0 96 64" fill="none" aria-hidden className="login-ufo-svg">
       <ellipse cx="48" cy="28" rx="26" ry="22" fill="url(#ufoDome)" opacity="0.92" />
       <ellipse cx="48" cy="28" rx="26" ry="22" fill="none" stroke="#7dd3fc" strokeWidth="1.5" opacity="0.7" />
-      {/* Alien body */}
       <ellipse cx="48" cy="36" rx="10" ry="12" fill="#7cb342" />
-      {/* Alien head */}
       <ellipse cx="48" cy="24" rx="12" ry="11" fill="#8bc34a" />
-      {/* Eyes */}
       <ellipse cx="42.5" cy="23" rx="4.2" ry="5" fill="#1e293b" />
       <ellipse cx="53.5" cy="23" rx="4.2" ry="5" fill="#1e293b" />
       <ellipse cx="43.5" cy="21.5" rx="1.4" ry="1.6" fill="#e0f2fe" />
       <ellipse cx="54.5" cy="21.5" rx="1.4" ry="1.6" fill="#e0f2fe" />
-      {/* Smile */}
       <path d="M44 29 Q48 32 52 29" stroke="#33691e" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-      {/* Waving hand */}
       <g transform="translate(58,18) rotate(-20)">
         <ellipse cx="0" cy="0" rx="4" ry="5" fill="#8bc34a" />
         <path d="M-2 -4 L-1 -9 M0 -5 L1 -10 M2 -4 L3 -9" stroke="#8bc34a" strokeWidth="1.8" strokeLinecap="round" />
       </g>
-      {/* Saucer top rim */}
       <ellipse cx="48" cy="42" rx="40" ry="10" fill="url(#ufoRimTop)" />
-      {/* Saucer body */}
       <ellipse cx="48" cy="46" rx="42" ry="12" fill="url(#ufoBody)" />
       <ellipse cx="48" cy="44" rx="38" ry="7" fill="#6366f1" opacity="0.35" />
-      {/* Lights */}
       <circle cx="22" cy="46" r="3.2" fill="#fbbf24" />
       <circle cx="34" cy="49" r="3.2" fill="#fde047" />
       <circle cx="48" cy="50" r="3.4" fill="#fbbf24" />
       <circle cx="62" cy="49" r="3.2" fill="#fde047" />
       <circle cx="74" cy="46" r="3.2" fill="#fbbf24" />
-      {/* Soft glow under saucer */}
       <ellipse cx="48" cy="56" rx="18" ry="4" fill="#a5b4fc" opacity="0.25" />
       <defs>
         <radialGradient id="ufoDome" cx="45%" cy="35%" r="65%">
@@ -65,34 +55,25 @@ export function UfoIcon() {
   );
 }
 
-/** Classic cartoon red/white rocket matching reference */
+/** Compact cartoon rocket */
 export function ShipIcon({ exhaustId = 'rocketFlame' }: { exhaustId?: string }) {
   return (
-    <svg width="100" height="48" viewBox="0 0 100 48" fill="none" aria-hidden className="login-ship-svg">
-      {/* Exhaust plume (behind ship) */}
+    <svg width="58" height="28" viewBox="0 0 100 48" fill="none" aria-hidden className="login-ship-svg">
       <ellipse className="login-ship-flame-core" cx="12" cy="24" rx="11" ry="7" fill={`url(#${exhaustId})`} />
       <ellipse className="login-ship-flame-hot" cx="16" cy="24" rx="5.5" ry="3.5" fill="#fef08a" opacity="0.95" />
-      {/* Rear nozzle */}
       <path d="M26 16 L26 32 L20 34 L16 24 L20 14 Z" fill="#b91c1c" />
       <path d="M26 18 L26 30 L22 31 L20 24 L22 17 Z" fill="#7f1d1d" opacity="0.6" />
-      {/* Body white */}
       <path d="M28 14 L68 10 L88 24 L68 38 L28 34 Z" fill="#f8fafc" />
-      {/* Red mid stripe */}
       <path d="M36 15.5 L64 12 L64 36 L36 32.5 Z" fill="#ef4444" opacity="0.92" />
-      {/* Nose cone red */}
       <path d="M68 10 L92 24 L68 38 Z" fill="#dc2626" />
       <path d="M72 14 L88 24 L72 34 Z" fill="#f87171" opacity="0.45" />
-      {/* Blue window */}
       <circle cx="52" cy="24" r="7.5" fill="#0ea5e9" />
       <circle cx="52" cy="24" r="7.5" fill="none" stroke="#0369a1" strokeWidth="1.5" />
       <ellipse cx="49" cy="21" rx="2.5" ry="2" fill="#e0f2fe" opacity="0.75" />
-      {/* Top fin */}
       <path d="M34 14 L28 2 L40 13 Z" fill="#dc2626" />
       <path d="M34 14 L30 6 L38 13.5 Z" fill="#f87171" opacity="0.5" />
-      {/* Bottom fin */}
       <path d="M34 34 L28 46 L40 35 Z" fill="#dc2626" />
       <path d="M34 34 L30 42 L38 34.5 Z" fill="#f87171" opacity="0.5" />
-      {/* Body highlight */}
       <path d="M30 16 L66 12.5 L66 16 L30 19 Z" fill="#ffffff" opacity="0.35" />
       <defs>
         <radialGradient id={exhaustId} cx="85%" cy="50%" r="75%">
