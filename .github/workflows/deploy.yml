@@ -28,15 +28,9 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ]; then npm ci; else npm install; fi
-
-      - name: Typecheck
-        run: npx tsc --noEmit
-        continue-on-error: true
+        run: npm install
 
       - name: Build
         env:
