@@ -13,13 +13,14 @@ interface Props {
 export default function PortalAuthGate({ children, onOpenAgent, onBackToAgent }: Props) {
   const { user, loading, requiresAuth, accountRole, configError } = useAuth();
   const goAgent = onOpenAgent || onBackToAgent;
+  const isAgentSide = accountRole === 'agent' || accountRole === 'admin';
 
+  // Only bounce agents away from the portal after auth has finished resolving
   useEffect(() => {
-    if (requiresAuth && user && accountRole === 'agent') {
-      if (goAgent) goAgent();
-      else window.location.hash = '';
-    }
-  }, [requiresAuth, user, accountRole, goAgent]);
+    if (loading || !requiresAuth || !user || !isAgentSide) return;
+    if (goAgent) goAgent();
+    else window.location.hash = '';
+  }, [loading, requiresAuth, user, isAgentSide, goAgent]);
 
   if (requiresAuth && loading) {
     return <BootLoader label="Loading portal…" />;
@@ -42,13 +43,13 @@ export default function PortalAuthGate({ children, onOpenAgent, onBackToAgent }:
     return <LoginPage audience="customer" onOpenAgent={goAgent} />;
   }
 
-  if (requiresAuth && user && accountRole === 'agent') {
+  if (requiresAuth && user && isAgentSide) {
     return <BootLoader label="Opening agent workspace…" />;
   }
 
   return (
     <PostLoginShell
-      ready={!requiresAuth || (!!user && accountRole !== 'agent')}
+      ready={!requiresAuth || (!!user && !isAgentSide)}
       label="Opening customer portal…"
       variant="customer"
     >
