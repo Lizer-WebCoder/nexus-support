@@ -179,12 +179,21 @@ export function TicketProvider({ children }: { children: ReactNode }) {
       const { data: existing } = await supabase.from('agents').select('*').eq('user_id', user.id).maybeSingle();
       if (cancelled) return;
       if (existing) {
+        // Only active workspace agent if approved
+        if ((existing as Agent).approval_status && (existing as Agent).approval_status !== 'approved') {
+          setCurrentAgent(null);
+          return;
+        }
         setCurrentAgent(hydrateAvatar(existing as Agent));
         return;
       }
       if (user.email) {
         const { data: byEmail } = await supabase.from('agents').select('*').eq('email', user.email).maybeSingle();
         if (byEmail && !cancelled) {
+          if ((byEmail as Agent).approval_status && (byEmail as Agent).approval_status !== 'approved') {
+            setCurrentAgent(null);
+            return;
+          }
           await supabase.from('agents').update({ user_id: user.id }).eq('id', byEmail.id);
           const linked = hydrateAvatar({ ...byEmail, user_id: user.id } as Agent);
           setCurrentAgent(linked);
@@ -192,25 +201,9 @@ export function TicketProvider({ children }: { children: ReactNode }) {
           return;
         }
       }
-      const displayName = (user.user_metadata?.full_name as string) || user.email?.split('@')[0] || 'Agent';
-      const { data: created } = await supabase
-        .from('agents')
-        .insert({
-          user_id: user.id,
-          name: displayName,
-          initials: initialsFromName(displayName),
-          role: 'Agent',
-          status: 'online',
-          email: user.email || null,
-          color: '#6366f1',
-        })
-        .select('*')
-        .single();
-      if (created && !cancelled) {
-        const agent = hydrateAvatar(created as Agent);
-        setCurrentAgent(agent);
-        setAgents((prev) => filterAgents([...prev, agent]));
-      }
+      // Do NOT auto-create agent rows — new accounts stay pending until admin approves
+      // (created by signup trigger / AuthContext). Avoids bypassing Users → Pending.
+      setCurrentAgent(null);
     })();
     return () => {
       cancelled = true;
