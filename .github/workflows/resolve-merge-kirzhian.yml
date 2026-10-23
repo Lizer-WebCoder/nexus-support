@@ -1,0 +1,41 @@
+name: Resolve merge main into kirzhian
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+        with:
+          ref: kirzhian
+          fetch-depth: 0
+      - name: Merge origin/main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          # Prefer our LoginPage; App already resolved on branch
+          git merge origin/main -m "Merge origin/main into kirzhian (resolve conflicts)" || true
+          if [ -f src/components/LoginPage.tsx ]; then
+            git checkout --ours src/components/LoginPage.tsx || true
+            git add src/components/LoginPage.tsx || true
+          fi
+          if [ -f src/App.tsx ]; then
+            git checkout --ours src/App.tsx || true
+            git add src/App.tsx || true
+          fi
+          # Accept ours for any remaining conflicted files under src/
+          git diff --name-only --diff-filter=U | while read -r f; do
+            echo "resolving ours: $f"
+            git checkout --ours "$f" || true
+            git add "$f" || true
+          done
+          git add -u || true
+          if git diff --cached --quiet; then
+            echo "No staged changes (merge may already be complete)"
+          else
+            git commit --no-edit -m "Merge origin/main into kirzhian; keep kirzhian App + LoginPage" || git commit -m "Merge origin/main into kirzhian; keep kirzhian App + LoginPage"
+          fi
+          git push origin HEAD:kirzhian
