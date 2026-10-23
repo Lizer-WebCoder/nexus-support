@@ -1,12 +1,16 @@
 const DARK_KEY = 'nexus-dark-v1';
 const COMPACT_KEY = 'nexus-compact-v1';
 
+export const THEME_EVENT = 'nexus-theme';
+
+/** Dark is the default until the user explicitly chooses light. */
 export function getDarkMode(): boolean {
   try {
-    return localStorage.getItem(DARK_KEY) === '1';
-  } catch {
-    return false;
-  }
+    const v = localStorage.getItem(DARK_KEY);
+    if (v === '0') return false;
+    if (v === '1') return true;
+  } catch {}
+  return true;
 }
 
 export function setDarkMode(on: boolean) {
@@ -14,6 +18,9 @@ export function setDarkMode(on: boolean) {
     localStorage.setItem(DARK_KEY, on ? '1' : '0');
   } catch {}
   applyUiPrefs();
+  try {
+    window.dispatchEvent(new Event(THEME_EVENT));
+  } catch {}
 }
 
 export function getCompactMode(): boolean {
@@ -34,8 +41,10 @@ export function setCompactMode(on: boolean) {
 /** Apply dark + compact classes on documentElement */
 export function applyUiPrefs() {
   const root = document.documentElement;
-  if (getDarkMode()) root.classList.add('nexus-dark');
-  else root.classList.remove('nexus-dark');
+  const dark = getDarkMode();
+  root.classList.toggle('nexus-dark', dark);
+  root.classList.toggle('nexus-light', !dark);
+  root.style.colorScheme = dark ? 'dark' : 'light';
   if (getCompactMode()) root.classList.add('nexus-compact');
   else root.classList.remove('nexus-compact');
 }

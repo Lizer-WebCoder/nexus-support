@@ -3,7 +3,7 @@ import { useTickets } from '../context/TicketContext';
 import { useAuth } from '../context/AuthContext';
 import { Database, HardDrive, ExternalLink, LogOut, Moon, Rows3, UserPlus, Mail } from 'lucide-react';
 import type { AgentStatus } from '../types';
-import { applyUiPrefs, getCompactMode, getDarkMode, setCompactMode, setDarkMode } from '../lib/uiPrefs';
+import { applyUiPrefs, getCompactMode, getDarkMode, setCompactMode, setDarkMode, THEME_EVENT } from '../lib/uiPrefs';
 import { loadAudit, loadAuditCloud } from '../lib/audit';
 import { getAssignMode, setAssignMode, type AssignMode } from '../lib/assign';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -30,6 +30,12 @@ export default function SettingsPage({ onOpenPortal, onSignOut }: Props) {
   useEffect(() => {
     applyUiPrefs();
   }, [dark, compact]);
+
+  useEffect(() => {
+    const sync = () => setDark(getDarkMode());
+    window.addEventListener(THEME_EVENT, sync);
+    return () => window.removeEventListener(THEME_EVENT, sync);
+  }, []);
 
   useEffect(() => {
     void loadAuditCloud().then(setAudit);

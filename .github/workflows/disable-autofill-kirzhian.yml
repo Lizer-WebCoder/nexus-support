@@ -1,0 +1,25 @@
+name: Disable autofill on kirzhian login
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+        with:
+          ref: kirzhian
+          fetch-depth: 0
+      - name: Apply autofill fix
+        run: python3 scripts/disable_autofill.py
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/LoginPage.tsx
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Login: no passive autofill; password manager still works on click/focus"
+          git push origin HEAD:kirzhian

@@ -1,0 +1,24 @@
+name: Apply post-login routing on kirzhian
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+        with:
+          ref: kirzhian
+          fetch-depth: 0
+      - run: python3 scripts/apply_post_login_routing.py
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.tsx src/components/LoginPage.tsx src/components/PostLoginLoader.tsx src/components/PortalAuthGate.tsx
+          if git diff --cached --quiet; then echo "No changes"; exit 0; fi
+          git commit -m "Post-login: cosmic loader + auto-route agent/customer (remove gate screen)"
+          git push origin HEAD:kirzhian

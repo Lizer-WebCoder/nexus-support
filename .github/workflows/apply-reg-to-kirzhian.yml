@@ -1,0 +1,30 @@
+name: Apply registration card to kirzhian
+on:
+  workflow_dispatch:
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: kirzhian
+          fetch-depth: 0
+      - name: Apply registration card script
+        run: |
+          python3 scripts/apply_reg_card.py
+          echo "Markers:"
+          grep -c "Create your account\|Forgot Password\|confirmPassword\|handleForgotPassword" src/components/LoginPage.tsx || true
+          wc -c src/components/LoginPage.tsx
+      - name: Commit and push to kirzhian only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/LoginPage.tsx
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Apply separate registration card, visible Show, Forgot Password"
+          git push origin HEAD:kirzhian
