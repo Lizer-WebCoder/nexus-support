@@ -95,10 +95,58 @@ body {
 
 .login-cosmos-sky {
   background:
-    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(76, 29, 149, 0.45) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 40% at 20% 20%, rgba(124, 58, 237, 0.25) 0%, transparent 50%),
-    radial-gradient(ellipse 40% 30% at 80% 30%, rgba(192, 38, 211, 0.2) 0%, transparent 45%),
-    linear-gradient(180deg, #0a0018 0%, #12002a 40%, #1a0540 100%);
+    radial-gradient(ellipse 70% 45% at 50% 115%, rgba(109, 40, 217, 0.55) 0%, transparent 62%),
+    radial-gradient(ellipse 32% 26% at 12% 18%, rgba(56, 189, 248, 0.22) 0%, transparent 60%),
+    radial-gradient(ellipse 28% 24% at 88% 16%, rgba(244, 114, 182, 0.2) 0%, transparent 58%),
+    radial-gradient(ellipse 22% 18% at 62% 62%, rgba(167, 139, 250, 0.16) 0%, transparent 60%),
+    linear-gradient(185deg, #040010 0%, #0a0122 32%, #140432 68%, #070014 100%);
+}
+.login-galaxy-band {
+  position: absolute;
+  inset: 8% -15% auto;
+  height: 46%;
+  background:
+    radial-gradient(ellipse 28% 55% at 22% 50%, rgba(255, 255, 255, 0.16), transparent 70%),
+    radial-gradient(ellipse 18% 40% at 58% 48%, rgba(244, 114, 182, 0.22), transparent 70%),
+    linear-gradient(102deg, transparent 4%, rgba(125, 211, 252, 0.08) 22%, rgba(192, 132, 252, 0.2) 48%, rgba(244, 114, 182, 0.12) 68%, transparent 92%);
+  filter: blur(10px);
+  transform: rotate(-14deg);
+  mix-blend-mode: screen;
+  opacity: 0.75;
+  animation: login-band-drift 40s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes login-band-drift {
+  from { transform: rotate(-14deg) translate3d(-1.5%, 0, 0); }
+  to { transform: rotate(-11deg) translate3d(2%, 1%, 0); }
+}
+.login-dust {
+  background-image:
+    radial-gradient(1.2px 1.2px at 8% 18%, rgba(255,255,255,.7) 50%, transparent 52%),
+    radial-gradient(1px 1px at 22% 72%, rgba(196,181,253,.8) 50%, transparent 52%),
+    radial-gradient(1.4px 1.4px at 40% 28%, rgba(255,255,255,.55) 50%, transparent 52%),
+    radial-gradient(1px 1px at 63% 14%, rgba(125,211,252,.75) 50%, transparent 52%),
+    radial-gradient(1.2px 1.2px at 78% 64%, rgba(244,114,182,.7) 50%, transparent 52%),
+    radial-gradient(1px 1px at 91% 36%, rgba(255,255,255,.6) 50%, transparent 52%),
+    radial-gradient(1px 1px at 15% 88%, rgba(255,255,255,.45) 50%, transparent 52%),
+    radial-gradient(1.3px 1.3px at 52% 84%, rgba(196,181,253,.55) 50%, transparent 52%);
+  background-size: 280px 280px;
+  opacity: 0.55;
+  animation: login-dust-drift 90s linear infinite;
+  pointer-events: none;
+}
+@keyframes login-dust-drift {
+  from { background-position: 0 0; }
+  to { background-position: 280px 420px; }
+}
+.login-twinkle {
+  animation-name: login-twinkle, login-star-fall;
+  animation-timing-function: ease-in-out, linear;
+  animation-iteration-count: infinite, infinite;
+}
+@keyframes login-twinkle {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.95; }
 }
 
 .login-nebula { opacity: 0.55; mix-blend-mode: screen; pointer-events: none; }
@@ -299,7 +347,63 @@ body {
 }
 .login-light-trail { pointer-events: none; }
 .login-cosmos-vignette {
-  background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 40%, rgba(5, 0, 18, 0.55) 100%);
+  background:
+    radial-gradient(ellipse 55% 50% at 72% 48%, transparent 0%, rgba(5, 0, 16, 0.18) 42%, rgba(4, 0, 14, 0.72) 100%),
+    linear-gradient(90deg, rgba(4, 0, 16, 0.35), transparent 28%, transparent 78%, rgba(4, 0, 16, 0.25));
+}
+.login-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 8px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: #d1fae5;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+.login-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #34d399;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+  animation: login-status-pulse 1.8s ease-out infinite;
+}
+@keyframes login-status-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+  70% { box-shadow: 0 0 0 7px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+.login-hero-title {
+  background: linear-gradient(180deg, #ffffff 30%, #e9d5ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.login-cap {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(15, 6, 32, 0.42);
+  border: 1px solid rgba(192, 132, 252, 0.18);
+  backdrop-filter: blur(10px);
+}
+.login-cap-index {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #e9d5ff;
+  background: rgba(139, 92, 246, 0.25);
+  border: 1px solid rgba(196, 181, 253, 0.3);
+  border-radius: 8px;
+  padding: 4px 6px;
+  line-height: 1;
 }
 .login-submit-btn {
   display: block;
@@ -503,6 +607,9 @@ body {
   .login-logo-arcs,
   .login-nebula-a,
   .login-nebula-b,
+  .login-galaxy-band,
+  .login-dust,
+  .login-status-dot,
   .login-star {
     animation: none !important;
   }

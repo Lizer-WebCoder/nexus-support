@@ -13,12 +13,14 @@ function useFallingStars(count: number) {
     () =>
       Array.from({ length: count }, (_, i) => ({
         id: i,
-        left: `${(i * 41 + 13) % 100}%`,
-        size: i % 5 === 0 ? 3 : i % 3 === 0 ? 2 : 1,
-        delay: -((i * 0.37) % 20),
-        duration: 8 + (i % 11) * 1.4,
-        color: i % 4 === 0 ? '#ff66cc' : i % 3 === 0 ? '#66f0ff' : '#c4b5fd',
-        opacity: 0.35 + (i % 6) * 0.1,
+        left: `${(i * 37 + 7) % 100}%`,
+        top: `${(i * 53 + 11) % 100}%`,
+        size: i % 7 === 0 ? 2.4 : i % 3 === 0 ? 1.6 : 1,
+        delay: -((i * 0.47) % 18),
+        duration: 14 + (i % 9) * 2.2,
+        twinkle: 2.4 + (i % 5) * 0.7,
+        color: i % 5 === 0 ? '#f9a8d4' : i % 4 === 0 ? '#67e8f9' : i % 3 === 0 ? '#ffffff' : '#c4b5fd',
+        opacity: 0.25 + (i % 5) * 0.12,
       })),
     [count]
   );
@@ -143,15 +145,23 @@ function LogoPilotStage() {
 }
 
 function CosmicFallBackground() {
-  const stars = useFallingStars(90);
+  const stars = useFallingStars(70);
+  const field = useFallingStars(48);
   return (
     <div className="login-cosmos absolute inset-0 overflow-hidden" aria-hidden>
       <div className="login-cosmos-sky absolute inset-0" />
+      <div className="login-galaxy-band" />
       <div className="login-nebula login-nebula-a absolute inset-0" />
       <div className="login-nebula login-nebula-b absolute inset-0" />
+      <div className="login-dust absolute inset-0" />
+      <div className="absolute inset-0">
+        {field.map((s) => (
+          <span key={`t-${s.id}`} className="absolute rounded-full" style={{ left: s.left, top: s.top, width: s.size, height: s.size, background: s.color, boxShadow: `0 0 ${s.size * 4}px ${s.color}`, animation: `login-twinkle ${s.twinkle}s ease-in-out ${s.delay}s infinite` }} />
+        ))}
+      </div>
       <div className="login-starfield absolute inset-0">
         {stars.map((s) => (
-          <span key={s.id} className="login-star absolute rounded-full" style={{ left: s.left, width: s.size, height: s.size, background: s.color, opacity: s.opacity, boxShadow: `0 0 ${s.size * 3}px ${s.color}`, animationDelay: `${s.delay}s`, animationDuration: `${s.duration}s` }} />
+          <span key={s.id} className="login-star absolute rounded-full" style={{ left: s.left, width: s.size, height: s.size, background: s.color, opacity: s.opacity, boxShadow: `0 0 ${s.size * 4}px ${s.color}`, animationDelay: `${s.delay}s`, animationDuration: `${s.duration}s` }} />
         ))}
       </div>
       <LogoPilotStage />
@@ -262,19 +272,20 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
                 <div className="text-[11px] text-fuchsia-200/70">{isAgent ? 'Support operations platform' : 'Customer support portal'}</div>
               </div>
             </div>
-            <div className="mt-8 lg:mt-12 max-w-lg">
-              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-fuchsia-300/80 mb-3">{isAgent ? 'Built for agent teams' : 'Built for customers'}</p>
-              <h1 className="text-3xl sm:text-4xl xl:text-[2.75rem] font-semibold text-white leading-tight tracking-tight">
-                {leftTitle}<span className="block text-fuchsia-200/90 font-normal mt-1">{leftSub}</span>
+            <div className="mt-8 lg:mt-10 max-w-lg">
+              <div className="login-status-pill mb-4"><span className="login-status-dot" /> Desk online</div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-fuchsia-300/80 mb-3">{isAgent ? 'Built for agent teams' : 'Built for customers'}</p>
+              <h1 className="login-hero-title text-3xl sm:text-4xl xl:text-[2.75rem] font-semibold leading-[1.08] tracking-tight">
+                {leftTitle}<span className="block text-fuchsia-200/90 font-normal mt-1" style={{ WebkitTextFillColor: 'rgba(245, 208, 254, 0.92)', background: 'none' }}>{leftSub}</span>
               </h1>
-              <p className="mt-5 text-sm sm:text-[15px] text-fuchsia-100/75 leading-relaxed max-w-md">{leftBlurb}</p>
-              <ul className="mt-8 space-y-3">
-                {caps.map((c) => (
-                  <li key={c.title} className="flex gap-3 items-start">
-                    <span className="login-feature-dot mt-1.5 w-1.5 h-1.5 rounded-full bg-fuchsia-400 shrink-0" />
+              <p className="mt-4 text-sm sm:text-[15px] text-fuchsia-100/75 leading-relaxed max-w-md">{leftBlurb}</p>
+              <ul className="mt-6 space-y-2.5 max-w-md">
+                {caps.map((c, i) => (
+                  <li key={c.title} className="login-cap">
+                    <span className="login-cap-index">{String(i + 1).padStart(2, '0')}</span>
                     <div>
                       <div className="text-sm font-medium text-white">{c.title}</div>
-                      <div className="text-xs text-fuchsia-100/60">{c.blurb}</div>
+                      <div className="text-xs text-fuchsia-100/65 mt-0.5">{c.blurb}</div>
                     </div>
                   </li>
                 ))}
