@@ -704,3 +704,74 @@ body {
     animation: none !important;
   }
 }
+
+/* Signed-in shells share the login galaxy */
+.app-cosmos {
+  position: relative;
+  color: #f5f3ff;
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 115%, rgba(109, 40, 217, 0.45) 0%, transparent 62%),
+    radial-gradient(ellipse 32% 26% at 8% 10%, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 28% 24% at 92% 8%, rgba(244, 114, 182, 0.14) 0%, transparent 58%),
+    linear-gradient(185deg, #070014 0%, #12042c 46%, #0a011c 100%);
+  min-height: 100vh;
+}
+.app-cosmos aside {
+  background: rgba(10, 4, 24, 0.78) !important;
+  border-color: rgba(167, 139, 250, 0.18) !important;
+  backdrop-filter: blur(16px);
+}
+.nexus-topbar {
+  background: rgba(16, 6, 36, 0.72);
+  border-bottom: 1px solid rgba(192, 132, 252, 0.18);
+  backdrop-filter: blur(16px);
+  color: #f5f3ff;
+}
+.nexus-search {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(196, 181, 253, 0.28);
+  color: #f8fafc;
+}
+.nexus-search::placeholder { color: rgba(221, 214, 254, 0.45); }
+.nexus-search:focus { border-color: rgba(192, 132, 252, 0.7); outline: none; }
+.app-cosmos .bg-white {
+  background-color: rgba(24, 10, 48, 0.72) !important;
+  color: #f5f3ff;
+  backdrop-filter: blur(12px);
+}
+.app-cosmos .bg-zinc-50,
+.app-cosmos .bg-zinc-100,
+.app-cosmos .hover\:bg-zinc-50:hover,
+.app-cosmos .hover\:bg-zinc-100:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+.app-cosmos .bg-zinc-950 { background-color: rgba(8, 3, 20, 0.9) !important; }
+.app-cosmos .text-zinc-900,
+.app-cosmos .text-zinc-800,
+.app-cosmos .text-zinc-700 { color: #f5f3ff !important; }
+.app-cosmos .text-zinc-600,
+.app-cosmos .text-zinc-500 { color: rgba(221, 214, 254, 0.72) !important; }
+.app-cosmos .text-zinc-400,
+.app-cosmos .text-zinc-300 { color: rgba(221, 214, 254, 0.55) !important; }
+.app-cosmos .border-zinc-200,
+.app-cosmos .border-zinc-100,
+.app-cosmos .border-zinc-300,
+.app-cosmos .border-zinc-800,
+.app-cosmos .border-zinc-800\/80 { border-color: rgba(192, 132, 252, 0.2) !important; }
+.app-cosmos input,
+.app-cosmos textarea,
+.app-cosmos select {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+  border-color: rgba(196, 181, 253, 0.28);
+}
+.app-cosmos input::placeholder,
+.app-cosmos textarea::placeholder { color: rgba(221, 214, 254, 0.4); }
+.app-cosmos .shadow-xl,
+.app-cosmos .shadow-lg,
+.app-cosmos .shadow-md { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35); }
+.app-cosmos .rounded-xl.bg-white,
+.app-cosmos .rounded-2xl.bg-white,
+.app-cosmos .rounded-lg.bg-white {
+  border: 1px solid rgba(192, 132, 252, 0.18);
+}

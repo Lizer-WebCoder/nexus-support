@@ -95,7 +95,7 @@ function AgentShell() {
 
   if (requiresAuth && authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 text-zinc-500 text-sm">
+      <div className="app-cosmos min-h-screen flex items-center justify-center text-violet-200/70 text-sm">
         Loading workspace…
       </div>
     );
@@ -117,14 +117,14 @@ function AgentShell() {
       window.location.hash = 'portal';
     }
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 text-zinc-500 text-sm">
+      <div className="app-cosmos min-h-screen flex items-center justify-center text-violet-200/70 text-sm">
         Opening customer portal…
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-zinc-50">
+    <div className="app-cosmos flex min-h-screen">
       <Sidebar
         active={activeNav}
         onNavigate={setActiveNav}
@@ -137,7 +137,7 @@ function AgentShell() {
         isAdmin={accountRole === 'admin' || !!currentAgent?.is_admin}
       />
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-        <header className="h-14 shrink-0 bg-white border-b border-zinc-200 flex items-center gap-3 px-4 lg:px-6">
+        <header className="nexus-topbar h-14 shrink-0 flex items-center gap-3 px-4 lg:px-6">
           <div className="text-sm font-semibold text-zinc-800">{TITLES[activeNav] || activeNav}</div>
           <div className="flex-1 max-w-xl">
             <div className="relative">
@@ -151,7 +151,7 @@ function AgentShell() {
                   }
                 }}
                 placeholder="Search tickets, customers, knowledge…"
-                className="w-full pl-9 pr-3 py-2 rounded-lg border border-zinc-200 bg-zinc-50 text-sm outline-none focus:border-violet-400 focus:bg-white"
+                className="nexus-search w-full pl-9 pr-3 py-2 rounded-lg text-sm outline-none"
               />
             </div>
           </div>

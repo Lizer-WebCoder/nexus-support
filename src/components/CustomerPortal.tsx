@@ -180,7 +180,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
   }
 
   return (
-    <div className="flex min-h-screen bg-zinc-50">
+    <div className="app-cosmos flex min-h-screen">
       <aside className="hidden md:flex w-60 shrink-0 bg-zinc-950 text-zinc-100 flex-col border-r border-zinc-800/80">
         <div className="px-4 py-5 flex items-center gap-3 border-b border-zinc-800/80">
           <BrandMark />
@@ -235,7 +235,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-        <header className="h-14 shrink-0 bg-white border-b border-zinc-200 flex items-center gap-3 px-4 lg:px-6">
+        <header className="h-14 shrink-0 nexus-topbar flex items-center gap-3 px-4 lg:px-6">
           <div className="md:hidden"><BrandMark className="w-8 h-8" /></div>
           <div className="text-sm font-semibold text-zinc-800">{VIEW_TITLES[view]}</div>
           <div className="flex-1" />
