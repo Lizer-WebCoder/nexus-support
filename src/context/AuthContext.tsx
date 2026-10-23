@@ -20,6 +20,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string, expectedRole?: AccountRole) => Promise<void>;
   signUp: (email: string, password: string, fullName?: string, role?: AccountRole) => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -60,101 +61,48 @@ function roleFromUser(user: User | null): AccountRole {
   return r === 'customer' ? 'customer' : 'agent';
 }
 
-async function assertAgentAllowed(user: User): Promise<void> {
+async function enforceAgentApproval(user: User): Promise<void> {
   if (!supabase) return;
-  if (roleFromUser(user) !== 'agent') return;
-
-  const email = (user.email || '').trim().toLowerCase();
   const meta = (user.user_metadata?.approval_status as string | undefined) || '';
+  if (meta === 'approved') return;
 
+  let row: { approval_status?: string | null; is_admin?: boolean } | null = null;
   try {
-    let row: { approval_status?: string | null; is_admin?: boolean } | null = null;
-
-    const { data: byId } = await supabase
+    const { data } = await supabase
       .from('agents')
       .select('approval_status, is_admin')
       .eq('user_id', user.id)
       .maybeSingle();
-    if (byId) row = byId;
-
-    if (!row && email) {
+    row = data;
+    if (!row && user.email) {
       const { data: byEmail } = await supabase
         .from('agents')
         .select('approval_status, is_admin')
-        .ilike('email', email)
-        .limit(1)
+        .eq('email', user.email)
         .maybeSingle();
-      if (byEmail) row = byEmail;
-    }
-
-    if (row?.is_admin) return;
-
-    const approval = (row?.approval_status ?? meta) || '';
-    if (!approval || approval === 'approved') return;
-
-    await supabase.auth.signOut();
-    if (approval === 'rejected') {
-      throw new Error(
-        'This agent account was rejected by an administrator. Contact support if you need access.'
-      );
-    }
-    throw new Error(
-      'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
-    );
-  } catch (e) {
-    if (e instanceof Error && /(rejected|pending admin)/i.test(e.message)) throw e;
-  }
-}
-
-async function assertCustomerAllowed(user: User): Promise<void> {
-  if (!supabase) return;
-  if (roleFromUser(user) !== 'customer') return;
-
-  const email = (user.email || '').trim().toLowerCase();
-  if (!email) {
-    await supabase.auth.signOut();
-    throw new Error('Customer account has no email.');
-  }
-
-  let status: string | null = null;
-  try {
-    const { data: byId } = await supabase
-      .from('customers')
-      .select('status')
-      .eq('id', user.id)
-      .maybeSingle();
-    if (byId?.status) status = byId.status as string;
-
-    if (!status) {
-      const { data: byEmail } = await supabase
-        .from('customers')
-        .select('status')
-        .ilike('email', email)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (byEmail?.status) status = byEmail.status as string;
+      row = byEmail;
     }
   } catch {
-    status = status || 'pending';
+    /* column may not exist yet */
   }
 
-  if (status === 'approved') return;
+  const approval = (row?.approval_status ?? meta) || '';
+  if (!approval || approval === 'approved') return;
+  if (row?.is_admin) return;
 
+  if (approval === 'rejected') {
+    await supabase.auth.signOut();
+    throw new Error('Your agent account was rejected. Contact an administrator.');
+  }
   await supabase.auth.signOut();
-
-  if (status === 'rejected') {
-    throw new Error(
-      'This customer account was rejected by an administrator. Contact support if you need access.'
-    );
-  }
   throw new Error(
-    'Your account is pending admin approval. An administrator must approve it under Users → Pending before you can use the portal.'
+    'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
   );
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
   const configError = getSupabaseConfigError();
 
@@ -163,193 +111,87 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-
     let cancelled = false;
-
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (cancelled) return;
-        const u = data.session?.user;
-        if (u && roleFromUser(u) === 'customer') {
-          try {
-            await assertCustomerAllowed(u);
-            if (!cancelled) setSession(data.session);
-          } catch {
-            if (!cancelled) setSession(null);
-          }
-        } else if (u && roleFromUser(u) === 'agent') {
-          try {
-            await assertAgentAllowed(u);
-            if (!cancelled) setSession(data.session);
-          } catch {
-            if (!cancelled) setSession(null);
-          }
-        } else if (!cancelled) {
-          setSession(data.session);
-        }
-      } catch {
-        if (!cancelled) setSession(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
-      if (next?.user && roleFromUser(next.user) === 'customer') {
-        void (async () => {
-          try {
-            await assertCustomerAllowed(next.user!);
-            setSession(next);
-          } catch {
-            setSession(null);
-          }
-        })();
-      } else if (next?.user && roleFromUser(next.user) === 'agent') {
-        void (async () => {
-          try {
-            await assertAgentAllowed(next.user!);
-            setSession(next);
-          } catch {
-            setSession(null);
-          }
-        })();
-      } else {
-        setSession(next);
-      }
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      setLoading(false);
     });
-
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+      setUser(next?.user ?? null);
+    });
     return () => {
       cancelled = true;
-      sub.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
   const signIn = async (email: string, password: string, expectedRole?: AccountRole) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw friendlyAuthError(error);
-    if (!data.user) return;
-
-    const actual = roleFromUser(data.user);
-
-    if (expectedRole === 'agent' && actual === 'customer') {
+    const role = roleFromUser(data.user);
+    if (expectedRole && role !== expectedRole) {
       await supabase.auth.signOut();
-      setSession(null);
       throw new Error(
-        'This is a customer account. Switch to the Customer tab (or open the Customer Portal) to sign in.'
+        expectedRole === 'agent'
+          ? 'This account is registered as a customer. Use the Customer tab to sign in.'
+          : 'This account is registered as an agent. Use the Agent tab to sign in.'
       );
     }
-    if (expectedRole === 'customer' && actual === 'agent') {
-      await supabase.auth.signOut();
-      setSession(null);
-      throw new Error(
-        'This is an agent account. Switch to the Agent tab to sign in to the Agent Workspace.'
-      );
+    if (role === 'agent' && data.user) {
+      await enforceAgentApproval(data.user);
     }
-
-    if (actual === 'customer') await assertCustomerAllowed(data.user);
-    else await assertAgentAllowed(data.user);
-
-    if (data.session) setSession(data.session);
   };
 
   const signUp = async (
     email: string,
     password: string,
     fullName?: string,
-    role: AccountRole = 'agent'
+    role: AccountRole = 'customer'
   ) => {
     if (!supabase) throw new Error(configError || 'Supabase is not configured');
-    const normalizedEmail = email.trim().toLowerCase();
-    const displayName = fullName?.trim() || normalizedEmail.split('@')[0];
-
     const { data, error } = await supabase.auth.signUp({
-      email: normalizedEmail,
+      email,
       password,
       options: {
         data: {
-          full_name: displayName,
+          full_name: fullName || '',
           role,
           approval_status: 'pending',
         },
       },
     });
     if (error) throw friendlyAuthError(error);
-
-    if (role === 'customer') {
-      const row = {
-        id: data.user?.id || crypto.randomUUID(),
-        name: displayName,
-        email: normalizedEmail,
-        role: 'Customer',
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      };
-      const { error: cErr } = await supabase.from('customers').upsert(row, { onConflict: 'id' });
-      if (cErr) {
-        const { data: existing } = await supabase
-          .from('customers')
-          .select('id')
-          .ilike('email', normalizedEmail)
-          .maybeSingle();
-        if (existing?.id) {
-          await supabase
-            .from('customers')
-            .update({ status: 'pending', name: displayName })
-            .eq('id', existing.id);
-        } else {
-          await supabase.from('customers').insert({
-            name: displayName,
-            email: normalizedEmail,
-            role: 'Customer',
-            status: 'pending',
-          });
-        }
-      }
+    if (data.session) {
       await supabase.auth.signOut();
-      setSession(null);
-      throw new Error(
-        'Account created. An administrator must approve it under Users → Pending before you can sign in.'
-      );
     }
+    throw new Error(
+      'Account created. An admin must approve your account before you can sign in.'
+    );
+  };
 
-    if (role === 'agent') {
-      const base = {
-        user_id: data.user?.id || null,
-        name: displayName,
-        initials: displayName.slice(0, 2).toUpperCase(),
-        role: 'Agent',
-        status: 'offline',
-        email: normalizedEmail,
-        color: '#6366f1',
-        is_admin: false,
-      };
-      const { error: aErr } = await supabase
-        .from('agents')
-        .insert({ ...base, approval_status: 'pending' });
-      if (aErr) {
-        const { error: aErr2 } = await supabase.from('agents').insert(base);
-        if (aErr2) console.warn('Agent insert failed', aErr2.message);
-      }
-      await supabase.auth.signOut();
-      setSession(null);
-      throw new Error(
-        'Account created. An administrator must approve it under Users → Pending before you can sign in to the Agent Workspace.'
-      );
-    }
+  const resetPassword = async (email: string) => {
+    if (!supabase) throw new Error(configError || 'Supabase is not configured');
+    const redirectTo =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}${window.location.pathname}`
+        : undefined;
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim(),
+      redirectTo ? { redirectTo } : undefined
+    );
+    if (error) throw friendlyAuthError(error);
   };
 
   const signOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
-    setSession(null);
   };
-
-  const user = session?.user ?? null;
 
   return (
     <AuthContext.Provider
@@ -363,6 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         signOut,
+        resetPassword,
       }}
     >
       {children}
