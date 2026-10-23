@@ -1,0 +1,105 @@
+name: Fix PostLoginLoader noblur on main
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Restore from last good + strip blur
+        run: |
+          # Recover space-scene file from merge commit before placeholder
+          git show 6507243a48984a432047da1d574e8307bc05552b:src/components/PostLoginLoader.tsx > /tmp/pl.tsx
+          python3 << 'PY'
+          from pathlib import Path
+          t = Path('/tmp/pl.tsx').read_text()
+          t = t.replace('const FADE_MS = 1400;', 'const FADE_MS = 900;')
+          old = '''  const showOverlay = mode === 'ceremony' || mode === 'fading';
+  const showPortal = mode === 'fading' || mode === 'done';
+  const overlayFading = mode === 'fading';
+
+  return (
+    <div className="relative min-h-screen bg-[#0b0618]">
+      {showPortal && (
+        <div
+          className="relative z-0 min-h-screen"
+          style={{
+            opacity: mode === 'done' ? 1 : 0.92,
+            animation:
+              mode === 'done'
+                ? 'pl-portal-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both'
+                : undefined,
+            transition: `opacity ${FADE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+          }}
+        >
+          {children}
+        </div>
+      )}
+
+      {showOverlay && (
+        <div
+          className="fixed inset-0 z-50 pointer-events-none"
+          style={{
+            opacity: overlayFading ? 0 : 1,
+            transition: `opacity ${FADE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+          }}
+        >
+          <PostLoginLoader label={label} fading={false} variant={variant} />
+        </div>
+      )}
+
+      <style>{`
+        @keyframes pl-portal-in {
+          from { opacity: 0.85; filter: blur(6px); transform: scale(1.01); }
+          to { opacity: 1; filter: blur(0); transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+}'''
+          new = '''  const showOverlay = mode === 'ceremony' || mode === 'fading';
+  const showPortal = mode === 'fading' || mode === 'done';
+  const overlayFading = mode === 'fading';
+
+  // Portal stays sharp under the overlay. Only the cosmic layer fades out.
+  return (
+    <div className="relative min-h-screen bg-[#0b0618]">
+      {showPortal && (
+        <div className="relative z-0 min-h-screen">
+          {children}
+        </div>
+      )}
+
+      {showOverlay && (
+        <div
+          className="fixed inset-0 z-50 pointer-events-none"
+          style={{
+            opacity: overlayFading ? 0 : 1,
+            transition: `opacity ${FADE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+          }}
+        >
+          <PostLoginLoader label={label} fading={false} variant={variant} />
+        </div>
+      )}
+    </div>
+  );
+}'''
+          if old not in t:
+              raise SystemExit('pattern not found')
+          Path('src/components/PostLoginLoader.tsx').write_text(t.replace(old, new))
+          out = Path('src/components/PostLoginLoader.tsx').read_text()
+          assert 'pl-portal-in' not in out and 'SpaceScene' in out and 'PLACEHOLDER' not in out
+          print('ok', len(out))
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/PostLoginLoader.tsx
+          git commit -m "Post-login: remove portal blur flash; clean overlay-only fade" || exit 0
+          git push origin HEAD:main
