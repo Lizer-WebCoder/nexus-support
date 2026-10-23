@@ -29,23 +29,11 @@ body {
   box-sizing: border-box;
 }
 
-/* Scrollbar polish */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #a1a1aa;
-  border-radius: 999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #71717a;
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #a1a1aa; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #71717a; }
 
-/* --- Login glass card --- */
 .login-glass-card {
   background: linear-gradient(160deg, rgba(30, 10, 60, 0.72) 0%, rgba(15, 5, 35, 0.78) 100%);
   border: 1px solid rgba(192, 132, 252, 0.28);
@@ -79,9 +67,7 @@ body {
   color: #f8fafc;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
-.login-glass-input::placeholder {
-  color: rgba(221, 214, 254, 0.45);
-}
+.login-glass-input::placeholder { color: rgba(221, 214, 254, 0.45); }
 .login-glass-input:focus {
   border-color: rgba(167, 139, 250, 0.7);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.28);
@@ -97,11 +83,7 @@ body {
     linear-gradient(180deg, #0a0018 0%, #12002a 40%, #1a0540 100%);
 }
 
-.login-nebula {
-  opacity: 0.55;
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
+.login-nebula { opacity: 0.55; mix-blend-mode: screen; pointer-events: none; }
 .login-nebula-a {
   background: radial-gradient(ellipse 60% 40% at 30% 70%, rgba(168, 85, 247, 0.35), transparent 70%);
   animation: login-nebula-drift 28s ease-in-out infinite alternate;
@@ -126,16 +108,10 @@ body {
 }
 .login-planet-svg {
   display: block;
-  filter: drop-shadow(0 0 14px rgba(167, 139, 250, 0.4));
-}
-.login-planet-bands {
-  opacity: 0.85;
+  filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.45));
 }
 @keyframes login-planet-rise {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.85);
-    opacity: 0;
-  }
+  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(0.85); opacity: 0; }
   8% { opacity: 1; }
   92% { opacity: 1; }
   100% {
@@ -153,20 +129,15 @@ body {
   from { transform: translateY(-8vh); }
   to { transform: translateY(110vh); }
 }
+.login-starfield { overflow: hidden; }
 
-.login-starfield {
-  overflow: hidden;
-}
-
-.login-shooting-layer {
-  overflow: hidden;
-}
+.login-shooting-layer { overflow: hidden; }
 .login-shooting-star {
   position: absolute;
   left: 0;
   top: 0;
-  width: 28px;
-  height: 28px;
+  width: 16px;
+  height: 16px;
   will-change: transform, opacity;
   transform: translate3d(-100px, 0, 0);
   backface-visibility: hidden;
@@ -174,51 +145,71 @@ body {
   opacity: 0;
 }
 
-/* Comet-style shooting star (cyan light trails) */
+/* Comet — compact cyan streak with animated trails + particles */
 .login-comet-trail {
   position: absolute;
-  right: 14px;
+  right: 10px;
   top: 50%;
-  height: 3px;
+  height: 2px;
   border-radius: 999px;
   transform-origin: right center;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent 0%, rgba(165, 243, 252, 0.1) 15%, rgba(34, 211, 238, 0.7) 65%, #ffffff 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(165, 243, 252, 0.08) 18%, rgba(34, 211, 238, 0.75) 70%, #ffffff 100%);
   box-shadow:
-    0 0 10px 3px rgba(34, 211, 238, 0.6),
-    0 0 22px 6px rgba(6, 182, 212, 0.4),
-    0 0 40px 8px rgba(8, 145, 178, 0.2);
-  animation: login-comet-shimmer 0.6s ease-in-out infinite alternate;
+    0 0 6px 2px rgba(34, 211, 238, 0.55),
+    0 0 14px 4px rgba(6, 182, 212, 0.35);
+  animation: login-comet-shimmer 0.45s ease-in-out infinite alternate;
 }
 .login-comet-trail-a {
-  width: 140px;
+  width: 72px;
   transform: translateY(-50%) rotate(-1.5deg);
   opacity: 1;
-  height: 5px;
+  height: 2.5px;
 }
 .login-comet-trail-b {
-  width: 100px;
-  transform: translateY(-50%) rotate(3.5deg);
-  opacity: 0.75;
-  height: 3px;
-  top: calc(50% - 6px);
-  animation-delay: 0.1s;
+  width: 52px;
+  transform: translateY(-50%) rotate(3deg);
+  opacity: 0.7;
+  height: 1.5px;
+  top: calc(50% - 3px);
+  animation-delay: 0.08s;
 }
 .login-comet-trail-c {
-  width: 70px;
-  transform: translateY(-50%) rotate(-5deg);
-  opacity: 0.55;
-  height: 2px;
-  top: calc(50% + 7px);
-  animation-delay: 0.2s;
+  width: 36px;
+  transform: translateY(-50%) rotate(-4deg);
+  opacity: 0.5;
+  height: 1px;
+  top: calc(50% + 3px);
+  animation-delay: 0.16s;
 }
 @keyframes login-comet-shimmer {
-  from { filter: brightness(0.9) saturate(1); }
-  to { filter: brightness(1.25) saturate(1.3); }
+  from { filter: brightness(0.85) saturate(1); opacity: 0.75; }
+  to { filter: brightness(1.35) saturate(1.4); opacity: 1; }
+}
+.login-comet-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #a5f3fc;
+  box-shadow: 0 0 6px 2px rgba(34, 211, 238, 0.8);
+  pointer-events: none;
+  animation: login-comet-spark 0.55s ease-out infinite;
+}
+.login-comet-p1 { right: 28px; top: 40%; animation-delay: 0s; }
+.login-comet-p2 { right: 42px; top: 60%; animation-delay: 0.12s; width: 2px; height: 2px; }
+.login-comet-p3 { right: 56px; top: 35%; animation-delay: 0.24s; width: 2.5px; height: 2.5px; background: #fff; }
+.login-comet-p4 { right: 68px; top: 55%; animation-delay: 0.36s; width: 2px; height: 2px; }
+@keyframes login-comet-spark {
+  0% { opacity: 0.9; transform: scale(1) translateX(0); }
+  100% { opacity: 0; transform: scale(0.3) translateX(-10px); }
 }
 .login-flyby-ufo {
-  transform: scale(1.08);
-  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.45));
+  filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.4));
+}
+.login-flyby-chat {
+  font-size: 10px !important;
+  padding: 3px 8px !important;
 }
 
 .login-star-glyph {
@@ -226,68 +217,28 @@ body {
   left: 0;
   top: 0;
   display: block;
-  transform-origin: 14px 14px;
-  filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.95)) drop-shadow(0 0 22px rgba(165, 243, 252, 0.7));
+  transform-origin: 8px 8px;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.95)) drop-shadow(0 0 16px rgba(165, 243, 252, 0.65));
   z-index: 3;
-  animation: login-star-pulse 0.7s ease-in-out infinite alternate;
+  animation: login-star-pulse 0.55s ease-in-out infinite alternate;
 }
-.login-star-trail {
-  display: none; /* replaced by comet trails */
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  width: 150px;
-  height: 2px;
-  margin-top: -1px;
-  border-radius: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(232, 184, 74, 0.08) 15%,
-    rgba(255, 214, 120, 0.4) 50%,
-    rgba(255, 236, 180, 0.7) 78%,
-    rgba(255, 255, 255, 0.95) 100%
-  );
-  box-shadow: 0 0 6px 1px rgba(255, 214, 120, 0.25);
-  transform-origin: right center;
-}
-.login-star-sparkles {
-  position: absolute;
-  left: -4px;
-  top: -4px;
-  width: 36px;
-  height: 36px;
-  pointer-events: none;
-}
+.login-star-trail { display: none; }
+.login-star-sparkles { position: absolute; left: -4px; top: -4px; width: 24px; height: 24px; pointer-events: none; }
 @keyframes login-star-pulse {
-  from { transform: scale(0.9); opacity: 0.85; }
-  to { transform: scale(1.12); opacity: 1; }
+  from { transform: scale(0.88); opacity: 0.8; }
+  to { transform: scale(1.15); opacity: 1; }
 }
 
-.login-logo-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.login-logo-arcs {
-  transform-origin: 24px 24px;
-  animation: login-logo-spin 8s linear infinite;
-}
-.login-logo-core {
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
-}
+.login-logo-mark { display: inline-flex; align-items: center; justify-content: center; }
+.login-logo-arcs { transform-origin: 24px 24px; animation: login-logo-spin 8s linear infinite; }
+.login-logo-core { filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8)); }
 @keyframes login-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-.login-pilot-stage {
-  overflow: hidden;
-}
-.login-pilot {
-  position: absolute;
-  will-change: transform;
-}
+.login-pilot-stage { overflow: hidden; }
+.login-pilot { position: absolute; will-change: transform; }
 .login-pilot-js { animation: none !important; }
 .login-pilot-glow {
   position: absolute;
@@ -305,25 +256,14 @@ body {
   pointer-events: none;
   transform: translate(-50%, -50%);
 }
-.login-light-trail {
-  pointer-events: none;
-}
-
+.login-light-trail { pointer-events: none; }
 .login-cosmos-vignette {
   background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 40%, rgba(5, 0, 18, 0.55) 100%);
 }
+.login-submit-btn { transition: filter 0.15s, transform 0.15s; }
+.login-submit-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.login-feature-dot { box-shadow: 0 0 8px rgba(232, 121, 249, 0.7); }
 
-.login-submit-btn {
-  transition: filter 0.15s, transform 0.15s;
-}
-.login-submit-btn:hover:not(:disabled) {
-  filter: brightness(1.08);
-}
-.login-feature-dot {
-  box-shadow: 0 0 8px rgba(232, 121, 249, 0.7);
-}
-
-/* Flybys */
 .login-flyby {
   position: absolute;
   left: 0;
@@ -351,26 +291,16 @@ body {
   from { transform: translateX(112vw); }
   to { transform: translateX(-12vw); }
 }
-.login-flyby-craft {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.login-flyby-rtl .login-flyby-craft {
-  transform: scaleX(-1);
-}
-.login-flyby-rtl .login-flyby-chat {
-  transform: scaleX(-1);
-}
-.login-flyby-ship {
-  position: relative;
-}
+.login-flyby-craft { position: relative; display: flex; align-items: center; }
+.login-flyby-rtl .login-flyby-craft { transform: scaleX(-1); }
+.login-flyby-rtl .login-flyby-chat { transform: scaleX(-1); }
+.login-flyby-ship { position: relative; }
 .login-ship-exhaust {
   position: absolute;
-  left: -6px;
+  left: -4px;
   top: 50%;
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   transform: translateY(-50%);
   pointer-events: none;
   z-index: 0;
@@ -378,14 +308,10 @@ body {
 .login-ship-svg {
   position: relative;
   z-index: 1;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
 }
-.login-ship-flame-core {
-  animation: login-flame-pulse 0.35s ease-in-out infinite alternate;
-}
-.login-ship-flame-hot {
-  animation: login-flame-pulse 0.28s ease-in-out infinite alternate-reverse;
-}
+.login-ship-flame-core { animation: login-flame-pulse 0.35s ease-in-out infinite alternate; }
+.login-ship-flame-hot { animation: login-flame-pulse 0.28s ease-in-out infinite alternate-reverse; }
 @keyframes login-flame-pulse {
   from { opacity: 0.75; transform: scaleX(0.9); }
   to { opacity: 1; transform: scaleX(1.08); }
@@ -394,62 +320,48 @@ body {
   position: absolute;
   left: 0;
   top: 50%;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: rgba(148, 163, 184, 0.35);
-  filter: blur(3px);
+  filter: blur(2px);
   transform: translateY(-50%);
   animation: login-smoke-drift 0.9s ease-out infinite;
 }
-.login-ship-smoke-a {
-  animation-delay: 0s;
-  width: 12px;
-  height: 12px;
-}
-.login-ship-smoke-b {
-  animation-delay: 0.2s;
-  top: 40%;
-  width: 8px;
-  height: 8px;
-}
-.login-ship-smoke-c {
-  animation-delay: 0.4s;
-  top: 60%;
-  width: 9px;
-  height: 9px;
-}
+.login-ship-smoke-a { animation-delay: 0s; width: 10px; height: 10px; }
+.login-ship-smoke-b { animation-delay: 0.2s; top: 40%; width: 7px; height: 7px; }
+.login-ship-smoke-c { animation-delay: 0.4s; top: 60%; width: 8px; height: 8px; }
 @keyframes login-smoke-drift {
   0% { opacity: 0.5; transform: translateY(-50%) translateX(0) scale(0.7); }
-  100% { opacity: 0; transform: translateY(-50%) translateX(-18px) scale(1.4); }
+  100% { opacity: 0; transform: translateY(-50%) translateX(-14px) scale(1.4); }
 }
 .login-ship-ember {
   position: absolute;
   left: 2px;
   top: 50%;
-  width: 4px;
-  height: 4px;
+  width: 3px;
+  height: 3px;
   border-radius: 50%;
   background: #f97316;
-  box-shadow: 0 0 6px 2px rgba(249, 115, 22, 0.85), 0 0 12px rgba(239, 68, 68, 0.45);
+  box-shadow: 0 0 5px 1px rgba(249, 115, 22, 0.85);
   transform: translateY(-50%);
   animation: login-ember-fly 0.6s ease-out infinite;
 }
 .login-ship-ember-a { animation-duration: 0.55s; animation-delay: 0s; }
-.login-ship-ember-b { animation-duration: 0.7s;  animation-delay: 0.12s; top: 42%; background: #fb923c; --ember-y: 5px; }
-.login-ship-ember-c { animation-duration: 0.62s; animation-delay: 0.24s; top: 58%; background: #fde68a; width: 3px; height: 3px; --ember-y: -6px; }
-.login-ship-ember-d { animation-duration: 0.8s;  animation-delay: 0.08s; top: 48%; background: #ef4444; width: 3px; height: 3px; --ember-y: 3px; }
+.login-ship-ember-b { animation-duration: 0.7s; animation-delay: 0.12s; top: 42%; background: #fb923c; --ember-y: 4px; }
+.login-ship-ember-c { animation-duration: 0.62s; animation-delay: 0.24s; top: 58%; background: #fde68a; width: 2px; height: 2px; --ember-y: -5px; }
+.login-ship-ember-d { animation-duration: 0.8s; animation-delay: 0.08s; top: 48%; background: #ef4444; width: 2px; height: 2px; --ember-y: 3px; }
 @keyframes login-ember-fly {
   0% { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
-  100% { opacity: 0; transform: translateY(calc(-50% + var(--ember-y, 0px))) translateX(-22px) scale(0.4); }
+  100% { opacity: 0; transform: translateY(calc(-50% + var(--ember-y, 0px))) translateX(-16px) scale(0.4); }
 }
 .login-flyby-chat {
   background: rgba(15, 10, 30, 0.85);
   border: 1px solid rgba(192, 132, 252, 0.35);
   color: #f5d0fe;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 999px;
   white-space: nowrap;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 12px rgba(139, 92, 246, 0.25);
@@ -469,6 +381,7 @@ body {
   .login-star-glyph,
   .login-star-trail,
   .login-comet-trail,
+  .login-comet-particle,
   .login-logo-arcs,
   .login-nebula-a,
   .login-nebula-b,
