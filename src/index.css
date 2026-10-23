@@ -1,6 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import './portal-desert.css';
 
 :root {
   font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
