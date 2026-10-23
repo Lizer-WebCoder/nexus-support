@@ -479,7 +479,7 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
                 <div className="space-y-2 pt-1">
                   <p className="text-center text-xs text-fuchsia-200/70">
                     New here?{' '}
-                    <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); setPassword(''); setConfirmPassword(''); }} className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline">Create an account</button>
+                    <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); setPassword(''); setConfirmPassword(''); }} className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline">{isAgent ? 'Create an agent account' : 'Create a customer account'}</button>
                   </p>
                   {!isAgent && (
                     <p className="text-center text-xs text-fuchsia-200/70">
@@ -532,18 +532,12 @@ export default function LoginPage({ audience = 'customer', onOpenPortal, onOpenA
                     <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-semibold text-fuchsia-100/90 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition" onClick={() => setShowConfirm((v) => !v)}>{showConfirm ? 'Hide' : 'Show'}</button>
                   </div>
                 </div>
-                <div className="flex gap-2 pt-1">
-                  <button type="button" onClick={() => { setAudienceTab('agent'); setError(''); }}
-                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium border transition ${isAgent ? 'bg-violet-500/25 border-violet-400/50 text-white' : 'border-white/10 text-fuchsia-200/60 hover:text-white'}`}>Agent</button>
-                  <button type="button" onClick={() => { setAudienceTab('customer'); setError(''); }}
-                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium border transition ${!isAgent ? 'bg-fuchsia-500/25 border-fuchsia-400/50 text-white' : 'border-white/10 text-fuchsia-200/60 hover:text-white'}`}>Customer</button>
-                </div>
                 <button type="submit" disabled={loading} className="login-submit-btn w-full rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-violet-600 bg-[length:160%_100%] hover:from-violet-500 hover:via-fuchsia-500 hover:to-violet-500 disabled:opacity-60 text-white font-medium text-sm py-2.5 shadow-lg shadow-violet-600/40 mt-1">
                   {loading ? 'Creating account…' : 'Create account'}
                 </button>
                 <p className="text-center text-xs text-fuchsia-200/70 pt-1">
                   Already have an account?{' '}
-                  <button type="button" onClick={() => { setMode('signin'); setError(''); setInfo(''); setConfirmPassword(''); }} className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline">Sign in</button>
+                  <button type="button" onClick={() => { setMode('signin'); setError(''); setInfo(''); setConfirmPassword(''); }} className="text-fuchsia-100 hover:text-white font-semibold underline-offset-2 hover:underline">{isAgent ? 'Back to agent sign in' : 'Back to customer sign in'}</button>
                 </p>
               </form>
             </div>
