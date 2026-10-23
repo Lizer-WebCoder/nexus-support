@@ -66,46 +66,176 @@ function roleFromMetadata(user: User | null): AccountRole {
   if (r === 'customer') return 'customer';
   if (r === 'admin') return 'admin';
   if (r === 'agent') return 'agent';
-  // No metadata role → default agent (legacy accounts)
   return 'agent';
 }
 
-async function resolveRole(user: User): Promise<AccountRole> {
+/** Prefer the login-tab role when the same email exists as both agent and customer. */
+async function resolveRole(
+  user: User,
+  preferred?: 'agent' | 'customer'
+): Promise<AccountRole> {
   const meta = roleFromMetadata(user);
-  if (!supabase) return meta;
+  if (!supabase) return preferred || meta;
 
+  const loadAgent = async () => {
+    try {
+      const { data } = await supabase
+        .from('agents')
+        .select('is_admin, approval_status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) return data;
+      if (user.email) {
+        const { data: byEmail } = await supabase
+          .from('agents')
+          .select('is_admin, approval_status')
+          .eq('email', user.email)
+          .maybeSingle();
+        return byEmail;
+      }
+    } catch {
+      /* ignore */
+    }
+    return null;
+  };
+
+  const loadCustomer = async () => {
+    try {
+      const { data } = await supabase
+        .from('customers')
+        .select('id, status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) return data;
+      if (user.email) {
+        const { data: byEmail } = await supabase
+          .from('customers')
+          .select('id, status')
+          .eq('email', user.email)
+          .maybeSingle();
+        return byEmail;
+      }
+    } catch {
+      /* ignore */
+    }
+    return null;
+  };
+
+  if (preferred === 'customer') {
+    const customer = await loadCustomer();
+    if (customer) return 'customer';
+    const agent = await loadAgent();
+    if (agent) return agent.is_admin ? 'admin' : 'agent';
+    return meta === 'customer' ? 'customer' : meta;
+  }
+
+  if (preferred === 'agent') {
+    const agent = await loadAgent();
+    if (agent) return agent.is_admin ? 'admin' : 'agent';
+    const customer = await loadCustomer();
+    if (customer) return 'customer';
+    return meta === 'customer' ? 'customer' : 'agent';
+  }
+
+  // No preference: agent profile wins, then customer, then metadata
+  const agent = await loadAgent();
+  if (agent) return agent.is_admin ? 'admin' : 'agent';
+  const customer = await loadCustomer();
+  if (customer) return 'customer';
+  return meta;
+}
+
+async function assertApproved(
+  user: User,
+  role: AccountRole
+): Promise<void> {
+  if (!supabase) return;
+
+  if (role === 'customer') {
+    try {
+      let row: { status?: string | null } | null = null;
+      const { data } = await supabase
+        .from('customers')
+        .select('status')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      row = data;
+      if (!row && user.email) {
+        const { data: byEmail } = await supabase
+          .from('customers')
+          .select('status')
+          .eq('email', user.email)
+          .maybeSingle();
+        row = byEmail;
+      }
+      // No profile row yet → treat as pending (new account)
+      if (!row) {
+        await supabase.auth.signOut();
+        throw new Error(
+          'Your customer account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
+        );
+      }
+      const status = (row.status || 'approved').toLowerCase();
+      if (status === 'approved' || status === '') return;
+      if (status === 'rejected') {
+        await supabase.auth.signOut();
+        throw new Error('Your customer account was rejected. Contact an administrator.');
+      }
+      if (status === 'pending') {
+        await supabase.auth.signOut();
+        throw new Error(
+          'Your customer account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
+        );
+      }
+    } catch (e) {
+      if (e instanceof Error && /pending|rejected/i.test(e.message)) throw e;
+      // Column/table missing → allow (legacy projects)
+    }
+    return;
+  }
+
+  // agent / admin
   try {
-    const { data: agent } = await supabase
+    let row: { approval_status?: string | null; is_admin?: boolean } | null = null;
+    const { data } = await supabase
       .from('agents')
-      .select('is_admin')
+      .select('approval_status, is_admin')
       .eq('user_id', user.id)
       .maybeSingle();
-    if (agent) return agent.is_admin ? 'admin' : 'agent';
-
-    if (user.email) {
+    row = data;
+    if (!row && user.email) {
       const { data: byEmail } = await supabase
         .from('agents')
-        .select('is_admin')
+        .select('approval_status, is_admin')
         .eq('email', user.email)
         .maybeSingle();
-      if (byEmail) return byEmail.is_admin ? 'admin' : 'agent';
+      row = byEmail;
     }
-  } catch {
-    /* ignore */
-  }
+    if (row?.is_admin) return;
 
-  try {
-    const { data: customer } = await supabase
-      .from('customers')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    if (customer) return 'customer';
-  } catch {
-    /* ignore */
-  }
+    if (!row) {
+      await supabase.auth.signOut();
+      throw new Error(
+        'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
+      );
+    }
 
-  return meta;
+    const approval = (row.approval_status || 'approved').toLowerCase();
+    if (approval === 'approved' || approval === '') return;
+    if (approval === 'rejected') {
+      await supabase.auth.signOut();
+      throw new Error('Your agent account was rejected. Contact an administrator.');
+    }
+    if (approval === 'pending') {
+      await supabase.auth.signOut();
+      throw new Error(
+        'Your agent account is pending admin approval. An administrator must approve it under Users → Pending before you can sign in.'
+      );
+    }
+  } catch (e) {
+    if (e instanceof Error && /pending|rejected/i.test(e.message)) throw e;
+    // Column/table missing → allow
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -127,13 +257,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(next);
       setUser(next?.user ?? null);
       if (next?.user) {
-        // Set metadata role immediately so UI does not bounce
         setAccountRole(roleFromMetadata(next.user));
         try {
           const role = await resolveRole(next.user);
           if (!cancelled) setAccountRole(role);
         } catch {
-          /* keep metadata role */
+          /* keep metadata */
         }
       } else {
         setAccountRole('agent');
@@ -171,31 +300,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw friendlyAuthError(error);
     if (!data.user) throw new Error('Authentication failed');
 
-    // Immediate role from metadata so routing does not flash wrong shell
-    let role = roleFromMetadata(data.user);
+    // Resolve role preferring the tab the user used
+    const role = await resolveRole(data.user, expectedRole);
+    const normalized = role === 'admin' ? 'agent' : role;
+
+    // Agents may only use Agent tab; customers may only use Customer tab
+    if (expectedRole && normalized !== expectedRole) {
+      await supabase.auth.signOut();
+      throw new Error(
+        expectedRole === 'agent'
+          ? 'This account is registered as a customer. Use the Customer tab to sign in.'
+          : 'This account is registered as an agent. Use the Agent tab to sign in.'
+      );
+    }
+
+    // New / unapproved accounts cannot enter until Users → Pending approval
+    await assertApproved(data.user, role);
+
     setAccountRole(role);
     setUser(data.user);
     setSession(data.session);
     setLoading(false);
-
-    try {
-      role = await resolveRole(data.user);
-      setAccountRole(role);
-    } catch {
-      /* keep metadata role */
-    }
-
-    // Soft role hint only — never sign the user out after a successful password auth
-    if (expectedRole) {
-      const normalized = role === 'admin' ? 'agent' : role;
-      if (normalized !== expectedRole) {
-        // Prefer expected tab role when metadata is missing/ambiguous
-        if (!data.user.user_metadata?.role) {
-          setAccountRole(expectedRole);
-        }
-        // Do not throw / signOut — let them into the app
-      }
-    }
   };
 
   const signUp = async (
@@ -218,6 +343,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) throw friendlyAuthError(error);
 
+    // Create profile as PENDING — admin must approve under Users → Pending
     if (data.user) {
       try {
         if (role === 'agent') {
@@ -234,7 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .toUpperCase(),
               role: 'Agent',
               status: 'offline',
-              approval_status: 'approved',
+              approval_status: 'pending',
               is_admin: false,
             },
             { onConflict: 'user_id' }
@@ -245,13 +371,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               user_id: data.user.id,
               email: email.trim().toLowerCase(),
               name: fullName || email.split('@')[0],
-              status: 'approved',
+              status: 'pending',
             },
             { onConflict: 'user_id' }
           );
         }
       } catch {
-        /* optional */
+        /* profile insert may fail under RLS; admin can still add them */
       }
     }
 
@@ -260,9 +386,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     throw new Error(
-      role === 'agent'
-        ? 'Account created. You can sign in now.'
-        : 'Account created. You can sign in now.'
+      'Account created. An admin must approve your account under Users → Pending before you can sign in.'
     );
   };
 
