@@ -1,5 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Search, CheckCircle2, Ticket, BookOpen, ArrowLeft, MessageSquare, LogIn, LogOut, User, Star } from 'lucide-react';
+import {
+  Search, CheckCircle2, Ticket, BookOpen, ArrowLeft, MessageSquare,
+  LogOut, User, Star, Home, ExternalLink,
+} from 'lucide-react';
 import { useTickets } from '../context/TicketContext';
 import { useAuth } from '../context/AuthContext';
 import { usePlatform } from '../context/PlatformContext';
@@ -20,12 +23,23 @@ const HELP_ARTICLES = [
 
 const BRANCH_OPTIONS = INITIAL_BRANCHES.map((b) => b.name);
 
-function LogoMark() {
+const VIEW_TITLES: Record<PortalView, string> = {
+  home: 'Home',
+  submit: 'Submit a request',
+  track: 'Track a ticket',
+  success: 'Request received',
+  help: 'Help articles',
+  chat: 'Live chat',
+  account: 'Account',
+  mytickets: 'My tickets',
+};
+
+function BrandMark({ className = 'w-8 h-8' }: { className?: string }) {
   return (
-    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center shadow-md shadow-violet-900/25">
+    <div className={`${className} rounded-xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center shadow-md shadow-brand-900/40`}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
         <circle cx="12" cy="12" r="3" fill="white" />
-        <path d="M12 3a9 9 0 0 1 9 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+        <path d="M12 3a9 9 0 0 1 9 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity="0.95" />
         <path d="M12 21a9 9 0 0 1-9-9" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity="0.55" />
       </svg>
     </div>
@@ -57,6 +71,9 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
 
   const isCustomerSession = !!user && accountRole === 'customer';
   const myTickets = isCustomerSession && user?.email ? ticketsForEmail(user.email) : [];
+  const displayName =
+    (user?.user_metadata?.full_name as string) || user?.email?.split('@')[0] || 'Customer';
+  const initials = displayName.slice(0, 2).toUpperCase();
 
   useEffect(() => {
     if (!isCustomerSession || !user) return;
@@ -139,252 +156,397 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
     resolved: 'bg-emerald-100 text-emerald-700',
   };
 
-  const homeCards = [
-    { id: 'submit' as const, Icon: Ticket, title: 'Submit a request', desc: 'Report a problem or ask a question' },
-    { id: 'chat' as const, Icon: MessageSquare, title: 'Live chat', desc: 'Talk to an agent in real time' },
-    { id: 'track' as const, Icon: Search, title: 'Track a ticket', desc: 'Check status with your ticket ID' },
-    { id: 'mytickets' as const, Icon: User, title: 'My tickets', desc: 'Tickets linked to your email' },
-    { id: 'help' as const, Icon: BookOpen, title: 'Help articles', desc: 'Find answers without waiting' },
-    { id: 'account' as const, Icon: LogIn, title: 'Account', desc: 'Manage your customer account' },
+  const navItems: { id: PortalView; label: string; icon: typeof Home }[] = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'submit', label: 'Submit request', icon: Ticket },
+    { id: 'chat', label: 'Live chat', icon: MessageSquare },
+    { id: 'track', label: 'Track ticket', icon: Search },
+    { id: 'mytickets', label: 'My tickets', icon: User },
+    { id: 'help', label: 'Help articles', icon: BookOpen },
+    { id: 'account', label: 'Account', icon: User },
   ];
 
-  const field = 'w-full px-3.5 py-2.5 text-sm border border-zinc-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/25 focus:border-violet-400 text-zinc-900 placeholder:text-zinc-400';
-  const btnPrimary = 'w-full py-2.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm font-semibold rounded-xl hover:from-violet-500 hover:to-fuchsia-500 disabled:opacity-50 shadow-sm shadow-violet-900/15';
+  const field =
+    'w-full px-3.5 py-2.5 text-sm border border-zinc-200 rounded-lg bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-violet-500/25 focus:border-violet-400 focus:bg-white text-zinc-900 placeholder:text-zinc-400';
+  const btnPrimary =
+    'w-full py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 disabled:opacity-50 transition-colors';
 
   if (!isCustomerSession) {
     return <PortalAuthGate onBackToAgent={onBackToAgent}>{null}</PortalAuthGate>;
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <header className="border-b border-zinc-200/90 bg-white sticky top-0 z-20 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
-          <button type="button" onClick={() => setView('home')} className="flex items-center gap-2.5">
-            <LogoMark />
-            <div className="text-left">
-              <div className="font-semibold text-zinc-900 text-sm tracking-tight leading-tight">Nexus Ops</div>
-              <div className="text-[11px] text-zinc-500 leading-tight">Customer portal</div>
-            </div>
-          </button>
-          <nav className="flex items-center gap-0.5 text-sm flex-wrap justify-end">
-            {([
-              { id: 'submit' as const, label: 'Submit' },
-              { id: 'chat' as const, label: 'Chat' },
-              { id: 'track' as const, label: 'Track' },
-              { id: 'mytickets' as const, label: 'My tickets' },
-              { id: 'account' as const, label: 'Account' },
-            ]).map((item) => (
+    <div className="flex min-h-screen bg-zinc-50">
+      {/* Agent-matching dark sidebar */}
+      <aside className="hidden md:flex w-60 shrink-0 bg-zinc-950 text-zinc-100 flex-col border-r border-zinc-800/80">
+        <div className="px-4 py-5 flex items-center gap-3 border-b border-zinc-800/80">
+          <BrandMark />
+          <div>
+            <div className="text-sm font-semibold tracking-tight">Nexus Ops</div>
+            <div className="text-[11px] text-zinc-500">Customer portal</div>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+          <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">
+            Support
+          </div>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = view === item.id || (view === 'success' && item.id === 'submit');
+            return (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => setView(item.id)}
-                className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                  view === item.id
-                    ? 'bg-violet-50 text-violet-700'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-brand-600/20 text-white'
+                    : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
                 }`}
               >
-                {item.label}
+                <Icon size={18} className="shrink-0" />
+                <span className="flex-1 text-left">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="p-3 border-t border-zinc-800/80 space-y-1">
+          {onBackToAgent && (
+            <button
+              type="button"
+              onClick={onBackToAgent}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:bg-white/5 hover:text-zinc-200"
+            >
+              <ExternalLink size={16} /> Agent desk
+            </button>
+          )}
+          <div className="w-full flex items-center gap-3 px-3 py-2 rounded-lg">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-400 to-violet-500 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <div className="text-sm font-medium text-zinc-100 truncate">{displayName}</div>
+              <div className="text-[11px] text-zinc-500 truncate">{user?.email}</div>
+            </div>
+          </div>
+          {requiresAuth && (
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:bg-white/5 hover:text-zinc-200"
+            >
+              <LogOut size={16} /> Sign out
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* Main column */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+        <header className="h-14 shrink-0 bg-white border-b border-zinc-200 flex items-center gap-3 px-4 lg:px-6">
+          <div className="md:hidden">
+            <BrandMark className="w-8 h-8" />
+          </div>
+          <div className="text-sm font-semibold text-zinc-800">{VIEW_TITLES[view]}</div>
+          <div className="flex-1" />
+          {/* Mobile nav */}
+          <div className="flex md:hidden items-center gap-1 overflow-x-auto">
+            {navItems.slice(0, 5).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setView(item.id)}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap ${
+                  view === item.id ? 'bg-violet-50 text-violet-700' : 'text-zinc-500'
+                }`}
+              >
+                {item.label.split(' ')[0]}
               </button>
             ))}
-            {onBackToAgent && (
-              <button
-                type="button"
-                onClick={onBackToAgent}
-                className="ml-2 px-2.5 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-700 border border-zinc-200 rounded-lg hover:bg-zinc-50"
-              >
-                Agent desk
-              </button>
-            )}
-          </nav>
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
-        {view === 'home' && (
-          <div className="space-y-8">
-            <div className="text-center sm:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-xs font-medium text-emerald-700 mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Support online · avg reply under 1 business day
-              </div>
-              <h1 className="text-3xl sm:text-[2.15rem] font-semibold text-zinc-900 tracking-tight">How can we help?</h1>
-              <p className="text-zinc-500 mt-2 text-sm">
-                Signed in as <span className="font-medium text-zinc-700">{user?.email}</span>
-              </p>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3.5">
-              {homeCards.map((card) => {
-                const Icon = card.Icon;
-                return (
-                  <button
-                    key={card.id}
-                    type="button"
-                    onClick={() => setView(card.id)}
-                    className="group bg-white rounded-2xl border border-zinc-200/90 shadow-sm p-5 hover:border-violet-300 hover:shadow-md hover:shadow-violet-900/5 transition-all text-left"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 group-hover:bg-violet-100 flex items-center justify-center mb-3 transition-colors">
-                      <Icon size={20} />
-                    </div>
-                    <div className="font-semibold text-zinc-900">{card.title}</div>
-                    <div className="text-sm text-zinc-500 mt-1">{card.desc}</div>
-                  </button>
-                );
-              })}
-            </div>
           </div>
-        )}
-
-        {view === 'chat' && <PortalLiveChat onBack={() => setView('home')} />}
-
-        {view === 'submit' && (
-          <div className="max-w-lg mx-auto">
-            <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-6"><ArrowLeft size={16} /> Back</button>
-            <div className="mb-6">
-              <h1 className="text-2xl font-semibold text-zinc-900 tracking-tight">Submit a request</h1>
-              <p className="text-zinc-500 text-sm mt-1">We typically respond within one business day.</p>
-            </div>
-            <form onSubmit={submit} className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 sm:p-8 space-y-5">
-              {error && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{error}</div>}
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-sm font-medium text-zinc-700 mb-1">Your name *</label><input value={name} onChange={(e) => setName(e.target.value)} required className={field} /></div>
-                <div><label className="block text-sm font-medium text-zinc-700 mb-1">Email *</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={field} /></div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Branch *</label>
-                <select value={branch} onChange={(e) => setBranch(e.target.value)} required className={field + ' bg-white'}>
-                  <option value="">Select branch…</option>
-                  {branchOptions.map((b) => <option key={b} value={b}>{b}</option>)}
-                </select>
-              </div>
-              <div><label className="block text-sm font-medium text-zinc-700 mb-1">Subject *</label><input value={title} onChange={(e) => setTitle(e.target.value)} required className={field} /></div>
-              <div><label className="block text-sm font-medium text-zinc-700 mb-1">Details</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className={field} /></div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Priority</label>
-                <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)} className={field + ' bg-white'}>
-                  {(['low', 'medium', 'high', 'critical'] as Priority[]).map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
-              </div>
-              <button type="submit" disabled={saving} className={btnPrimary}>{saving ? 'Submitting…' : 'Submit request'}</button>
-            </form>
+          <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            Support online
           </div>
-        )}
+        </header>
 
-        {view === 'success' && created && (
-          <div className="max-w-md mx-auto text-center space-y-4">
-            <CheckCircle2 className="mx-auto text-emerald-500" size={48} />
-            <h1 className="text-2xl font-semibold text-zinc-900">Request received</h1>
-            <p className="text-zinc-500 text-sm">Your ticket ID is <span className="font-mono font-semibold text-violet-700">{created.id}</span>.</p>
-            <div className="flex gap-2 justify-center">
-              <button type="button" onClick={() => { setTrackId(created.id); setView('track'); }} className="px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm font-medium rounded-xl shadow-sm">Track ticket</button>
-              <button type="button" onClick={() => setView('home')} className="px-4 py-2 border border-zinc-200 text-sm rounded-xl bg-white">Home</button>
-            </div>
-          </div>
-        )}
-
-        {view === 'track' && (
-          <div className="max-w-md mx-auto">
-            <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-6"><ArrowLeft size={16} /> Back</button>
-            <h1 className="text-2xl font-semibold text-zinc-900 mb-1">Track a ticket</h1>
-            <form onSubmit={track} className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 space-y-4 mt-4">
-              {trackError && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{trackError}</div>}
-              <div><label className="block text-sm font-medium text-zinc-700 mb-1">Ticket ID</label><input value={trackId} onChange={(e) => setTrackId(e.target.value)} required className={field + ' font-mono'} placeholder="NX-2841" /></div>
-              <div><label className="block text-sm font-medium text-zinc-700 mb-1">Email (optional)</label><input type="email" value={trackEmail} onChange={(e) => setTrackEmail(e.target.value)} placeholder={user?.email || ''} className={field} /></div>
-              <button type="submit" className={btnPrimary}>Look up</button>
-            </form>
-            {tracked && (
-              <div className="mt-4 bg-white rounded-2xl border border-zinc-200 p-5 space-y-3 shadow-sm">
-                <div className="flex justify-between"><span className="font-mono text-xs text-zinc-400">{tracked.id}</span>
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${statusColor[tracked.status] || ''}`}>{tracked.status}</span>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          <div className="max-w-3xl mx-auto">
+            {view === 'home' && (
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-2xl font-semibold text-zinc-900 tracking-tight">How can we help?</h1>
+                  <p className="text-sm text-zinc-500 mt-1">
+                    Signed in as <span className="font-medium text-zinc-700">{user?.email}</span>
+                  </p>
                 </div>
-                <div className="font-semibold text-zinc-900">{tracked.title}</div>
-                <div className="text-xs text-zinc-500">{tracked.branch || 'No branch'} · {new Date(tracked.created_at).toLocaleString()}</div>
-                {tracked.status === 'resolved' && (
-                  <div className="pt-3 border-t border-zinc-100">
-                    {csatDone ? (
-                      <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">Thanks for rating this support experience.</p>
-                    ) : (
-                      <form onSubmit={submitCsat} className="space-y-3">
-                        <p className="text-sm font-medium text-zinc-800">How was our support?</p>
-                        <div className="flex gap-1">
-                          {[1, 2, 3, 4, 5].map((n) => (
-                            <button key={n} type="button" onClick={() => setCsatScore(n)} className={`p-2 rounded-lg border ${csatScore >= n ? 'bg-violet-50 border-violet-200 text-violet-600' : 'border-zinc-200 text-zinc-300'}`}>
-                              <Star size={18} fill={csatScore >= n ? 'currentColor' : 'none'} />
-                            </button>
-                          ))}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {navItems.filter((i) => i.id !== 'home').map((item) => {
+                    const Icon = item.icon;
+                    const desc: Record<string, string> = {
+                      submit: 'Report a problem or ask a question',
+                      chat: 'Talk to an agent in real time',
+                      track: 'Check status with your ticket ID',
+                      mytickets: 'Tickets linked to your email',
+                      help: 'Find answers without waiting',
+                      account: 'Manage your customer account',
+                    };
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setView(item.id)}
+                        className="group bg-white rounded-xl border border-zinc-200 shadow-sm p-5 hover:border-violet-300 hover:shadow-md transition-all text-left"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-violet-50 text-violet-600 group-hover:bg-violet-100 flex items-center justify-center mb-3 transition-colors">
+                          <Icon size={20} />
                         </div>
-                        <textarea value={csatComment} onChange={(e) => setCsatComment(e.target.value)} rows={2} placeholder="Optional comment" className={field} />
-                        <button type="submit" disabled={csatSaving} className={btnPrimary}>{csatSaving ? 'Sending…' : 'Submit rating'}</button>
-                      </form>
+                        <div className="font-semibold text-zinc-900 text-sm">{item.label}</div>
+                        <div className="text-xs text-zinc-500 mt-1">{desc[item.id]}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {view === 'chat' && <PortalLiveChat onBack={() => setView('home')} />}
+
+            {view === 'submit' && (
+              <div className="max-w-lg">
+                <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-5">
+                  <ArrowLeft size={16} /> Back
+                </button>
+                <div className="mb-5">
+                  <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">Submit a request</h1>
+                  <p className="text-zinc-500 text-sm mt-1">We typically respond within one business day.</p>
+                </div>
+                <form onSubmit={submit} className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 space-y-4">
+                  {error && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{error}</div>}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-600 mb-1.5">Your name *</label>
+                      <input value={name} onChange={(e) => setName(e.target.value)} required className={field} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-600 mb-1.5">Email *</label>
+                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={field} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-600 mb-1.5">Branch *</label>
+                    <select value={branch} onChange={(e) => setBranch(e.target.value)} required className={field}>
+                      <option value="">Select branch…</option>
+                      {branchOptions.map((b) => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-600 mb-1.5">Subject *</label>
+                    <input value={title} onChange={(e) => setTitle(e.target.value)} required className={field} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-600 mb-1.5">Details</label>
+                    <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className={field} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-600 mb-1.5">Priority</label>
+                    <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)} className={field}>
+                      {(['low', 'medium', 'high', 'critical'] as Priority[]).map((p) => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button type="submit" disabled={saving} className={btnPrimary}>
+                    {saving ? 'Submitting…' : 'Submit request'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {view === 'success' && created && (
+              <div className="max-w-md text-center space-y-4 py-8">
+                <CheckCircle2 className="mx-auto text-emerald-500" size={48} />
+                <h1 className="text-xl font-semibold text-zinc-900">Request received</h1>
+                <p className="text-zinc-500 text-sm">
+                  Your ticket ID is{' '}
+                  <span className="font-mono font-semibold text-violet-700">{created.id}</span>.
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => { setTrackId(created.id); setView('track'); }}
+                    className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700"
+                  >
+                    Track ticket
+                  </button>
+                  <button type="button" onClick={() => setView('home')} className="px-4 py-2 border border-zinc-200 text-sm rounded-lg bg-white hover:bg-zinc-50">
+                    Home
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {view === 'track' && (
+              <div className="max-w-md">
+                <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-5">
+                  <ArrowLeft size={16} /> Back
+                </button>
+                <h1 className="text-xl font-semibold text-zinc-900 mb-1">Track a ticket</h1>
+                <form onSubmit={track} className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 space-y-4 mt-4">
+                  {trackError && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{trackError}</div>}
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-600 mb-1.5">Ticket ID</label>
+                    <input value={trackId} onChange={(e) => setTrackId(e.target.value)} required className={field + ' font-mono'} placeholder="NX-2841" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-600 mb-1.5">Email (optional)</label>
+                    <input type="email" value={trackEmail} onChange={(e) => setTrackEmail(e.target.value)} placeholder={user?.email || ''} className={field} />
+                  </div>
+                  <button type="submit" className={btnPrimary}>Look up</button>
+                </form>
+                {tracked && (
+                  <div className="mt-4 bg-white rounded-xl border border-zinc-200 p-5 space-y-3 shadow-sm">
+                    <div className="flex justify-between">
+                      <span className="font-mono text-xs text-zinc-400">{tracked.id}</span>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${statusColor[tracked.status] || ''}`}>
+                        {tracked.status}
+                      </span>
+                    </div>
+                    <div className="font-semibold text-zinc-900">{tracked.title}</div>
+                    <div className="text-xs text-zinc-500">
+                      {tracked.branch || 'No branch'} · {new Date(tracked.created_at).toLocaleString()}
+                    </div>
+                    {tracked.status === 'resolved' && (
+                      <div className="pt-3 border-t border-zinc-100">
+                        {csatDone ? (
+                          <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                            Thanks for rating this support experience.
+                          </p>
+                        ) : (
+                          <form onSubmit={submitCsat} className="space-y-3">
+                            <p className="text-sm font-medium text-zinc-800">How was our support?</p>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <button
+                                  key={n}
+                                  type="button"
+                                  onClick={() => setCsatScore(n)}
+                                  className={`p-2 rounded-lg border ${csatScore >= n ? 'bg-violet-50 border-violet-200 text-violet-600' : 'border-zinc-200 text-zinc-300'}`}
+                                >
+                                  <Star size={18} fill={csatScore >= n ? 'currentColor' : 'none'} />
+                                </button>
+                              ))}
+                            </div>
+                            <textarea value={csatComment} onChange={(e) => setCsatComment(e.target.value)} rows={2} placeholder="Optional comment" className={field} />
+                            <button type="submit" disabled={csatSaving} className={btnPrimary}>
+                              {csatSaving ? 'Sending…' : 'Submit rating'}
+                            </button>
+                          </form>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
               </div>
             )}
-          </div>
-        )}
 
-        {view === 'help' && (
-          <div className="max-w-lg mx-auto">
-            <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-6"><ArrowLeft size={16} /> Back</button>
-            <h1 className="text-2xl font-semibold text-zinc-900 mb-6">Help articles</h1>
-            <div className="space-y-3">
-              {HELP_ARTICLES.map((a) => (
-                <div key={a.title} className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-5">
-                  <div className="font-semibold text-zinc-900">{a.title}</div>
-                  <p className="text-sm text-zinc-500 mt-1.5 leading-relaxed">{a.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {view === 'mytickets' && (
-          <div className="max-w-lg mx-auto">
-            <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-6"><ArrowLeft size={16} /> Back</button>
-            <h1 className="text-2xl font-semibold text-zinc-900 mb-6">My tickets</h1>
-            {myTickets.length === 0 ? (
-              <p className="text-sm text-zinc-500 bg-white border border-zinc-200 rounded-2xl p-6 shadow-sm">No tickets linked to {user?.email} yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {myTickets.map((t) => (
-                  <button key={t.id} type="button" onClick={() => { setTrackId(t.id); setView('track'); }} className="w-full text-left bg-white rounded-xl border border-zinc-200 shadow-sm p-4 hover:border-violet-300">
-                    <div className="flex justify-between items-start gap-2">
-                      <span className="font-mono text-xs text-zinc-400">{t.id}</span>
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${statusColor[t.status] || ''}`}>{t.status}</span>
+            {view === 'help' && (
+              <div className="max-w-lg">
+                <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-5">
+                  <ArrowLeft size={16} /> Back
+                </button>
+                <h1 className="text-xl font-semibold text-zinc-900 mb-5">Help articles</h1>
+                <div className="space-y-3">
+                  {HELP_ARTICLES.map((a) => (
+                    <div key={a.title} className="bg-white rounded-xl border border-zinc-200 shadow-sm p-5">
+                      <div className="font-semibold text-zinc-900 text-sm">{a.title}</div>
+                      <p className="text-sm text-zinc-500 mt-1.5 leading-relaxed">{a.body}</p>
                     </div>
-                    <div className="font-medium text-zinc-900 mt-1">{t.title}</div>
-                    <div className="text-xs text-zinc-500 mt-1">{t.branch || 'No branch'} · {new Date(t.created_at).toLocaleDateString()}</div>
-                  </button>
-                ))}
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {view === 'mytickets' && (
+              <div className="max-w-lg">
+                <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-5">
+                  <ArrowLeft size={16} /> Back
+                </button>
+                <h1 className="text-xl font-semibold text-zinc-900 mb-5">My tickets</h1>
+                {myTickets.length === 0 ? (
+                  <p className="text-sm text-zinc-500 bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
+                    No tickets linked to {user?.email} yet.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {myTickets.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => { setTrackId(t.id); setView('track'); }}
+                        className="w-full text-left bg-white rounded-xl border border-zinc-200 shadow-sm p-4 hover:border-violet-300"
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="font-mono text-xs text-zinc-400">{t.id}</span>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${statusColor[t.status] || ''}`}>
+                            {t.status}
+                          </span>
+                        </div>
+                        <div className="font-medium text-zinc-900 mt-1 text-sm">{t.title}</div>
+                        <div className="text-xs text-zinc-500 mt-1">
+                          {t.branch || 'No branch'} · {new Date(t.created_at).toLocaleDateString()}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {view === 'account' && (
+              <div className="max-w-md">
+                <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-5">
+                  <ArrowLeft size={16} /> Back
+                </button>
+                <h1 className="text-xl font-semibold text-zinc-900 mb-5">Account</h1>
+                <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 space-y-4">
+                  {configError && (
+                    <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">{configError}</p>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-400 to-violet-500 flex items-center justify-center text-white text-sm font-semibold">
+                      {initials}
+                    </div>
+                    <div>
+                      <div className="font-medium text-zinc-900">{displayName}</div>
+                      <div className="text-sm text-zinc-500">{user?.email}</div>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-zinc-100 space-y-3">
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Role</div>
+                      <div className="text-sm font-medium text-zinc-800 capitalize mt-0.5">{accountRole || 'customer'}</div>
+                    </div>
+                    {requiresAuth && (
+                      <button
+                        type="button"
+                        onClick={() => void signOut()}
+                        className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-medium text-zinc-700 border border-zinc-200 rounded-lg hover:bg-zinc-50"
+                      >
+                        <LogOut size={16} /> Sign out
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
-        )}
-
-        {view === 'account' && (
-          <div className="max-w-md mx-auto">
-            <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-6"><ArrowLeft size={16} /> Back</button>
-            <h1 className="text-2xl font-semibold text-zinc-900 mb-6">Account</h1>
-            <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm p-6 space-y-4">
-              {configError && <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">{configError}</p>}
-              <div>
-                <div className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Email</div>
-                <div className="text-sm font-medium text-zinc-900 mt-0.5">{user?.email}</div>
-              </div>
-              <div>
-                <div className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Role</div>
-                <div className="text-sm font-medium text-zinc-900 mt-0.5 capitalize">{accountRole || 'customer'}</div>
-              </div>
-              {requiresAuth && (
-                <button type="button" onClick={() => void signOut()} className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-medium text-zinc-700 border border-zinc-200 rounded-xl hover:bg-zinc-50">
-                  <LogOut size={16} /> Sign out
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
