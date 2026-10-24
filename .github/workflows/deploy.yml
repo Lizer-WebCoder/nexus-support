@@ -38,6 +38,18 @@ jobs:
             git push || true
           fi
 
+      - name: Patch topbar (icons + descriptions)
+        run: |
+          set -e
+          python3 scripts/patch_topbar.py
+          if grep -q VIEW_META src/components/CustomerPortal.tsx; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/components/CustomerPortal.tsx
+            git commit -m "feat(portal): topbar icons, larger titles, descriptions" || true
+            git push || true
+          fi
+
       - name: Fix light-mode sidebar (white glass)
         run: |
           set -e
