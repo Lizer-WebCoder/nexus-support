@@ -13,46 +13,31 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Restore CustomerPortal from known good commit
+      - name: Restore CustomerPortal with content-area lounge bg
         run: |
-          git show 59ecaf8d57:src/components/CustomerPortal.tsx > src/components/CustomerPortal.tsx
-          sed -i "/portal-desert.css/d" src/index.css || true
-          if ! grep -q "portal-glass-card" src/index.css; then
-            cat >> src/index.css << 'EOF'
-
-/* Portal cards */
-.portal-glass-card {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #e4e4e7;
-  box-shadow: 0 4px 16px rgba(24, 24, 27, 0.05);
-}
-html.nexus-dark .portal-glass-card {
-  background: rgba(24, 24, 27, 0.85);
-  border-color: #3f3f46;
-}
-.portal-home-card {
-  background: #fff !important;
-  border-color: #e4e4e7 !important;
-}
-html.nexus-dark .portal-home-card {
-  background: rgba(24, 24, 27, 0.9) !important;
-  border-color: #3f3f46 !important;
-}
-.portal-home-hero {
-  background: #fff !important;
-  border: 1px solid #e4e4e7;
-}
-html.nexus-dark .portal-home-hero {
-  background: rgba(24, 24, 27, 0.9) !important;
-  border-color: #3f3f46;
-}
-EOF
-          fi
+          set -e
+          git show f962bc078f7f9800d969021fd350e97be9b8039e:src/components/CustomerPortal.tsx > src/components/CustomerPortal.tsx
+          python3 -c "
+          from pathlib import Path
+          text = Path('src/components/CustomerPortal.tsx').read_text()
+          text = text.replace(
+            '''    <div className=\"app-cosmos flex min-h-screen relative\">\n      <PortalSpaceLoungeBg />\n      <aside className=\"hidden md:flex w-60 shrink-0 bg-zinc-950/90 text-zinc-100 flex-col border-r border-zinc-800/80 relative z-30\">''',
+            '''    <div className=\"app-cosmos flex min-h-screen relative\">\n      <aside className=\"hidden md:flex w-60 shrink-0 bg-zinc-950 text-zinc-100 flex-col border-r border-zinc-800 relative z-30\">''',
+            1,
+          )
+          text = text.replace(
+            '''      <div className=\"portal-shell flex-1 flex flex-col min-w-0 min-h-screen relative z-10\">\n        <header className=\"relative z-20 h-12 shrink-0 nexus-topbar flex items-center gap-3 px-4 lg:px-6\">''',
+            '''      <div className=\"portal-shell flex-1 flex flex-col min-w-0 min-h-screen relative z-10\">\n        <PortalSpaceLoungeBg />\n        <header className=\"relative z-20 h-12 shrink-0 nexus-topbar flex items-center gap-3 px-4 lg:px-6\">''',
+            1,
+          )
+          Path('src/components/CustomerPortal.tsx').write_text(text)
+          print('ok', len(text))
+          "
           wc -c src/components/CustomerPortal.tsx
-          head -5 src/components/CustomerPortal.tsx
+          grep -n PortalSpaceLoungeBg src/components/CustomerPortal.tsx
           git config user.name "nexus-bot"
           git config user.email "bot@nexus.ops"
-          git add src/components/CustomerPortal.tsx src/index.css
+          git add src/components/CustomerPortal.tsx
           git status
-          git commit -m "Restore full Customer Portal layout (no desert bg, no dinosaur)" || echo "no changes"
+          git commit -m "fix(portal): CustomerPortal lounge bg only in content area (red box)" || echo "no changes"
           git push origin HEAD:main
