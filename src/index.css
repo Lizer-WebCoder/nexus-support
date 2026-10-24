@@ -741,23 +741,29 @@ html.nexus-dark .app-cosmos aside {
   color: #f8fafc;
 }
 html.nexus-light .app-cosmos aside {
-  background: #18181b !important;
-  border-color: #27272a !important;
-  color: #fafafa;
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(196, 181, 253, 0.35) !important;
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  color: #0f0a1e;
 }
 
-/* Sidebar stays dark in both themes — keep labels light enough to read */
+/* Sidebar: dark theme keeps light labels; light theme uses dark labels */
 html.nexus-dark .app-cosmos aside .text-zinc-600,
 html.nexus-dark .app-cosmos aside .text-zinc-500,
-html.nexus-dark .app-cosmos aside .text-zinc-400,
+html.nexus-dark .app-cosmos aside .text-zinc-400 {
+  color: #e4e4e7 !important;
+}
 html.nexus-light .app-cosmos aside .text-zinc-600,
 html.nexus-light .app-cosmos aside .text-zinc-500,
 html.nexus-light .app-cosmos aside .text-zinc-400 {
-  color: #e4e4e7 !important;
+  color: #52525b !important;
 }
-html.nexus-dark .app-cosmos aside .text-zinc-100,
-html.nexus-light .app-cosmos aside .text-zinc-100 {
+html.nexus-dark .app-cosmos aside .text-zinc-100 {
   color: #fafafa !important;
+}
+html.nexus-light .app-cosmos aside .text-zinc-100 {
+  color: #18181b !important;
 }
 
 html.nexus-dark .nexus-topbar {
