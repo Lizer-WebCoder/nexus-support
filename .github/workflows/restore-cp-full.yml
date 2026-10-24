@@ -1,0 +1,24 @@
+name: Restore CustomerPortal full
+on:
+  workflow_dispatch:
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Decode and restore CustomerPortal
+        run: |
+          cat scripts/cp_restore/part0.b64 scripts/cp_restore/part1.b64 scripts/cp_restore/part2.b64 scripts/cp_restore/part3.b64 scripts/cp_restore/part4.b64 | tr -d '\n' | base64 -d > src/components/CustomerPortal.tsx
+          sed -i "/portal-desert.css/d" src/index.css || true
+          if ! grep -q "portal-glass-card" src/index.css; then
+            printf '\n/* Portal cards */\n.portal-glass-card { background: rgba(255,255,255,0.9); border: 1px solid #e4e4e7; box-shadow: 0 4px 16px rgba(24,24,27,0.05); }\nhtml.nexus-dark .portal-glass-card { background: rgba(24,24,27,0.85); border-color: #3f3f46; }\n.portal-home-card { background: #fff !important; border-color: #e4e4e7 !important; }\nhtml.nexus-dark .portal-home-card { background: rgba(24,24,27,0.9) !important; border-color: #3f3f46 !important; }\n.portal-home-hero { background: #fff !important; border: 1px solid #e4e4e7; }\nhtml.nexus-dark .portal-home-hero { background: rgba(24,24,27,0.9) !important; border-color: #3f3f46; }\n' >> src/index.css
+          fi
+          wc -c src/components/CustomerPortal.tsx
+          head -3 src/components/CustomerPortal.tsx
+          git config user.name "nexus-bot"
+          git config user.email "bot@nexus.ops"
+          git add src/components/CustomerPortal.tsx src/index.css
+          git commit -m "Restore full Customer Portal layout (no desert, no dino)" || echo "no changes"
+          git push origin HEAD:main
