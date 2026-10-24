@@ -1,0 +1,110 @@
+import { useState, useMemo, useEffect } from 'react';
+import {
+  Search, CheckCircle2, Ticket, BookOpen, ArrowLeft, MessageSquare,
+  LogOut, User, Star, Home, ExternalLink, Users,
+} from 'lucide-react';
+import { useTickets } from '../context/TicketContext';
+import { useAuth } from '../context/AuthContext';
+import { usePlatform } from '../context/PlatformContext';
+import type { Priority, Ticket as TicketType } from '../types';
+import { INITIAL_BRANCHES } from '../data';
+import PortalLiveChat from './PortalLiveChat';
+import PortalAuthGate from './PortalAuthGate';
+import PortalHome from './PortalHome';
+import PortalCommunityChat from './PortalCommunityChat';
+import ThemeToggle from './ThemeToggle';
+import PortalSpaceLoungeBg from './PortalSpaceLoungeBg';
+
+interface Props { onBackToAgent?: () => void; }
+type PortalView = 'home' | 'submit' | 'track' | 'success' | 'help' | 'chat' | 'account' | 'mytickets' | 'community';
+
+const HELP_ARTICLES = [
+  { title: 'Reset your password', body: 'Go to Account → Sign in. Use the same email you registered with.' },
+  { title: 'Check service status', body: 'Visit status.nexus.support for live incident updates before opening a ticket.' },
+  { title: 'Billing & invoices', body: 'Invoices are emailed on the 1st of each month. Include your invoice number when submitting a request.' },
+  { title: 'API rate limits', body: 'Free plans allow 60 requests/minute. Pro plans allow 600.' },
+];
+
+const BRANCH_OPTIONS = INITIAL_BRANCHES.map((b) => b.name);
+
+const VIEW_TITLES: Record<PortalView, string> = {
+  home: 'Home',
+  submit: 'Submit a request',
+  track: 'Track a ticket',
+  success: 'Request received',
+  help: 'Help articles',
+  chat: 'Live chat',
+  account: 'Account',
+  mytickets: 'My tickets',
+  community: 'Community',
+};
+
+function BrandMark({ className = 'w-8 h-8' }: { className?: string }) {
+  return (
+    <div className={`${className} rounded-xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center shadow-md shadow-brand-900/40`}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+        <circle cx="12" cy="12" r="3" fill="white" />
+        <path d="M12 3a9 9 0 0 1 9 9" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity="0.95" />
+        <path d="M12 21a9 9 0 0 1-9-9" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity="0.55" />
+      </svg>
+    </div>
+  );
+}
+
+export default function CustomerPortal({ onBackToAgent }: Props) {
+  const { createTicket, findTicket, tickets, ticketsForEmail } = useTickets();
+  const { user, accountRole, signOut, requiresAuth } = useAuth();
+  const { addSurvey, surveys } = usePlatform();
+  const [view, setView] = useState<PortalView>('home');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [branch, setBranch] = useState('');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [priority, setPriority] = useState<Priority>('medium');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [created, setCreated] = useState<TicketType | null>(null);
+  const [trackId, setTrackId] = useState('');
+  const [trackEmail, setTrackEmail] = useState('');
+  const [tracked, setTracked] = useState<TicketType | null>(null);
+  const [trackError, setTrackError] = useState('');
+  const [csatScore, setCsatScore] = useState(5);
+  const [csatComment, setCsatComment] = useState('');
+  const [csatDone, setCsatDone] = useState(false);
+  const [csatSaving, setCsatSaving] = useState(false);
+
+  const isCustomerSession = !!user && accountRole === 'customer';
+  const myTickets = isCustomerSession && user?.email ? ticketsForEmail(user.email) : [];
+  const displayName =
+    (user?.user_metadata?.full_name as string) || user?.email?.split('@')[0] || 'Customer';
+  const initials = displayName.slice(0, 2).toUpperCase();
+
+  useEffect(() => {
+    if (!isCustomerSession || !user) return;
+    const display = (user.user_metadata?.full_name as string) || '';
+    if (display) setName((n) => n || display);
+    if (user.email) setEmail((e) => e || user.email || '');
+  }, [isCustomerSession, user]);
+
+  const branchOptions = useMemo(() => {
+    const set = new Set(BRANCH_OPTIONS);
+    tickets.forEach((t) => { if (t.branch) set.add(t.branch); });
+    try {
+      const raw = localStorage.getItem('nexus-branches-v1');
+      if (raw) (JSON.parse(raw) as { name: string }[]).forEach((b) => set.add(b.name));
+    } catch {}
+    return Array.from(set).sort();
+  }, [tickets]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || !title.trim() || !branch.trim()) {
+      setError('Name, email, branch, and subject are required');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      const ticket = await createTicket({
+        title: title.trim(), description: description.trim(), priority, channel: 'portal',
