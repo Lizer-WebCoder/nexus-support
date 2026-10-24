@@ -3,9 +3,9 @@ import { LOUNGE_DAY } from './loungeDay';
 import { LOUNGE_NIGHT } from './loungeNight';
 
 /**
- * Full-page space lounge using the day/night reference photos.
- * Covers entire portal including behind the sidebar.
- * No side HUD cards.
+ * Full-page space lounge using the exact day/night reference photos
+ * (image-39 light, image-38 dark). Covers entire portal including
+ * behind the sidebar. No generated art, no extra side cards.
  */
 export default function PortalSpaceLoungeBg() {
   return (

@@ -1,7 +1,4 @@
-@import './lounge-day.css';
-@import './lounge-night.css';
-
-/* Full-page lounge layout */
+/* Full-page space lounge — exact day/night reference photos */
 
 .portal-lounge {
   pointer-events: none;
@@ -26,23 +23,24 @@ html.nexus-dark .portal-lounge-photo-day { opacity: 0; }
 .portal-lounge-photo-night { opacity: 0; }
 html.nexus-dark .portal-lounge-photo-night { opacity: 1; }
 
+/* Light veil so glass cards stay readable; keep background visible */
 .portal-lounge-veil {
   position: absolute;
   inset: 0;
   z-index: 1;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.05) 40%,
-    rgba(241, 245, 249, 0.3) 100%
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(241, 245, 249, 0.22) 100%
   );
 }
 html.nexus-dark .portal-lounge-veil {
   background: linear-gradient(
     180deg,
-    rgba(5, 3, 20, 0.22) 0%,
-    rgba(5, 3, 20, 0.12) 40%,
-    rgba(5, 3, 20, 0.4) 100%
+    rgba(5, 3, 20, 0.18) 0%,
+    rgba(5, 3, 20, 0.1) 40%,
+    rgba(5, 3, 20, 0.32) 100%
   );
 }
 
@@ -53,7 +51,7 @@ html.nexus-dark .portal-lounge-veil {
 .app-cosmos > aside {
   position: relative;
   z-index: 30;
-  background: rgba(9, 9, 11, 0.82) !important;
+  background: rgba(9, 9, 11, 0.88) !important;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -63,42 +61,51 @@ html.nexus-dark .portal-lounge-veil {
   background: transparent !important;
 }
 .portal-shell .nexus-topbar {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.45);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.4);
 }
 html.nexus-dark .portal-shell .nexus-topbar {
-  background: rgba(12, 10, 28, 0.5);
-  border-bottom-color: rgba(63, 63, 70, 0.35);
+  background: rgba(12, 10, 28, 0.45);
+  border-bottom-color: rgba(63, 63, 70, 0.3);
 }
 
+/* Glass cards — background shows through slightly; no solid blocks */
 .portal-glass-card {
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(16px) saturate(1.1);
   -webkit-backdrop-filter: blur(16px) saturate(1.1);
   box-shadow: 0 10px 36px rgba(15, 23, 42, 0.1);
 }
 html.nexus-dark .portal-glass-card {
-  background: rgba(15, 12, 40, 0.78);
-  border-color: rgba(139, 92, 246, 0.28);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+  background: rgba(15, 12, 40, 0.72);
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
 }
 .portal-home-card {
-  background: rgba(255, 255, 255, 0.78) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
   backdrop-filter: blur(14px);
-  border-color: rgba(255, 255, 255, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
 }
 html.nexus-dark .portal-home-card {
-  background: rgba(18, 14, 42, 0.75) !important;
-  border-color: rgba(139, 92, 246, 0.25) !important;
+  background: rgba(18, 14, 42, 0.7) !important;
+  border-color: rgba(139, 92, 246, 0.22) !important;
 }
 .portal-home-hero {
-  background: rgba(255, 255, 255, 0.75) !important;
+  background: rgba(255, 255, 255, 0.7) !important;
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 html.nexus-dark .portal-home-hero {
-  background: rgba(22, 16, 50, 0.72) !important;
-  border-color: rgba(139, 92, 246, 0.28);
+  background: rgba(22, 16, 50, 0.68) !important;
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+/* Explicitly no side HUD / decorative panel cards */
+.portal-lounge-side,
+.portal-lounge-hud,
+.lounge-side-card,
+.lounge-panel {
+  display: none !important;
 }
