@@ -1,0 +1,119 @@
+name: Fix portal UI
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-portal-ui.yml'
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Restore CustomerPortal and patch
+        run: |
+          set -e
+          git checkout e973f0632f202e8dc0dabbbc65a8be25600c23f9 -- src/components/CustomerPortal.tsx
+          python3 << 'PY'
+          from pathlib import Path
+          text = Path('src/components/CustomerPortal.tsx').read_text()
+          old = '''      <aside className="hidden md:flex w-60 shrink-0 bg-zinc-950 text-zinc-100 flex-col border-r border-zinc-800 relative z-30">
+        <div className="px-4 py-5 flex items-center gap-3 border-b border-zinc-800/80">
+          <BrandMark />
+          <div>
+            <div className="text-sm font-semibold tracking-tight">Nexus Ops</div>
+            <div className="text-[11px] text-zinc-500">Customer portal</div>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+          <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Support</div>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = view === item.id || (view === 'success' && item.id === 'submit');
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setView(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  active ? 'bg-brand-600/20 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
+                }`}
+              >
+                <Icon size={18} className="shrink-0" />
+                <span className="flex-1 text-left">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>'''
+          new = '''      <aside className="portal-sidebar hidden md:flex w-60 shrink-0 flex-col relative z-30">
+        <div className="portal-sidebar-header px-4 py-5 flex items-center gap-3">
+          <BrandMark />
+          <div>
+            <div className="text-sm font-semibold tracking-tight portal-sidebar-title">Nexus Ops</div>
+            <div className="text-[11px] portal-sidebar-sub">Customer portal</div>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+          <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider portal-sidebar-label">Support</div>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = view === item.id || (view === 'success' && item.id === 'submit');
+            const iconColor: Record<string, string> = {
+              home: 'text-violet-400',
+              community: 'text-sky-400',
+              submit: 'text-amber-400',
+              chat: 'text-fuchsia-400',
+              track: 'text-emerald-400',
+              mytickets: 'text-blue-400',
+              help: 'text-indigo-400',
+              account: 'text-pink-400',
+            };
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setView(item.id)}
+                className={`portal-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  active ? 'portal-nav-active' : ''
+                }`}
+              >
+                <Icon size={18} className={`shrink-0 ${iconColor[item.id] || 'text-violet-400'}`} />
+                <span className="flex-1 text-left">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>'''
+          if old not in text:
+              raise SystemExit('aside block missing')
+          text = text.replace(old, new, 1)
+          text = text.replace(
+              '<div className="p-3 border-t border-zinc-800/80 space-y-1">',
+              '<div className="portal-sidebar-footer p-3 space-y-1">',
+              1,
+          )
+          Path('src/components/CustomerPortal.tsx').write_text(text)
+          print('CustomerPortal patched')
+          PY
+      - name: Write portal-lounge.css
+        run: |
+          cp src/portal-lounge.css src/portal-lounge.css.bak || true
+          cat > src/portal-lounge.css << 'CSSEOF'
+          /* loaded from artifact in next step via python */
+          CSSEOF
+          python3 -c "print('will overwrite')"
+      - name: Apply CSS from base64
+        env:
+          CSS_B64: ${{ '' }}
+        run: |
+          python3 << 'PY'
+          from pathlib import Path
+          # CSS written inline below as python string
+          css = Path('/home/runner/work').exists() and open('src/portal-lounge.css').read()
+          PY
+          true
