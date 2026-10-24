@@ -12,6 +12,17 @@ type Star = {
   glow: number;
 };
 
+type Drift = {
+  left: string;
+  top: string;
+  size: number;
+  delay: number;
+  dur: number;
+  dx: string;
+  dy: string;
+  color: string;
+};
+
 function makeStars(count: number, seed: number): Star[] {
   const colors = [
     '#ffffff',
@@ -21,7 +32,6 @@ function makeStars(count: number, seed: number): Star[] {
     '#ddd6fe',
     '#a5b4fc',
     '#f5d0fe',
-    '#e0e7ff',
   ];
   const stars: Star[] = [];
   let s = seed;
@@ -30,61 +40,64 @@ function makeStars(count: number, seed: number): Star[] {
     return (s - 1) / 2147483646;
   };
   for (let i = 0; i < count; i++) {
-    const bright = i % 9 === 0;
+    const bright = i % 10 === 0;
     stars.push({
       left: `${rnd() * 100}%`,
       top: `${rnd() * 100}%`,
-      size: bright ? 1.6 + rnd() * 2 : 0.55 + rnd() * 1.3,
-      delay: rnd() * 12,
-      dur: 2.2 + rnd() * 4.5,
+      size: bright ? 1.5 + rnd() * 1.8 : 0.5 + rnd() * 1.2,
+      delay: rnd() * 10,
+      dur: 2 + rnd() * 4.5,
       color: colors[i % colors.length],
       opacity: 0.35 + rnd() * 0.6,
-      glow: bright ? 5 + rnd() * 7 : 2 + rnd() * 3,
+      glow: bright ? 5 + rnd() * 6 : 2 + rnd() * 3,
     });
   }
   return stars;
 }
 
+function makeDrift(count: number, seed: number): Drift[] {
+  const colors = ['#ffffff', '#e9d5ff', '#c4b5fd', '#f0abfc', '#a5b4fc'];
+  const out: Drift[] = [];
+  let s = seed;
+  const rnd = () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+  for (let i = 0; i < count; i++) {
+    const angle = rnd() * Math.PI * 2;
+    const dist = 30 + rnd() * 80;
+    out.push({
+      left: `${rnd() * 100}%`,
+      top: `${rnd() * 100}%`,
+      size: 0.8 + rnd() * 1.6,
+      delay: rnd() * 20,
+      dur: 18 + rnd() * 25,
+      dx: `${Math.cos(angle) * dist}px`,
+      dy: `${Math.sin(angle) * dist}px`,
+      color: colors[i % colors.length],
+    });
+  }
+  return out;
+}
+
 /**
- * Purple galaxy sky.
- * Light: soft clouds + many glowing stars.
- * Dark: same scene, darker — black storm clouds + lightning.
+ * Purple sky field: no center blob, no clouds/lightning.
+ * Twinkling stars + drifting particles + occasional left→right shooting stars.
  */
 export default function PortalSpaceLoungeBg() {
-  const stars = useMemo(() => makeStars(180, 42), []);
-  const midStars = useMemo(() => makeStars(80, 77), []);
+  const stars = useMemo(() => makeStars(160, 42), []);
+  const drifts = useMemo(() => makeDrift(40, 91), []);
 
   return (
     <div className="portal-cosmic" aria-hidden>
       <div className="portal-cosmic-sky" />
 
-      {/* Galaxy swirl */}
-      <div className="portal-galaxy">
-        <div className="portal-galaxy-core" />
-        <div className="portal-galaxy-arm portal-galaxy-arm-1" />
-        <div className="portal-galaxy-arm portal-galaxy-arm-2" />
-        <div className="portal-galaxy-arm portal-galaxy-arm-3" />
-      </div>
+      {/* Soft moving nebula wash (no hard core) */}
+      <div className="portal-nebula-wash portal-nebula-wash-a" />
+      <div className="portal-nebula-wash portal-nebula-wash-b" />
+      <div className="portal-nebula-wash portal-nebula-wash-c" />
 
-      {/* Soft nebula wash */}
-      <div className="portal-cosmic-nebula portal-cosmic-nebula-a" />
-      <div className="portal-cosmic-nebula portal-cosmic-nebula-b" />
-
-      {/* Clouds — soft in light, black storm in dark */}
-      <div className="portal-clouds">
-        <div className="portal-cloud portal-cloud-1" />
-        <div className="portal-cloud portal-cloud-2" />
-        <div className="portal-cloud portal-cloud-3" />
-        <div className="portal-cloud portal-cloud-4" />
-        <div className="portal-cloud portal-cloud-5" />
-      </div>
-
-      {/* Lightning (dark mode only via CSS) */}
-      <div className="portal-lightning portal-lightning-a" />
-      <div className="portal-lightning portal-lightning-b" />
-      <div className="portal-lightning portal-lightning-c" />
-
-      {/* Dense stars */}
+      {/* Static twinkle field */}
       <div className="portal-cosmic-stars">
         {stars.map((st, i) => (
           <span
@@ -103,26 +116,37 @@ export default function PortalSpaceLoungeBg() {
             }}
           />
         ))}
-        {midStars.map((st, i) => (
+      </div>
+
+      {/* Particles drifting in random directions */}
+      <div className="portal-drift-layer">
+        {drifts.map((d, i) => (
           <span
-            key={`m${i}`}
-            className="portal-cosmic-star portal-cosmic-star-mid"
+            key={`d${i}`}
+            className="portal-drift-particle"
             style={{
-              left: st.left,
-              top: st.top,
-              width: Math.max(0.5, st.size * 0.75),
-              height: Math.max(0.5, st.size * 0.75),
-              background: st.color,
-              opacity: st.opacity * 0.8,
-              boxShadow: `0 0 ${st.glow * 0.8}px ${st.color}`,
-              animationDelay: `${st.delay + 0.5}s`,
-              animationDuration: `${st.dur + 1.5}s`,
+              left: d.left,
+              top: d.top,
+              width: d.size,
+              height: d.size,
+              background: d.color,
+              boxShadow: `0 0 ${d.size * 3}px ${d.color}`,
+              animationDelay: `${d.delay}s`,
+              animationDuration: `${d.dur}s`,
+              ['--dx' as string]: d.dx,
+              ['--dy' as string]: d.dy,
             }}
           />
         ))}
       </div>
 
-      <div className="portal-cosmic-dust" />
+      {/* Shooting stars L→R, staggered ~every 30s */}
+      <div className="portal-shooting-layer">
+        <span className="portal-shooting-star portal-shooting-1" />
+        <span className="portal-shooting-star portal-shooting-2" />
+        <span className="portal-shooting-star portal-shooting-3" />
+      </div>
+
       <div className="portal-cosmic-veil" />
     </div>
   );
