@@ -3,10 +3,9 @@ import '../portal-lounge.css';
 import { LOUNGE_DAY } from './loungeDay';
 import { LOUNGE_NIGHT } from './loungeNight';
 
-/** Stable star field for the space window — slow drift + twinkle */
+/** Fixed star field (opacity twinkle only — no position drift) */
 function makeStars(count: number) {
   const stars: { left: string; top: string; size: number; delay: number; dur: number; opacity: number }[] = [];
-  // Deterministic PRNG so SSR/client match
   let s = 42;
   const rnd = () => {
     s = (s * 16807) % 2147483647;
@@ -16,22 +15,22 @@ function makeStars(count: number) {
     stars.push({
       left: `${rnd() * 100}%`,
       top: `${rnd() * 100}%`,
-      size: 0.8 + rnd() * 2.2,
+      size: 0.8 + rnd() * 2.0,
       delay: rnd() * 8,
-      dur: 3 + rnd() * 5,
-      opacity: 0.35 + rnd() * 0.55,
+      dur: 3.5 + rnd() * 4,
+      opacity: 0.35 + rnd() * 0.5,
     });
   }
   return stars;
 }
 
 /**
- * Space lounge for the main content area only.
- * HQ photos (no aggressive crop-zoom) + drifting star field
- * so the window feels alive, not frozen.
+ * Lounge bg for the main content area only.
+ * Day/night share identical framing — theme switch fades color only;
+ * the scene stays still (no pan/zoom drift).
  */
 export default function PortalSpaceLoungeBg() {
-  const stars = useMemo(() => makeStars(48), []);
+  const stars = useMemo(() => makeStars(40), []);
 
   return (
     <div className="portal-lounge" aria-hidden>
@@ -44,7 +43,6 @@ export default function PortalSpaceLoungeBg() {
         style={{ backgroundImage: `url(${LOUNGE_NIGHT})` }}
       />
 
-      {/* Moving galaxy / star layer over the space window */}
       <div className="portal-lounge-stars">
         {stars.map((st, i) => (
           <span
@@ -57,12 +55,10 @@ export default function PortalSpaceLoungeBg() {
               height: st.size,
               animationDelay: `${st.delay}s`,
               animationDuration: `${st.dur}s`,
-              opacity: st.opacity,
+              ['--star-base' as string]: st.opacity,
             }}
           />
         ))}
-        <div className="portal-lounge-nebula portal-lounge-nebula-a" />
-        <div className="portal-lounge-nebula portal-lounge-nebula-b" />
       </div>
 
       <div className="portal-lounge-veil" />
