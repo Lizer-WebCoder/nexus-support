@@ -1,2 +1,2 @@
-/** HQ day lounge — same framing as night so theme switch is color-only */
-export const LOUNGE_DAY = 'https://litter.catbox.moe/mpqxtu.jpg';
+/** Single master lounge photo (shared by light/dark — color via CSS filter only) */
+export const LOUNGE_MASTER = 'https://litter.catbox.moe/zcc3hf.jpg';
