@@ -11,7 +11,7 @@
 .portal-lounge-photo {
   position: absolute;
   inset: 0;
-  /* Fit the content area without aggressive zoom; HD source reduces pixelation */
+  /* Fit the content area; HD source reduces pixelation */
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
