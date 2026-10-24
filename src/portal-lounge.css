@@ -213,13 +213,13 @@ html.nexus-dark .portal-cosmic-veil {
   background: linear-gradient(180deg, rgba(8, 4, 20, 0.2) 0%, transparent 30%, rgba(5, 2, 15, 0.35) 100%);
 }
 
-/* Theme-aware glass sidebar */
+/* Theme-aware glass sidebar — light mode high contrast */
 .portal-sidebar {
-  background: rgba(245, 243, 255, 0.72) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
   backdrop-filter: blur(18px) saturate(1.15);
   -webkit-backdrop-filter: blur(18px) saturate(1.15);
-  border-right: 1px solid rgba(196, 181, 253, 0.35);
-  color: #1e1b4b;
+  border-right: 1px solid rgba(139, 92, 246, 0.25);
+  color: #0f0a1e;
   transition: background 0.85s ease, border-color 0.85s ease, color 0.85s ease;
 }
 html.nexus-dark .portal-sidebar {
@@ -228,36 +228,35 @@ html.nexus-dark .portal-sidebar {
   color: #f4f4f5;
 }
 .app-cosmos > aside.portal-sidebar {
-  background: rgba(245, 243, 255, 0.72) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
 }
 html.nexus-dark .app-cosmos > aside.portal-sidebar {
   background: rgba(12, 8, 28, 0.78) !important;
 }
 
 .portal-sidebar-header {
-  border-bottom: 1px solid rgba(196, 181, 253, 0.3);
-  transition: border-color 0.85s ease;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
 }
 html.nexus-dark .portal-sidebar-header {
   border-bottom-color: rgba(63, 63, 70, 0.5);
 }
-.portal-sidebar-title { color: #1e1b4b; }
+.portal-sidebar-title { color: #0f0a1e; font-weight: 600; }
 html.nexus-dark .portal-sidebar-title { color: #fafafa; }
-.portal-sidebar-sub { color: #7c3aed; }
+.portal-sidebar-sub { color: #5b21b6; }
 html.nexus-dark .portal-sidebar-sub { color: #a1a1aa; }
-.portal-sidebar-label { color: #8b5cf6; }
+.portal-sidebar-label { color: #6d28d9; }
 html.nexus-dark .portal-sidebar-label { color: #71717a; }
 .portal-sidebar-footer {
-  border-top: 1px solid rgba(196, 181, 253, 0.3);
+  border-top: 1px solid rgba(139, 92, 246, 0.2);
 }
 html.nexus-dark .portal-sidebar-footer {
   border-top-color: rgba(63, 63, 70, 0.5);
 }
 
-.portal-nav-item { color: #4c1d95; }
+.portal-nav-item { color: #1e1b4b; }
 .portal-nav-item:hover {
   background: rgba(139, 92, 246, 0.12);
-  color: #2e1065;
+  color: #0f0a1e;
 }
 html.nexus-dark .portal-nav-item { color: #a1a1aa; }
 html.nexus-dark .portal-nav-item:hover {
@@ -266,12 +265,15 @@ html.nexus-dark .portal-nav-item:hover {
 }
 .portal-nav-active {
   background: rgba(124, 58, 237, 0.18) !important;
-  color: #2e1065 !important;
+  color: #0f0a1e !important;
+  font-weight: 600;
 }
 html.nexus-dark .portal-nav-active {
   background: rgba(124, 58, 237, 0.28) !important;
   color: #ffffff !important;
 }
+.portal-sidebar-footer .portal-nav-item { color: #312e81; }
+html.nexus-dark .portal-sidebar-footer .portal-nav-item { color: #a1a1aa; }
 
 .app-cosmos { position: relative; isolation: isolate; }
 .portal-shell {
