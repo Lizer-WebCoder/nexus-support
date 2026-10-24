@@ -182,8 +182,9 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
   }
 
   return (
-    <div className="app-cosmos flex min-h-screen">
-      <aside className="hidden md:flex w-60 shrink-0 bg-zinc-950 text-zinc-100 flex-col border-r border-zinc-800/80">
+    <div className="app-cosmos flex min-h-screen relative">
+      <PortalSpaceLoungeBg />
+      <aside className="hidden md:flex w-60 shrink-0 bg-zinc-950/90 text-zinc-100 flex-col border-r border-zinc-800/80 relative z-30">
         <div className="px-4 py-5 flex items-center gap-3 border-b border-zinc-800/80">
           <BrandMark />
           <div>
@@ -236,8 +237,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
         </div>
       </aside>
 
-      <div className="portal-shell flex-1 flex flex-col min-w-0 min-h-screen relative overflow-hidden">
-        <PortalSpaceLoungeBg />
+      <div className="portal-shell flex-1 flex flex-col min-w-0 min-h-screen relative z-10">
         <header className="relative z-20 h-12 shrink-0 nexus-topbar flex items-center gap-3 px-4 lg:px-6">
           <div className="md:hidden"><BrandMark className="w-8 h-8" /></div>
           <div className="text-sm font-semibold text-zinc-800">{VIEW_TITLES[view]}</div>
@@ -267,7 +267,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                   <h1 className="text-lg font-semibold text-zinc-900 tracking-tight">Submit a request</h1>
                   <p className="text-zinc-500 text-sm mt-1">We typically respond within one business day.</p>
                 </div>
-                <form onSubmit={submit} className="portal-glass-card rounded-xl p-4 sm:p-5 space-y-3 bg-white border border-zinc-200">
+                <form onSubmit={submit} className="portal-glass-card rounded-xl p-4 sm:p-5 space-y-3">
                   {error && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{error}</div>}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -311,7 +311,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                 <p className="text-zinc-500 text-sm">Your ticket ID is <span className="font-mono font-semibold text-violet-700">{created.id}</span>.</p>
                 <div className="flex gap-2 justify-center">
                   <button type="button" onClick={() => { setTrackId(created.id); setView('track'); }} className="px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700">Track ticket</button>
-                  <button type="button" onClick={() => setView('home')} className="px-4 py-2 border border-zinc-200 text-sm rounded-lg bg-white hover:bg-zinc-50">Home</button>
+                  <button type="button" onClick={() => setView('home')} className="px-4 py-2 border border-zinc-200 text-sm rounded-lg bg-white/80 hover:bg-white">Home</button>
                 </div>
               </div>
             )}
@@ -319,7 +319,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <div className="max-w-md">
                 <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-3"><ArrowLeft size={16} /> Back</button>
                 <h1 className="text-xl font-semibold text-zinc-900 mb-1">Track a ticket</h1>
-                <form onSubmit={track} className="portal-glass-card rounded-xl p-4 sm:p-5 space-y-3 mt-3 bg-white border border-zinc-200">
+                <form onSubmit={track} className="portal-glass-card rounded-xl p-4 sm:p-5 space-y-3 mt-3">
                   {trackError && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{trackError}</div>}
                   <div>
                     <label className="block text-xs font-medium text-zinc-600 mb-1.5">Ticket ID</label>
@@ -332,7 +332,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                   <button type="submit" className={btnPrimary}>Look up</button>
                 </form>
                 {tracked && (
-                  <div className="mt-3 portal-glass-card rounded-xl p-4 space-y-2.5 bg-white border border-zinc-200">
+                  <div className="mt-3 portal-glass-card rounded-xl p-4 space-y-2.5">
                     <div className="flex justify-between">
                       <span className="font-mono text-xs text-zinc-400">{tracked.id}</span>
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${statusColor[tracked.status] || ''}`}>{tracked.status}</span>
