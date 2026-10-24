@@ -29,9 +29,9 @@ function makeStars(count: number, seed: number): Star[] {
     '#e9d5ff',
     '#c4b5fd',
     '#f0abfc',
+    '#a5f3fc',
+    '#67e8f9',
     '#ddd6fe',
-    '#a5b4fc',
-    '#f5d0fe',
   ];
   const stars: Star[] = [];
   let s = seed;
@@ -56,7 +56,7 @@ function makeStars(count: number, seed: number): Star[] {
 }
 
 function makeDrift(count: number, seed: number): Drift[] {
-  const colors = ['#ffffff', '#e9d5ff', '#c4b5fd', '#f0abfc', '#a5b4fc'];
+  const colors = ['#ffffff', '#e9d5ff', '#c4b5fd', '#67e8f9', '#a5f3fc'];
   const out: Drift[] = [];
   let s = seed;
   const rnd = () => {
@@ -80,10 +80,7 @@ function makeDrift(count: number, seed: number): Drift[] {
   return out;
 }
 
-/**
- * Purple sky field: no center blob, no clouds/lightning.
- * Twinkling stars + drifting particles + occasional left→right shooting stars.
- */
+/** Purple sky + login-style cyan shooting comets + drift particles. */
 export default function PortalSpaceLoungeBg() {
   const stars = useMemo(() => makeStars(160, 42), []);
   const drifts = useMemo(() => makeDrift(40, 91), []);
@@ -92,12 +89,10 @@ export default function PortalSpaceLoungeBg() {
     <div className="portal-cosmic" aria-hidden>
       <div className="portal-cosmic-sky" />
 
-      {/* Soft moving nebula wash (no hard core) */}
       <div className="portal-nebula-wash portal-nebula-wash-a" />
       <div className="portal-nebula-wash portal-nebula-wash-b" />
       <div className="portal-nebula-wash portal-nebula-wash-c" />
 
-      {/* Static twinkle field */}
       <div className="portal-cosmic-stars">
         {stars.map((st, i) => (
           <span
@@ -118,7 +113,6 @@ export default function PortalSpaceLoungeBg() {
         ))}
       </div>
 
-      {/* Particles drifting in random directions */}
       <div className="portal-drift-layer">
         {drifts.map((d, i) => (
           <span
@@ -140,11 +134,19 @@ export default function PortalSpaceLoungeBg() {
         ))}
       </div>
 
-      {/* Shooting stars L→R, staggered ~every 30s */}
+      {/* Login-style cyan comet shooting stars */}
       <div className="portal-shooting-layer">
-        <span className="portal-shooting-star portal-shooting-1" />
-        <span className="portal-shooting-star portal-shooting-2" />
-        <span className="portal-shooting-star portal-shooting-3" />
+        {[0, 1, 2].map((i) => (
+          <div key={i} className={`portal-shooting-star portal-shooting-${i + 1}`}>
+            <span className="portal-comet-trail portal-comet-trail-a" />
+            <span className="portal-comet-trail portal-comet-trail-b" />
+            <span className="portal-comet-trail portal-comet-trail-c" />
+            <span className="portal-comet-head" />
+            <span className="portal-comet-particle portal-comet-p1" />
+            <span className="portal-comet-particle portal-comet-p2" />
+            <span className="portal-comet-particle portal-comet-p3" />
+          </div>
+        ))}
       </div>
 
       <div className="portal-cosmic-veil" />
