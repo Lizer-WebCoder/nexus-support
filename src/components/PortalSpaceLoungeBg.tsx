@@ -12,8 +12,7 @@ type Star = {
   glow: number;
 };
 
-/** Stars only inside one window zone (0=center, 1=left, 2=right). */
-function makeWindowStars(count: number, seed: number, zone: 0 | 1 | 2): Star[] {
+function makeWindowStars(count: number, seed: number): Star[] {
   const stars: Star[] = [];
   let s = seed;
   const rnd = () => {
@@ -21,30 +20,21 @@ function makeWindowStars(count: number, seed: number, zone: 0 | 1 | 2): Star[] {
     return (s - 1) / 2147483646;
   };
   for (let i = 0; i < count; i++) {
-    // Local % inside the zone container (0–100)
-    const left = 8 + rnd() * 84;
-    const top = 10 + rnd() * 75;
     stars.push({
-      left: `${left}%`,
-      top: `${top}%`,
-      size: 1.2 + rnd() * 2.8,
+      left: `${6 + rnd() * 88}%`,
+      top: `${8 + rnd() * 80}%`,
+      size: 1.1 + rnd() * 2.6,
       delay: rnd() * 5,
-      dur: 2.4 + rnd() * 3.2,
-      glow: 3 + rnd() * 6,
+      dur: 2.2 + rnd() * 3.4,
+      glow: 2.5 + rnd() * 5,
     });
   }
   return stars;
 }
 
-function StarField({
-  stars,
-  className,
-}: {
-  stars: Star[];
-  className: string;
-}) {
+function StarField({ stars }: { stars: Star[] }) {
   return (
-    <div className={className}>
+    <div className="portal-lounge-stars">
       {stars.map((st, i) => (
         <span
           key={i}
@@ -56,7 +46,6 @@ function StarField({
             height: st.size,
             animationDelay: `${st.delay}s`,
             animationDuration: `${st.dur}s`,
-            // CSS var for glow strength
             ['--star-glow' as string]: `${st.glow}px`,
           }}
         />
@@ -66,54 +55,44 @@ function StarField({
 }
 
 /**
- * Day/night lounge crossfade.
- * Stars + nebula only inside the 3 windows (never over the capsule floor).
- * Left/right computer screens have subtle live UI motion.
+ * Day/night lounge photos animate themselves (slow drift).
+ * Galaxy + stars only inside the three real windows — no extra cards/overlays.
  */
 export default function PortalSpaceLoungeBg() {
-  const centerStars = useMemo(() => makeWindowStars(28, 91, 0), []);
-  const leftStars = useMemo(() => makeWindowStars(14, 33, 1), []);
-  const rightStars = useMemo(() => makeWindowStars(14, 71, 2), []);
+  const centerStars = useMemo(() => makeWindowStars(32, 91), []);
+  const leftStars = useMemo(() => makeWindowStars(12, 33), []);
+  const rightStars = useMemo(() => makeWindowStars(12, 71), []);
 
   return (
     <div className="portal-lounge" aria-hidden>
-      <div
-        className="portal-lounge-photo portal-lounge-day"
-        style={{ backgroundImage: `url(${LOUNGE_DAY})` }}
-      />
-      <div
-        className="portal-lounge-photo portal-lounge-night"
-        style={{ backgroundImage: `url(${LOUNGE_NIGHT})` }}
-      />
+      {/* Photos slowly drift — the background itself moves */}
+      <div className="portal-lounge-photo-wrap">
+        <div
+          className="portal-lounge-photo portal-lounge-day"
+          style={{ backgroundImage: `url(${LOUNGE_DAY})` }}
+        />
+        <div
+          className="portal-lounge-photo portal-lounge-night"
+          style={{ backgroundImage: `url(${LOUNGE_NIGHT})` }}
+        />
+      </div>
 
-      {/* Center main window: nebula + stars (clipped) */}
+      {/* Center window galaxy only */}
       <div className="portal-lounge-window portal-lounge-window-center">
-        <div className="portal-lounge-nebula portal-lounge-nebula-center" />
-        <StarField stars={centerStars} className="portal-lounge-stars" />
+        <div className="portal-lounge-nebula" />
+        <StarField stars={centerStars} />
       </div>
 
-      {/* Left side window above the desk */}
+      {/* Left window */}
       <div className="portal-lounge-window portal-lounge-window-left">
-        <div className="portal-lounge-nebula portal-lounge-nebula-left" />
-        <StarField stars={leftStars} className="portal-lounge-stars" />
+        <div className="portal-lounge-nebula" />
+        <StarField stars={leftStars} />
       </div>
 
-      {/* Right side window */}
+      {/* Right window */}
       <div className="portal-lounge-window portal-lounge-window-right">
-        <div className="portal-lounge-nebula portal-lounge-nebula-right" />
-        <StarField stars={rightStars} className="portal-lounge-stars" />
-      </div>
-
-      {/* Animated computer screens (left + right) */}
-      <div className="portal-lounge-screen portal-lounge-screen-left">
-        <span className="portal-lounge-screen-scan" />
-        <span className="portal-lounge-screen-pulse" />
-        <span className="portal-lounge-screen-data" />
-      </div>
-      <div className="portal-lounge-screen portal-lounge-screen-right">
-        <span className="portal-lounge-screen-scan" />
-        <span className="portal-lounge-screen-pulse" />
-        <span className="portal-lounge-screen-orbit" />
+        <div className="portal-lounge-nebula" />
+        <StarField stars={rightStars} />
       </div>
 
       <div className="portal-lounge-veil" />
