@@ -1,0 +1,38 @@
+name: Restore CustomerPortal lounge mount
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/restore-cp-lounge.yml'
+permissions:
+  contents: write
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write CustomerPortal
+        run: |
+          python3 -c "
+          import base64, pathlib, urllib.request
+          # Fetch fixed content from prior good commit then patch
+          url = 'https://raw.githubusercontent.com/Right-Click-V4/nexus-support/f962bc078f7f9800d969021fd350e97be9b8039e/src/components/CustomerPortal.tsx'
+          text = urllib.request.urlopen(url).read().decode()
+          old = '''    <div className=\"app-cosmos flex min-h-screen relative\">\n      <PortalSpaceLoungeBg />\n      <aside className=\"hidden md:flex w-60 shrink-0 bg-zinc-950/90 text-zinc-100 flex-col border-r border-zinc-800/80 relative z-30\">'''
+          new = '''    <div className=\"app-cosmos flex min-h-screen relative\">\n      <aside className=\"hidden md:flex w-60 shrink-0 bg-zinc-950 text-zinc-100 flex-col border-r border-zinc-800 relative z-30\">'''
+          assert old in text, 'block1 missing'
+          text = text.replace(old, new, 1)
+          old2 = '''      <div className=\"portal-shell flex-1 flex flex-col min-w-0 min-h-screen relative z-10\">\n        <header className=\"relative z-20 h-12 shrink-0 nexus-topbar flex items-center gap-3 px-4 lg:px-6\">'''
+          new2 = '''      <div className=\"portal-shell flex-1 flex flex-col min-w-0 min-h-screen relative z-10\">\n        <PortalSpaceLoungeBg />\n        <header className=\"relative z-20 h-12 shrink-0 nexus-topbar flex items-center gap-3 px-4 lg:px-6\">'''
+          assert old2 in text, 'block2 missing'
+          text = text.replace(old2, new2, 1)
+          pathlib.Path('src/components/CustomerPortal.tsx').write_text(text)
+          print('wrote', len(text))
+          "
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/CustomerPortal.tsx
+          git commit -m "fix(portal): restore CustomerPortal — lounge bg only in content area" || exit 0
+          git push origin HEAD:main
