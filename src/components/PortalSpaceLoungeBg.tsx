@@ -1,6 +1,6 @@
 import '../portal-lounge.css';
-
-const base = import.meta.env.BASE_URL || '/';
+import { LOUNGE_DAY } from './loungeDay';
+import { LOUNGE_NIGHT } from './loungeNight';
 
 /**
  * Full-page space lounge using the exact day/night reference photos
@@ -12,11 +12,11 @@ export default function PortalSpaceLoungeBg() {
     <div className="portal-lounge" aria-hidden>
       <div
         className="portal-lounge-photo portal-lounge-photo-day"
-        style={{ backgroundImage: `url(${base}lounge-day.jpg)` }}
+        style={{ backgroundImage: `url(${LOUNGE_DAY})` }}
       />
       <div
         className="portal-lounge-photo portal-lounge-photo-night"
-        style={{ backgroundImage: `url(${base}lounge-night.jpg)` }}
+        style={{ backgroundImage: `url(${LOUNGE_NIGHT})` }}
       />
       <div className="portal-lounge-veil" />
     </div>
