@@ -1,4 +1,7 @@
-/* Full-page lounge photos (day + night) */
+@import './lounge-day.css';
+@import './lounge-night.css';
+
+/* Full-page lounge layout */
 
 .portal-lounge {
   pointer-events: none;
@@ -17,42 +20,29 @@
   transition: opacity 0.45s ease;
 }
 
-/* Light mode = day photo */
-.portal-lounge-photo-day {
-  background-image: url('/nexus-support/lounge-day.jpg');
-  opacity: 1;
-}
-html.nexus-dark .portal-lounge-photo-day {
-  opacity: 0;
-}
+.portal-lounge-photo-day { opacity: 1; }
+html.nexus-dark .portal-lounge-photo-day { opacity: 0; }
 
-/* Dark mode = night photo */
-.portal-lounge-photo-night {
-  background-image: url('/nexus-support/lounge-night.jpg');
-  opacity: 0;
-}
-html.nexus-dark .portal-lounge-photo-night {
-  opacity: 1;
-}
+.portal-lounge-photo-night { opacity: 0; }
+html.nexus-dark .portal-lounge-photo-night { opacity: 1; }
 
-/* Soft veil so UI stays readable */
 .portal-lounge-veil {
   position: absolute;
   inset: 0;
   z-index: 1;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.12) 0%,
-    rgba(255, 255, 255, 0.08) 40%,
-    rgba(241, 245, 249, 0.35) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 40%,
+    rgba(241, 245, 249, 0.3) 100%
   );
 }
 html.nexus-dark .portal-lounge-veil {
   background: linear-gradient(
     180deg,
-    rgba(5, 3, 20, 0.25) 0%,
-    rgba(5, 3, 20, 0.15) 40%,
-    rgba(5, 3, 20, 0.45) 100%
+    rgba(5, 3, 20, 0.22) 0%,
+    rgba(5, 3, 20, 0.12) 40%,
+    rgba(5, 3, 20, 0.4) 100%
   );
 }
 

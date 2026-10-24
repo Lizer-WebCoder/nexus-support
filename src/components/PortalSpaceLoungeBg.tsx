@@ -3,6 +3,7 @@ import '../portal-lounge.css';
 /**
  * Full-page space lounge using the day/night reference photos.
  * Covers entire portal including behind the sidebar.
+ * No side HUD cards.
  */
 export default function PortalSpaceLoungeBg() {
   return (
