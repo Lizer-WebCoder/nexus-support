@@ -1,8 +1,8 @@
-/* Full-page space lounge — exact day/night reference photos */
+/* Lounge background — only inside the main content area (right of sidebar) */
 
 .portal-lounge {
   pointer-events: none;
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
@@ -11,10 +11,11 @@
 .portal-lounge-photo {
   position: absolute;
   inset: 0;
+  /* Fit the content area without aggressive zoom; HD source reduces pixelation */
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  transition: opacity 0.45s ease;
+  transition: opacity 0.7s ease;
 }
 
 .portal-lounge-photo-day { opacity: 1; }
@@ -23,24 +24,25 @@ html.nexus-dark .portal-lounge-photo-day { opacity: 0; }
 .portal-lounge-photo-night { opacity: 0; }
 html.nexus-dark .portal-lounge-photo-night { opacity: 1; }
 
-/* Light veil so glass cards stay readable; keep background visible */
+/* Soft veil so glass cards stay readable */
 .portal-lounge-veil {
   position: absolute;
   inset: 0;
   z-index: 1;
+  transition: background 0.7s ease;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.04) 40%,
-    rgba(241, 245, 249, 0.22) 100%
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.03) 40%,
+    rgba(241, 245, 249, 0.18) 100%
   );
 }
 html.nexus-dark .portal-lounge-veil {
   background: linear-gradient(
     180deg,
-    rgba(5, 3, 20, 0.18) 0%,
-    rgba(5, 3, 20, 0.1) 40%,
-    rgba(5, 3, 20, 0.32) 100%
+    rgba(5, 3, 20, 0.14) 0%,
+    rgba(5, 3, 20, 0.08) 40%,
+    rgba(5, 3, 20, 0.28) 100%
   );
 }
 
@@ -48,19 +50,24 @@ html.nexus-dark .portal-lounge-veil {
   position: relative;
   isolation: isolate;
 }
+
+/* Sidebar stays solid — background does not extend behind it */
 .app-cosmos > aside {
   position: relative;
   z-index: 30;
-  background: rgba(9, 9, 11, 0.88) !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: rgb(9, 9, 11) !important;
 }
+
 .portal-shell {
   position: relative;
   z-index: 10;
   background: transparent !important;
+  overflow: hidden;
 }
+
 .portal-shell .nexus-topbar {
+  position: relative;
+  z-index: 20;
   background: rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(226, 232, 240, 0.4);
@@ -70,7 +77,12 @@ html.nexus-dark .portal-shell .nexus-topbar {
   border-bottom-color: rgba(63, 63, 70, 0.3);
 }
 
-/* Glass cards — background shows through slightly; no solid blocks */
+.portal-shell > main {
+  position: relative;
+  z-index: 10;
+}
+
+/* Glass cards */
 .portal-glass-card {
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -102,7 +114,6 @@ html.nexus-dark .portal-home-hero {
   border-color: rgba(139, 92, 246, 0.25);
 }
 
-/* Explicitly no side HUD / decorative panel cards */
 .portal-lounge-side,
 .portal-lounge-hud,
 .lounge-side-card,
