@@ -1,4 +1,4 @@
-/* Single still lounge. Theme switch changes color grade only (no second image). */
+/* Dual day/night lounge + animated window galaxy */
 
 .portal-lounge {
   pointer-events: none;
@@ -15,29 +15,108 @@
   background-position: center center;
   background-repeat: no-repeat;
   transform: none;
-  transition: filter 0.75s ease;
-  /* Light mode baseline = day photo */
-  filter: brightness(1.05) contrast(1) saturate(1);
+  transition: opacity 0.9s ease;
 }
 
-html.nexus-light .portal-lounge-photo {
-  filter: brightness(1.08) contrast(0.98) saturate(0.95);
+/* Light mode: day visible, night hidden */
+.portal-lounge-day {
+  opacity: 1;
+  z-index: 0;
+}
+.portal-lounge-night {
+  opacity: 0;
+  z-index: 1;
 }
 
-/* Dark mode: same framing, deep night grade */
-html.nexus-dark .portal-lounge-photo {
-  filter: brightness(0.52) contrast(1.18) saturate(1.35) hue-rotate(8deg);
+html.nexus-dark .portal-lounge-day {
+  opacity: 0;
+}
+html.nexus-dark .portal-lounge-night {
+  opacity: 1;
 }
 
+/* --- Nebula / galaxy drift in the 3 windows --- */
+.portal-lounge-nebula {
+  position: absolute;
+  z-index: 2;
+  border-radius: 40%;
+  pointer-events: none;
+  filter: blur(18px);
+  mix-blend-mode: screen;
+  opacity: 0.35;
+  transition: opacity 0.9s ease;
+  animation: lounge-nebula-drift 18s ease-in-out infinite alternate;
+}
+html.nexus-dark .portal-lounge-nebula {
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+html.nexus-light .portal-lounge-nebula {
+  opacity: 0.28;
+}
+
+.portal-lounge-nebula-center {
+  left: 28%;
+  top: 6%;
+  width: 44%;
+  height: 48%;
+  background:
+    radial-gradient(ellipse at 40% 45%, rgba(120, 80, 255, 0.55) 0%, transparent 55%),
+    radial-gradient(ellipse at 65% 35%, rgba(60, 160, 255, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 60%, rgba(255, 100, 180, 0.25) 0%, transparent 45%);
+  animation-duration: 22s;
+}
+
+.portal-lounge-nebula-left {
+  left: 1%;
+  top: 14%;
+  width: 22%;
+  height: 50%;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(80, 140, 255, 0.5) 0%, transparent 55%),
+    radial-gradient(ellipse at 30% 60%, rgba(160, 80, 255, 0.3) 0%, transparent 50%);
+  animation-duration: 16s;
+  animation-delay: -4s;
+}
+
+.portal-lounge-nebula-right {
+  right: 1%;
+  left: auto;
+  top: 14%;
+  width: 22%;
+  height: 50%;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(100, 180, 255, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse at 70% 55%, rgba(200, 100, 255, 0.28) 0%, transparent 50%);
+  animation-duration: 20s;
+  animation-delay: -8s;
+}
+
+@keyframes lounge-nebula-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+    filter: blur(18px) hue-rotate(0deg);
+  }
+  50% {
+    transform: translate(2%, -1.5%) scale(1.06);
+    filter: blur(20px) hue-rotate(12deg);
+  }
+  100% {
+    transform: translate(-1.5%, 2%) scale(1.03);
+    filter: blur(16px) hue-rotate(-8deg);
+  }
+}
+
+/* --- Stars --- */
 .portal-lounge-stars {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 3;
   overflow: hidden;
-  mask-image: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 55%, transparent 85%);
-  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 55%, transparent 85%);
-  transition: opacity 0.75s ease;
-  opacity: 0.35;
+  transition: opacity 0.9s ease;
+}
+html.nexus-light .portal-lounge-stars {
+  opacity: 0.55;
 }
 html.nexus-dark .portal-lounge-stars {
   opacity: 1;
@@ -47,36 +126,63 @@ html.nexus-dark .portal-lounge-stars {
   position: absolute;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 3px 1px rgba(180, 210, 255, 0.65);
+  box-shadow: 0 0 3px 1px rgba(180, 210, 255, 0.7);
   animation-name: lounge-star-twinkle;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
-  transform: none;
+}
+
+.portal-lounge-star-window {
+  animation-name: lounge-star-glow-move;
 }
 
 @keyframes lounge-star-twinkle {
-  0%, 100% { opacity: 0.2; }
-  50%      { opacity: 0.95; }
+  0%, 100% { opacity: 0.25; transform: scale(0.9); }
+  50%      { opacity: 1; transform: scale(1.15); }
 }
 
+@keyframes lounge-star-glow-move {
+  0% {
+    opacity: 0.35;
+    transform: translate(0, 0) scale(0.95);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(3px, -4px) scale(1.2);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translate(-2px, 2px) scale(1.05);
+  }
+  75% {
+    opacity: 0.95;
+    transform: translate(4px, 1px) scale(1.25);
+  }
+  100% {
+    opacity: 0.35;
+    transform: translate(0, 0) scale(0.95);
+  }
+}
+
+/* Room atmosphere / light */
 .portal-lounge-veil {
   position: absolute;
   inset: 0;
-  z-index: 2;
-  transition: background 0.75s ease;
+  z-index: 4;
+  transition: background 0.9s ease;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.03) 40%,
-    rgba(241, 245, 249, 0.2) 100%
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(248, 250, 252, 0.22) 100%
   );
 }
 html.nexus-dark .portal-lounge-veil {
   background: linear-gradient(
     180deg,
-    rgba(5, 3, 20, 0.2) 0%,
-    rgba(5, 3, 20, 0.1) 40%,
-    rgba(5, 3, 20, 0.35) 100%
+    rgba(8, 4, 28, 0.22) 0%,
+    rgba(8, 4, 28, 0.1) 40%,
+    rgba(5, 3, 20, 0.38) 100%
   );
 }
 
@@ -101,13 +207,13 @@ html.nexus-dark .portal-lounge-veil {
 .portal-shell .nexus-topbar {
   position: relative;
   z-index: 20;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.52);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(226, 232, 240, 0.45);
-  transition: background 0.75s ease, border-color 0.75s ease;
+  transition: background 0.9s ease, border-color 0.9s ease;
 }
 html.nexus-dark .portal-shell .nexus-topbar {
-  background: rgba(12, 10, 28, 0.5);
+  background: rgba(12, 10, 28, 0.52);
   border-bottom-color: rgba(63, 63, 70, 0.35);
 }
 
@@ -122,7 +228,7 @@ html.nexus-dark .portal-shell .nexus-topbar {
   backdrop-filter: blur(16px) saturate(1.1);
   -webkit-backdrop-filter: blur(16px) saturate(1.1);
   box-shadow: 0 10px 36px rgba(15, 23, 42, 0.1);
-  transition: background 0.75s ease, border-color 0.75s ease, box-shadow 0.75s ease;
+  transition: background 0.9s ease, border-color 0.9s ease, box-shadow 0.9s ease;
 }
 html.nexus-dark .portal-glass-card {
   background: rgba(15, 12, 40, 0.72);
@@ -133,7 +239,7 @@ html.nexus-dark .portal-glass-card {
   background: rgba(255, 255, 255, 0.75) !important;
   backdrop-filter: blur(14px);
   border-color: rgba(255, 255, 255, 0.5) !important;
-  transition: background 0.75s ease, border-color 0.75s ease;
+  transition: background 0.9s ease, border-color 0.9s ease;
 }
 html.nexus-dark .portal-home-card {
   background: rgba(18, 14, 42, 0.7) !important;
@@ -143,7 +249,7 @@ html.nexus-dark .portal-home-card {
   background: rgba(255, 255, 255, 0.72) !important;
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.45);
-  transition: background 0.75s ease, border-color 0.75s ease;
+  transition: background 0.9s ease, border-color 0.9s ease;
 }
 html.nexus-dark .portal-home-hero {
   background: rgba(22, 16, 50, 0.68) !important;
@@ -158,7 +264,8 @@ html.nexus-dark .portal-home-hero {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .portal-lounge-star {
+  .portal-lounge-star,
+  .portal-lounge-nebula {
     animation: none !important;
   }
   .portal-lounge-photo {
