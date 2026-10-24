@@ -213,12 +213,12 @@ html.nexus-dark .portal-cosmic-veil {
   background: linear-gradient(180deg, rgba(8, 4, 20, 0.2) 0%, transparent 30%, rgba(5, 2, 15, 0.35) 100%);
 }
 
-/* Theme-aware glass sidebar — light mode high contrast */
+/* Theme-aware glass sidebar — light = white translucent like cards */
 .portal-sidebar {
-  background: rgba(255, 255, 255, 0.92) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
   backdrop-filter: blur(18px) saturate(1.15);
   -webkit-backdrop-filter: blur(18px) saturate(1.15);
-  border-right: 1px solid rgba(139, 92, 246, 0.25);
+  border-right: 1px solid rgba(196, 181, 253, 0.35);
   color: #0f0a1e;
   transition: background 0.85s ease, border-color 0.85s ease, color 0.85s ease;
 }
@@ -227,11 +227,16 @@ html.nexus-dark .portal-sidebar {
   border-right-color: rgba(63, 63, 70, 0.45);
   color: #f4f4f5;
 }
+html.nexus-light .app-cosmos > aside.portal-sidebar,
 .app-cosmos > aside.portal-sidebar {
-  background: rgba(255, 255, 255, 0.92) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-right: 1px solid rgba(196, 181, 253, 0.35) !important;
+  color: #0f0a1e !important;
 }
 html.nexus-dark .app-cosmos > aside.portal-sidebar {
   background: rgba(12, 8, 28, 0.78) !important;
+  border-right-color: rgba(63, 63, 70, 0.45) !important;
+  color: #f4f4f5 !important;
 }
 
 .portal-sidebar-header {
