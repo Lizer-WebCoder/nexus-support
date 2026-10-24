@@ -14,106 +14,60 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Restore CustomerPortal and patch
+      - name: Restore CustomerPortal, patch sidebar, write CSS
         run: |
           set -e
           git checkout e973f0632f202e8dc0dabbbc65a8be25600c23f9 -- src/components/CustomerPortal.tsx
           python3 << 'PY'
           from pathlib import Path
-          text = Path('src/components/CustomerPortal.tsx').read_text()
-          old = '''      <aside className="hidden md:flex w-60 shrink-0 bg-zinc-950 text-zinc-100 flex-col border-r border-zinc-800 relative z-30">
-        <div className="px-4 py-5 flex items-center gap-3 border-b border-zinc-800/80">
-          <BrandMark />
-          <div>
-            <div className="text-sm font-semibold tracking-tight">Nexus Ops</div>
-            <div className="text-[11px] text-zinc-500">Customer portal</div>
-          </div>
-        </div>
-
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-          <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Support</div>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = view === item.id || (view === 'success' && item.id === 'submit');
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setView(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  active ? 'bg-brand-600/20 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'
-                }`}
-              >
-                <Icon size={18} className="shrink-0" />
-                <span className="flex-1 text-left">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>'''
-          new = '''      <aside className="portal-sidebar hidden md:flex w-60 shrink-0 flex-col relative z-30">
-        <div className="portal-sidebar-header px-4 py-5 flex items-center gap-3">
-          <BrandMark />
-          <div>
-            <div className="text-sm font-semibold tracking-tight portal-sidebar-title">Nexus Ops</div>
-            <div className="text-[11px] portal-sidebar-sub">Customer portal</div>
-          </div>
-        </div>
-
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-          <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider portal-sidebar-label">Support</div>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = view === item.id || (view === 'success' && item.id === 'submit');
-            const iconColor: Record<string, string> = {
-              home: 'text-violet-400',
-              community: 'text-sky-400',
-              submit: 'text-amber-400',
-              chat: 'text-fuchsia-400',
-              track: 'text-emerald-400',
-              mytickets: 'text-blue-400',
-              help: 'text-indigo-400',
-              account: 'text-pink-400',
-            };
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setView(item.id)}
-                className={`portal-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  active ? 'portal-nav-active' : ''
-                }`}
-              >
-                <Icon size={18} className={`shrink-0 ${iconColor[item.id] || 'text-violet-400'}`} />
-                <span className="flex-1 text-left">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>'''
-          if old not in text:
-              raise SystemExit('aside block missing')
-          text = text.replace(old, new, 1)
-          text = text.replace(
-              '<div className="p-3 border-t border-zinc-800/80 space-y-1">',
-              '<div className="portal-sidebar-footer p-3 space-y-1">',
-              1,
+          import base64
+          p = Path('src/components/CustomerPortal.tsx')
+          t = p.read_text()
+          t = t.replace(
+            'hidden md:flex w-60 shrink-0 bg-zinc-950 text-zinc-100 flex-col border-r border-zinc-800 relative z-30',
+            'portal-sidebar hidden md:flex w-60 shrink-0 flex-col relative z-30',
+            1,
           )
-          Path('src/components/CustomerPortal.tsx').write_text(text)
-          print('CustomerPortal patched')
+          t = t.replace(
+            'px-4 py-5 flex items-center gap-3 border-b border-zinc-800/80',
+            'portal-sidebar-header px-4 py-5 flex items-center gap-3',
+            1,
+          )
+          t = t.replace(
+            'text-sm font-semibold tracking-tight">Nexus Ops',
+            'text-sm font-semibold tracking-tight portal-sidebar-title">Nexus Ops',
+            1,
+          )
+          t = t.replace(
+            'text-[11px] text-zinc-500">Customer portal',
+            'text-[11px] portal-sidebar-sub">Customer portal',
+            1,
+          )
+          t = t.replace(
+            'text-[10px] font-semibold uppercase tracking-wider text-zinc-600">Support',
+            'text-[10px] font-semibold uppercase tracking-wider portal-sidebar-label">Support',
+            1,
+          )
+          t = t.replace(
+            'p-3 border-t border-zinc-800/80 space-y-1',
+            'portal-sidebar-footer p-3 space-y-1',
+            1,
+          )
+          old_btn = """                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${\n                  active ? 'bg-brand-600/20 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'\n                }`}\n              >\n                <Icon size={18} className=\"shrink-0\" />"""
+          new_btn = """                className={`portal-nav-item w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${\n                  active ? 'portal-nav-active' : ''\n                }`}\n              >\n                <Icon size={18} className={`shrink-0 ${\n                  ({ home: 'text-violet-400', community: 'text-sky-400', submit: 'text-amber-400', chat: 'text-fuchsia-400', track: 'text-emerald-400', mytickets: 'text-blue-400', help: 'text-indigo-400', account: 'text-pink-400' } as Record<string, string>)[item.id] || 'text-violet-400'\n                }`} />"""
+          if old_btn not in t:
+              raise SystemExit('nav button block not found')
+          t = t.replace(old_btn, new_btn, 1)
+          p.write_text(t)
+          print('CustomerPortal OK', 'portal-sidebar' in t)
+          b64 = Path('scripts/portal-lounge.css.b64').read_text().strip()
+          Path('src/portal-lounge.css').write_bytes(base64.b64decode(b64))
+          print('CSS size', Path('src/portal-lounge.css').stat().st_size)
           PY
-      - name: Write portal-lounge.css
+      - name: Commit
         run: |
-          cp src/portal-lounge.css src/portal-lounge.css.bak || true
-          cat > src/portal-lounge.css << 'CSSEOF'
-          /* loaded from artifact in next step via python */
-          CSSEOF
-          python3 -c "print('will overwrite')"
-      - name: Apply CSS from base64
-        env:
-          CSS_B64: ${{ '' }}
-        run: |
-          python3 << 'PY'
-          from pathlib import Path
-          # CSS written inline below as python string
-          css = Path('/home/runner/work').exists() and open('src/portal-lounge.css').read()
-          PY
-          true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/CustomerPortal.tsx src/portal-lounge.css
+          git status
+          git diff --cached --quiet && echo "no changes" || (git commit -m "fix(portal): theme-aware sidebar, colored icons, login-style comets" && git push)
