@@ -13,6 +13,7 @@ import PortalAuthGate from './PortalAuthGate';
 import PortalHome from './PortalHome';
 import PortalCommunityChat from './PortalCommunityChat';
 import ThemeToggle from './ThemeToggle';
+import PortalSpaceLoungeBg from './PortalSpaceLoungeBg';
 
 interface Props { onBackToAgent?: () => void; }
 type PortalView = 'home' | 'submit' | 'track' | 'success' | 'help' | 'chat' | 'account' | 'mytickets' | 'community';
@@ -235,8 +236,9 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-zinc-50">
-        <header className="h-12 shrink-0 nexus-topbar flex items-center gap-3 px-4 lg:px-6 border-b border-zinc-200/80 bg-white/80 backdrop-blur">
+      <div className="portal-shell flex-1 flex flex-col min-w-0 min-h-screen relative overflow-hidden">
+        <PortalSpaceLoungeBg />
+        <header className="relative z-20 h-12 shrink-0 nexus-topbar flex items-center gap-3 px-4 lg:px-6">
           <div className="md:hidden"><BrandMark className="w-8 h-8" /></div>
           <div className="text-sm font-semibold text-zinc-800">{VIEW_TITLES[view]}</div>
           <div className="flex-1" />
@@ -247,7 +249,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
           <ThemeToggle />
         </header>
 
-        <main className="flex-1 overflow-y-auto p-3 lg:p-5">
+        <main className="relative z-10 flex-1 overflow-y-auto p-3 lg:p-5">
           <div className="max-w-5xl mx-auto">
             {view === 'home' && (
               <PortalHome displayName={displayName} onNavigate={(v) => setView(v)} />
@@ -317,7 +319,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <div className="max-w-md">
                 <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-3"><ArrowLeft size={16} /> Back</button>
                 <h1 className="text-xl font-semibold text-zinc-900 mb-1">Track a ticket</h1>
-                <form onSubmit={track} className="rounded-xl p-4 sm:p-5 space-y-3 mt-3 bg-white border border-zinc-200">
+                <form onSubmit={track} className="portal-glass-card rounded-xl p-4 sm:p-5 space-y-3 mt-3 bg-white border border-zinc-200">
                   {trackError && <div className="text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">{trackError}</div>}
                   <div>
                     <label className="block text-xs font-medium text-zinc-600 mb-1.5">Ticket ID</label>
@@ -330,7 +332,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                   <button type="submit" className={btnPrimary}>Look up</button>
                 </form>
                 {tracked && (
-                  <div className="mt-3 rounded-xl p-4 space-y-2.5 bg-white border border-zinc-200">
+                  <div className="mt-3 portal-glass-card rounded-xl p-4 space-y-2.5 bg-white border border-zinc-200">
                     <div className="flex justify-between">
                       <span className="font-mono text-xs text-zinc-400">{tracked.id}</span>
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${statusColor[tracked.status] || ''}`}>{tracked.status}</span>
@@ -364,11 +366,11 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                 <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-3"><ArrowLeft size={16} /> Back</button>
                 <h1 className="text-xl font-semibold text-zinc-900 mb-3">My tickets</h1>
                 {myTickets.length === 0 ? (
-                  <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-500">No tickets linked to {user?.email} yet.</div>
+                  <div className="rounded-xl border border-zinc-200 bg-white/80 px-4 py-3 text-sm text-zinc-500">No tickets linked to {user?.email} yet.</div>
                 ) : (
                   <div className="space-y-2">
                     {myTickets.map((t) => (
-                      <button key={t.id} type="button" onClick={() => { setTrackId(t.id); setTracked(t); setView('track'); }} className="w-full text-left rounded-xl border border-zinc-200 bg-white px-4 py-3 hover:border-violet-300 transition-colors">
+                      <button key={t.id} type="button" onClick={() => { setTrackId(t.id); setTracked(t); setView('track'); }} className="w-full text-left rounded-xl border border-zinc-200 bg-white/80 px-4 py-3 hover:border-violet-300 transition-colors">
                         <div className="flex justify-between gap-2">
                           <span className="font-mono text-xs text-zinc-400">{t.id}</span>
                           <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full capitalize ${statusColor[t.status] || ''}`}>{t.status}</span>
@@ -387,7 +389,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
                 <h1 className="text-xl font-semibold text-zinc-900 mb-3">Help articles</h1>
                 <div className="space-y-2">
                   {HELP_ARTICLES.map((a) => (
-                    <div key={a.title} className="rounded-xl border border-zinc-200 bg-white px-4 py-3">
+                    <div key={a.title} className="rounded-xl border border-zinc-200 bg-white/80 px-4 py-3">
                       <div className="font-medium text-zinc-900">{a.title}</div>
                       <p className="text-sm text-zinc-500 mt-1">{a.body}</p>
                     </div>
@@ -399,7 +401,7 @@ export default function CustomerPortal({ onBackToAgent }: Props) {
               <div className="max-w-md">
                 <button type="button" onClick={() => setView('home')} className="flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-3"><ArrowLeft size={16} /> Back</button>
                 <h1 className="text-xl font-semibold text-zinc-900 mb-3">Account</h1>
-                <div className="rounded-xl border border-zinc-200 bg-white p-4 space-y-3">
+                <div className="rounded-xl border border-zinc-200 bg-white/80 p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-400 to-violet-500 flex items-center justify-center text-white text-sm font-semibold">{initials}</div>
                     <div>
