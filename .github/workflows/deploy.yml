@@ -22,7 +22,50 @@ jobs:
       - name: Checkout
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
 
-      # LoginPage is source-of-truth in the repo — do NOT run mutation scripts here.
+      - name: Restore full CustomerPortal if needed
+        run: |
+          set -e
+          if ! grep -q PortalLiveChat src/components/CustomerPortal.tsx 2>/dev/null; then
+            echo "Restoring full CustomerPortal from e973..."
+            curl -fsSL "https://raw.githubusercontent.com/Right-Click-V4/nexus-support/e973f0632f202e8dc0dabbbc65a8be25600c23f9/src/components/CustomerPortal.tsx" -o src/components/CustomerPortal.tsx
+            python3 -c "
+from pathlib import Path
+t = Path('src/components/CustomerPortal.tsx').read_text()
+t = t.replace(
+  'hidden md:flex w-60 shrink-0 bg-zinc-950 text-zinc-100 flex-col border-r border-zinc-800 relative z-30',
+  'portal-sidebar hidden md:flex w-60 shrink-0 flex-col relative z-30', 1)
+t = t.replace(
+  'px-4 py-5 flex items-center gap-3 border-b border-zinc-800/80',
+  'portal-sidebar-header px-4 py-5 flex items-center gap-3', 1)
+t = t.replace(
+  'text-sm font-semibold tracking-tight\">Nexus Ops',
+  'text-sm font-semibold tracking-tight portal-sidebar-title\">Nexus Ops', 1)
+t = t.replace(
+  'text-[11px] text-zinc-500\">Customer portal',
+  'text-[11px] portal-sidebar-sub\">Customer portal', 1)
+t = t.replace(
+  'text-[10px] font-semibold uppercase tracking-wider text-zinc-600\">Support',
+  'text-[10px] font-semibold uppercase tracking-wider portal-sidebar-label\">Support', 1)
+t = t.replace(
+  'p-3 border-t border-zinc-800/80 space-y-1',
+  'portal-sidebar-footer p-3 space-y-1', 1)
+t = t.replace(
+  \"active ? 'bg-brand-600/20 text-white' : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-200'\",
+  \"active ? 'portal-nav-active' : 'portal-nav-item'\", 1)
+t = t.replace(
+  '<Icon size={18} className=\"shrink-0\" />',
+  '<Icon size={18} className={`shrink-0 ${({ home: \"text-violet-400\", community: \"text-sky-400\", submit: \"text-amber-400\", chat: \"text-fuchsia-400\", track: \"text-emerald-400\", mytickets: \"text-blue-400\", help: \"text-indigo-400\", account: \"text-pink-400\" } as Record<string, string>)[item.id] || \"text-violet-400\"}`} />', 1)
+Path('src/components/CustomerPortal.tsx').write_text(t)
+print('patched', 'PortalLiveChat' in t, 'portal-sidebar' in t)
+"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/components/CustomerPortal.tsx
+            git commit -m "fix: restore full CustomerPortal features" || true
+            git push || true
+          else
+            echo "CustomerPortal already has features"
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
