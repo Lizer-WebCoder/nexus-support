@@ -1,4 +1,4 @@
-/* Portal cosmic background — same violet/fuchsia/indigo palette as login */
+/* Swirling galaxy portal bg — login violet/fuchsia/indigo palette */
 
 .portal-cosmic {
   pointer-events: none;
@@ -8,17 +8,18 @@
   overflow: hidden;
 }
 
-/* Base sky — matches login-cosmos-sky hues */
+/* ---- Sky base (same family as login) ---- */
 .portal-cosmic-sky {
   position: absolute;
   inset: 0;
   transition: background 0.85s ease;
-  /* Light: soft pastel of the same palette */
+  /* Light: richer cosmic pastels, not plain white */
   background:
-    radial-gradient(ellipse 55% 40% at 50% -5%, rgba(192, 38, 211, 0.18), transparent 58%),
-    radial-gradient(ellipse 42% 32% at 18% 78%, rgba(124, 58, 237, 0.14), transparent 52%),
-    radial-gradient(ellipse 38% 28% at 88% 58%, rgba(79, 70, 229, 0.12), transparent 50%),
-    linear-gradient(165deg, #f5f3ff 0%, #ede9fe 35%, #e0e7ff 70%, #faf5ff 100%);
+    radial-gradient(ellipse 50% 45% at 50% 42%, rgba(192, 38, 211, 0.22), transparent 55%),
+    radial-gradient(ellipse 40% 35% at 18% 70%, rgba(124, 58, 237, 0.2), transparent 50%),
+    radial-gradient(ellipse 38% 30% at 85% 30%, rgba(79, 70, 229, 0.16), transparent 48%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(167, 139, 250, 0.18), transparent 55%),
+    linear-gradient(160deg, #e8e0ff 0%, #d4c4fc 28%, #c7d2fe 55%, #ede9fe 78%, #f3e8ff 100%);
 }
 
 html.nexus-dark .portal-cosmic-sky {
@@ -29,105 +30,198 @@ html.nexus-dark .portal-cosmic-sky {
     linear-gradient(165deg, #0c0618 0%, #1a0b2e 40%, #12081f 70%, #0a0614 100%);
 }
 
-/* Soft galaxy band */
-.portal-cosmic-galaxy {
+/* ---- Swirling galaxy ---- */
+.portal-galaxy {
   position: absolute;
-  left: -10%;
-  top: 25%;
-  width: 120%;
-  height: 45%;
-  background: linear-gradient(
-    105deg,
-    transparent 0%,
-    rgba(167, 139, 250, 0.12) 25%,
-    rgba(232, 121, 249, 0.1) 50%,
-    rgba(129, 140, 248, 0.1) 75%,
-    transparent 100%
-  );
-  filter: blur(40px);
-  animation: portal-galaxy-drift 28s ease-in-out infinite alternate;
-  opacity: 0.7;
-  transition: opacity 0.85s ease;
-}
-html.nexus-dark .portal-cosmic-galaxy {
-  opacity: 1;
-  background: linear-gradient(
-    105deg,
-    transparent 0%,
-    rgba(167, 139, 250, 0.22) 25%,
-    rgba(232, 121, 249, 0.18) 50%,
-    rgba(99, 102, 241, 0.16) 75%,
-    transparent 100%
-  );
+  left: 50%;
+  top: 48%;
+  width: min(120vmin, 1100px);
+  height: min(120vmin, 1100px);
+  transform: translate(-50%, -50%);
+  animation: portal-galaxy-spin 90s linear infinite;
+  z-index: 1;
 }
 
-@keyframes portal-galaxy-drift {
-  0%   { transform: translate(0, 0) rotate(-1deg); }
-  100% { transform: translate(-3%, 2%) rotate(1.5deg); }
+.portal-galaxy-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18%;
+  height: 18%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(232, 121, 249, 0.7) 25%,
+      rgba(167, 139, 250, 0.4) 50%,
+      transparent 70%);
+  filter: blur(4px);
+  box-shadow:
+    0 0 40px 12px rgba(232, 121, 249, 0.35),
+    0 0 80px 24px rgba(124, 58, 237, 0.2);
 }
 
-/* Floating nebula blobs */
+html.nexus-light .portal-galaxy-core {
+  background:
+    radial-gradient(circle,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(216, 180, 254, 0.75) 30%,
+      rgba(167, 139, 250, 0.45) 55%,
+      transparent 72%);
+  box-shadow:
+    0 0 50px 16px rgba(192, 38, 211, 0.25),
+    0 0 100px 30px rgba(124, 58, 237, 0.15);
+}
+
+.portal-galaxy-arm {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+html.nexus-light .portal-galaxy-arm {
+  mix-blend-mode: multiply;
+  opacity: 0.45;
+}
+
+.portal-galaxy-arm-1 {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(167, 139, 250, 0.15) 20deg,
+    rgba(232, 121, 249, 0.45) 55deg,
+    rgba(99, 102, 241, 0.35) 90deg,
+    transparent 130deg,
+    transparent 180deg,
+    rgba(192, 38, 211, 0.4) 220deg,
+    rgba(129, 140, 248, 0.3) 260deg,
+    transparent 300deg,
+    transparent 360deg
+  );
+  filter: blur(18px);
+  animation: portal-arm-pulse 12s ease-in-out infinite alternate;
+}
+
+.portal-galaxy-arm-2 {
+  background: conic-gradient(
+    from 40deg,
+    transparent 0deg,
+    rgba(236, 72, 153, 0.25) 30deg,
+    rgba(167, 139, 250, 0.4) 70deg,
+    transparent 110deg,
+    transparent 160deg,
+    rgba(99, 102, 241, 0.35) 200deg,
+    rgba(244, 114, 182, 0.3) 250deg,
+    transparent 290deg,
+    transparent 360deg
+  );
+  filter: blur(22px);
+  transform: translate(-50%, -50%) scale(0.92) rotate(25deg);
+  animation: portal-arm-pulse 16s ease-in-out infinite alternate-reverse;
+}
+
+.portal-galaxy-arm-3 {
+  background: conic-gradient(
+    from 80deg,
+    transparent 0deg,
+    rgba(129, 140, 248, 0.2) 25deg,
+    rgba(192, 38, 211, 0.35) 60deg,
+    transparent 100deg,
+    transparent 150deg,
+    rgba(232, 121, 249, 0.3) 190deg,
+    rgba(165, 180, 252, 0.25) 240deg,
+    transparent 280deg,
+    transparent 360deg
+  );
+  filter: blur(26px);
+  transform: translate(-50%, -50%) scale(1.08) rotate(-15deg);
+  animation: portal-arm-pulse 20s ease-in-out infinite alternate;
+}
+
+.portal-galaxy-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 55%;
+  height: 55%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(232, 121, 249, 0.2) 0%,
+    rgba(124, 58, 237, 0.12) 40%,
+    transparent 70%
+  );
+  filter: blur(30px);
+  animation: portal-core-breathe 8s ease-in-out infinite alternate;
+}
+
+@keyframes portal-galaxy-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes portal-arm-pulse {
+  0%   { opacity: 0.4; filter: blur(18px) hue-rotate(0deg); }
+  100% { opacity: 0.7; filter: blur(22px) hue-rotate(12deg); }
+}
+
+@keyframes portal-core-breathe {
+  0%   { transform: translate(-50%, -50%) scale(0.95); opacity: 0.7; }
+  100% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+}
+
+/* ---- Nebula wash ---- */
 .portal-cosmic-nebula {
   position: absolute;
-  inset: 0;
+  inset: -5%;
+  z-index: 1;
   pointer-events: none;
-  mix-blend-mode: soft-light;
-  transition: opacity 0.85s ease;
-  opacity: 0.55;
-  animation: portal-nebula-pulse 18s ease-in-out infinite alternate;
+  animation: portal-nebula-drift 22s ease-in-out infinite alternate;
 }
 html.nexus-dark .portal-cosmic-nebula {
   mix-blend-mode: screen;
+  opacity: 0.65;
+}
+html.nexus-light .portal-cosmic-nebula {
+  mix-blend-mode: soft-light;
   opacity: 0.7;
 }
 
 .portal-cosmic-nebula-a {
   background:
-    radial-gradient(ellipse 60% 40% at 30% 40%, rgba(168, 85, 247, 0.28), transparent 62%),
-    radial-gradient(ellipse 50% 35% at 72% 68%, rgba(99, 102, 241, 0.2), transparent 55%);
-  animation-duration: 20s;
+    radial-gradient(ellipse 55% 40% at 28% 38%, rgba(168, 85, 247, 0.35), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 75% 65%, rgba(99, 102, 241, 0.28), transparent 55%);
 }
 .portal-cosmic-nebula-b {
   background:
-    radial-gradient(ellipse 45% 30% at 62% 22%, rgba(236, 72, 153, 0.2), transparent 52%),
-    radial-gradient(ellipse 40% 35% at 14% 62%, rgba(124, 58, 237, 0.18), transparent 55%);
-  animation-duration: 24s;
-  animation-delay: -6s;
+    radial-gradient(ellipse 40% 30% at 65% 20%, rgba(236, 72, 153, 0.28), transparent 50%),
+    radial-gradient(ellipse 38% 32% at 12% 70%, rgba(124, 58, 237, 0.25), transparent 52%);
+  animation-duration: 28s;
+  animation-delay: -8s;
 }
 
-@keyframes portal-nebula-pulse {
-  0%   { transform: scale(1) translate(0, 0); opacity: 0.45; }
-  50%  { transform: scale(1.08) translate(1%, -1%); opacity: 0.75; }
-  100% { transform: scale(1.03) translate(-1%, 1.5%); opacity: 0.55; }
+@keyframes portal-nebula-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(2%, -1.5%) scale(1.05); }
+  100% { transform: translate(-1.5%, 2%) scale(1.02); }
 }
 
-/* Fine dust */
-.portal-cosmic-dust {
-  position: absolute;
-  inset: 0;
-  opacity: 0.25;
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.5) 0 0.6px, transparent 1px),
-    radial-gradient(circle, rgba(196, 181, 253, 0.4) 0 0.5px, transparent 0.9px);
-  background-size: 120px 120px, 80px 80px;
-  background-position: 0 0, 40px 60px;
-  animation: portal-dust-drift 60s linear infinite;
-  transition: opacity 0.85s ease;
-}
-html.nexus-dark .portal-cosmic-dust {
-  opacity: 0.4;
-}
-
-@keyframes portal-dust-drift {
-  0%   { background-position: 0 0, 40px 60px; }
-  100% { background-position: 120px 80px, 160px 20px; }
-}
-
-/* Twinkling stars */
+/* ---- Dense starfield ---- */
 .portal-cosmic-stars {
   position: absolute;
   inset: 0;
+  z-index: 2;
   overflow: hidden;
+}
+.portal-cosmic-stars-b {
+  animation: portal-stars-drift 50s linear infinite;
 }
 
 .portal-cosmic-star {
@@ -137,35 +231,78 @@ html.nexus-dark .portal-cosmic-dust {
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
 }
-
-@keyframes portal-star-twinkle {
-  0%, 100% { opacity: 0.25; transform: scale(0.85); }
-  50%      { opacity: 1; transform: scale(1.2); }
+.portal-cosmic-star-slow {
+  animation-name: portal-star-twinkle-slow;
 }
 
-/* Soft veil for readability */
-.portal-cosmic-veil {
+html.nexus-light .portal-cosmic-star {
+  /* Stronger glow so stars read on light sky */
+  filter: saturate(1.2);
+}
+
+@keyframes portal-star-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50%      { opacity: 1; transform: scale(1.25); }
+}
+@keyframes portal-star-twinkle-slow {
+  0%, 100% { opacity: 0.2; transform: scale(0.85); }
+  50%      { opacity: 0.85; transform: scale(1.15); }
+}
+@keyframes portal-stars-drift {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Fine dust */
+.portal-cosmic-dust {
   position: absolute;
   inset: 0;
   z-index: 2;
+  opacity: 0.35;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.55) 0 0.5px, transparent 0.9px),
+    radial-gradient(circle, rgba(196, 181, 253, 0.45) 0 0.4px, transparent 0.8px),
+    radial-gradient(circle, rgba(240, 171, 252, 0.35) 0 0.45px, transparent 0.85px);
+  background-size: 90px 90px, 60px 60px, 130px 130px;
+  background-position: 0 0, 30px 40px, 70px 20px;
+  animation: portal-dust-drift 45s linear infinite;
+  transition: opacity 0.85s ease;
+}
+html.nexus-dark .portal-cosmic-dust {
+  opacity: 0.5;
+}
+html.nexus-light .portal-cosmic-dust {
+  opacity: 0.4;
+}
+
+@keyframes portal-dust-drift {
+  0%   { background-position: 0 0, 30px 40px, 70px 20px; }
+  100% { background-position: 90px 60px, 150px 10px, 200px 80px; }
+}
+
+/* Soft veil for card readability */
+.portal-cosmic-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
   transition: background 0.85s ease;
   background: linear-gradient(
     180deg,
-    rgba(245, 243, 255, 0.15) 0%,
-    transparent 30%,
-    rgba(237, 233, 254, 0.25) 100%
+    rgba(237, 233, 254, 0.12) 0%,
+    transparent 25%,
+    rgba(221, 214, 254, 0.2) 100%
   );
 }
 html.nexus-dark .portal-cosmic-veil {
   background: linear-gradient(
     180deg,
-    rgba(12, 6, 24, 0.2) 0%,
-    transparent 30%,
-    rgba(10, 6, 20, 0.35) 100%
+    rgba(12, 6, 24, 0.18) 0%,
+    transparent 25%,
+    rgba(10, 6, 20, 0.32) 100%
   );
 }
 
-/* Layout helpers (unchanged) */
+/* Layout */
 .app-cosmos {
   position: relative;
   isolation: isolate;
@@ -184,9 +321,9 @@ html.nexus-dark .portal-cosmic-veil {
 .portal-shell .nexus-topbar {
   position: relative;
   z-index: 20;
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.45);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.4);
   transition: background 0.85s ease, border-color 0.85s ease;
 }
 html.nexus-dark .portal-shell .nexus-topbar {
@@ -240,8 +377,11 @@ html.nexus-dark .portal-home-hero {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .portal-cosmic-galaxy,
+  .portal-galaxy,
+  .portal-galaxy-arm,
+  .portal-galaxy-glow,
   .portal-cosmic-nebula,
+  .portal-cosmic-stars-b,
   .portal-cosmic-dust,
   .portal-cosmic-star {
     animation: none !important;
