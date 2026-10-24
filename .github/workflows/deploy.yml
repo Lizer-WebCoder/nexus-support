@@ -38,6 +38,18 @@ jobs:
             git push || true
           fi
 
+      - name: Fix light-mode sidebar (white glass)
+        run: |
+          set -e
+          python3 scripts/fix_sidebar_light.py || true
+          if grep -q 'rgba(255, 255, 255, 0.88)' src/index.css; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/index.css
+            git commit -m "fix: light mode sidebar white glass" || true
+            git push || true
+          fi
+
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
