@@ -4,18 +4,20 @@ on:
   push:
     paths:
       - '.github/workflows/restore-cp-lounge.yml'
-permissions:
-  contents: write
 jobs:
   restore:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Restore and patch
+        with:
+          fetch-depth: 0
+      - name: Restore and patch CustomerPortal
         run: |
           set -e
-          git fetch --depth=1 origin f962bc078f7f9800d969021fd350e97be9b8039e || true
-          git show f962bc078f7f9800d969021fd350e97be9b8039e:src/components/CustomerPortal.tsx > src/components/CustomerPortal.tsx 2>/dev/null || curl -sL https://raw.githubusercontent.com/Right-Click-V4/nexus-support/f962bc078f7f9800d969021fd350e97be9b8039e/src/components/CustomerPortal.tsx -o src/components/CustomerPortal.tsx
+          git show f962bc078f7f9800d969021fd350e97be9b8039e:src/components/CustomerPortal.tsx > src/components/CustomerPortal.tsx
+          wc -c src/components/CustomerPortal.tsx
           python3 << 'PY'
           from pathlib import Path
           text = Path('src/components/CustomerPortal.tsx').read_text()
@@ -38,11 +40,9 @@ jobs:
           Path('src/components/CustomerPortal.tsx').write_text(text)
           print('patched', len(text))
           PY
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "nexus-bot"
+          git config user.email "bot@nexus.ops"
           git add src/components/CustomerPortal.tsx
           git status
-          git commit -m "fix(portal): restore CustomerPortal — lounge bg only in content area" || exit 0
+          git commit -m "fix(portal): restore CustomerPortal — lounge bg only in content area" || echo "no changes"
           git push origin HEAD:main
