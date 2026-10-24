@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import '../portal-lounge.css';
 import { LOUNGE_MASTER } from './loungeDay';
 
-/** Fixed star field — opacity twinkle only, no position change */
 function makeStars(count: number) {
   const stars: { left: string; top: string; size: number; delay: number; dur: number }[] = [];
   let s = 42;
@@ -23,8 +22,8 @@ function makeStars(count: number) {
 }
 
 /**
- * One still lounge photo for both themes.
- * Light/dark only changes CSS color filters — framing never moves.
+ * One still lounge photo. Light = day look, dark = color-graded night.
+ * Framing never moves — only filters change with theme.
  */
 export default function PortalSpaceLoungeBg() {
   const stars = useMemo(() => makeStars(36), []);
@@ -35,7 +34,6 @@ export default function PortalSpaceLoungeBg() {
         className="portal-lounge-photo"
         style={{ backgroundImage: `url(${LOUNGE_MASTER})` }}
       />
-
       <div className="portal-lounge-stars">
         {stars.map((st, i) => (
           <span
@@ -52,7 +50,6 @@ export default function PortalSpaceLoungeBg() {
           />
         ))}
       </div>
-
       <div className="portal-lounge-veil" />
     </div>
   );
