@@ -87,7 +87,6 @@ html.nexus-light .portal-cosmic-star { filter: brightness(1.1); }
   100% { transform: translate(var(--dx, 40px), var(--dy, -30px)); opacity: 0; }
 }
 
-/* Login-style cyan comet shooting stars */
 .portal-shooting-layer {
   position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none;
 }
@@ -350,4 +349,32 @@ html.nexus-dark .portal-home-hero {
   .portal-comet-particle {
     animation: none !important;
   }
+}
+
+/* Beat index.css "sidebar stays dark" rule for light mode */
+html.nexus-light .app-cosmos aside,
+html.nexus-light .app-cosmos aside.portal-sidebar,
+html.nexus-light aside.portal-sidebar {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(196, 181, 253, 0.35) !important;
+  border-right: 1px solid rgba(196, 181, 253, 0.35) !important;
+  color: #0f0a1e !important;
+  backdrop-filter: blur(18px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
+}
+html.nexus-light .app-cosmos aside .portal-sidebar-title,
+html.nexus-light .app-cosmos aside .portal-nav-item,
+html.nexus-light .app-cosmos aside .portal-sidebar-sub,
+html.nexus-light .app-cosmos aside .portal-sidebar-label {
+  color: inherit;
+}
+html.nexus-light .app-cosmos aside .text-zinc-100,
+html.nexus-light .app-cosmos aside .text-zinc-200,
+html.nexus-light .app-cosmos aside .text-zinc-300 {
+  color: #18181b !important;
+}
+html.nexus-light .app-cosmos aside .text-zinc-400,
+html.nexus-light .app-cosmos aside .text-zinc-500,
+html.nexus-light .app-cosmos aside .text-zinc-600 {
+  color: #52525b !important;
 }
